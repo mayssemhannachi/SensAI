@@ -1,0 +1,233 @@
+# KineKids AI Backend
+
+Backend de **KineKids AI**, développé avec **FastAPI**, **PostgreSQL**, **SQLAlchemy** et **Alembic**.
+
+## Prérequis
+
+- Python 3.13+
+- PostgreSQL
+- Git
+
+## 1. Cloner le projet
+
+```bash
+git clone <URL_DU_REPOSITORY>
+cd KineKids-ai-backend
+```
+
+## 2. Créer un environnement virtuel
+
+Sous Windows :
+
+```powershell
+python -m venv .venv
+```
+
+Activer l'environnement :
+
+```powershell
+.venv\Scripts\activate
+```
+
+Lorsque l'environnement est actif, le terminal affiche généralement `(.venv)`.
+
+## 3. Installer les dépendances
+
+```powershell
+pip install -r requirements.txt
+```
+
+## 4. Configurer PostgreSQL
+
+Créer une base de données nommée :
+
+```sql
+CREATE DATABASE kinekids_db;
+```
+
+## 5. Configurer les variables d'environnement
+
+Créer un fichier `.env` à la racine du projet :
+
+```env
+DATABASE_URL=postgresql+psycopg2://postgres:YOUR_PASSWORD@localhost:5432/kinekids_db
+```
+
+Remplacer `YOUR_PASSWORD` par le mot de passe PostgreSQL local.
+
+> Le fichier `.env` contient des informations sensibles et ne doit pas être ajouté au dépôt Git.
+
+## 6. Appliquer les migrations Alembic
+
+```powershell
+python -m alembic upgrade head
+```
+
+Si la commande `alembic` fonctionne directement :
+
+```powershell
+alembic upgrade head
+```
+
+## 7. Lancer le backend
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+Le serveur est accessible sur :
+
+```text
+http://127.0.0.1:8000
+```
+
+## 8. Documentation Swagger
+
+La documentation interactive de l'API est disponible sur :
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Endpoint de vérification :
+
+```text
+GET /health
+```
+
+## Fonctionnalités actuellement implémentées
+
+### Authentification
+
+- Inscription du thérapeute
+- Connexion avec JWT
+- Route protégée `/auth/me`
+- Authentification Bearer Token
+
+### Patients
+
+- Création d'un patient
+- Liste des patients du thérapeute
+- Consultation d'un patient
+- Modification d'un patient
+- Suppression d'un patient
+- Génération d'un Patient Code
+- Recherche par Patient Code
+- Régénération du Patient Code
+
+### Consultations
+
+- Création des consultations
+- Association entre patient et thérapeute
+- Diagnostic
+
+### Notes de consultation
+
+- Ajout de notes associées aux consultations
+- Conservation de l'auteur de la note
+
+### Activation du compte patient
+
+- Génération d'un code d'activation
+- Code à usage unique
+
+### Transfert de patient
+
+- Transfert vers un nouveau thérapeute
+- Conservation de l'historique médical
+- Régénération du Patient Code après transfert
+- Historique des affectations thérapeute-patient
+
+## Architecture
+
+```text
+KineKids-ai-backend/
+|
+|-- app/
+|   |-- core/
+|   |-- database/
+|   |-- models/
+|   |-- repositories/
+|   |-- routers/
+|   |-- schemas/
+|   |-- services/
+|   |-- utils/
+|   `-- main.py
+|
+|-- alembic/
+|-- tests/
+|-- .env
+|-- alembic.ini
+|-- requirements.txt
+`-- README.md
+```
+
+L'architecture suit le principe :
+
+```text
+Router
+  |
+Service
+  |
+Repository
+  |
+SQLAlchemy Model
+  |
+PostgreSQL
+```
+
+## Commandes utiles
+
+### Lancer le serveur
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+### Générer une migration
+
+```powershell
+python -m alembic revision --autogenerate -m "nom de la migration"
+```
+
+### Appliquer les migrations
+
+```powershell
+python -m alembic upgrade head
+```
+
+### Mettre à jour `requirements.txt`
+
+```powershell
+pip freeze > requirements.txt
+```
+
+## Technologies
+
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- Alembic
+- Pydantic
+- JWT / python-jose
+- Passlib / BCrypt
+- Uvicorn
+
+## Sécurité
+
+Ne jamais ajouter au dépôt Git :
+
+- `.env`
+- mots de passe PostgreSQL
+- clés secrètes JWT
+- environnement virtuel `.venv/`
+
+Un fichier `.gitignore` doit notamment contenir :
+
+```gitignore
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+```
