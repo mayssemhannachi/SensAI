@@ -230,4 +230,3 @@ Un fichier `.gitignore` doit notamment contenir :
 __pycache__/
 *.pyc
 .pytest_cache/
-```
