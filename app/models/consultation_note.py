@@ -1,12 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Text
-from sqlalchemy import ForeignKey
-from sqlalchemy import DateTime
-
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 
@@ -14,31 +9,29 @@ from app.database.base import Base
 class ConsultationNote(Base):
     __tablename__ = "consultation_notes"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     consultation_id: Mapped[int] = mapped_column(
         ForeignKey("consultations.id"),
-        nullable=False
+        nullable=False,
     )
 
     therapist_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
-        nullable=False
+        nullable=False,
     )
 
     note: Mapped[str] = mapped_column(
         Text,
-        nullable=False
+        nullable=False,
     )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.utcnow,
     )
 
     consultation: Mapped["Consultation"] = relationship(
         "Consultation",
-        back_populates="notes"
+        back_populates="notes",
     )

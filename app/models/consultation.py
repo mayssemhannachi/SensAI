@@ -34,7 +34,8 @@ class Consultation(Base):
         "User",
         back_populates="consultations",
     )
+
     notes: Mapped[list["ConsultationNote"]] = relationship(
-    "ConsultationNote",
-    back_populates="consultation"
-)
+        "ConsultationNote",
+        back_populates="consultation",
+    )

@@ -39,3 +39,7 @@ class Patient(Base):
         "Consultation",
         back_populates="patient",
     )
+
+    patient_games: Mapped[list["PatientGame"]] = relationship(
+        "PatientGame",
+    )

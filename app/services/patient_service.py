@@ -5,18 +5,10 @@ from fastapi import HTTPException
 from app.models.patient import Patient
 from app.repositories.patient_repository import (
     delete_patient,
+    get_patient_by_code,
     get_patient_by_id,
     get_patients_by_therapist,
     save_patient,
-)
-from app.models.patient_therapist import PatientTherapist
-import uuid
-
-from fastapi import HTTPException
-
-from app.repositories.patient_repository import (
-    get_patient_by_code,
-    get_patient_by_id
 )
 
 def generate_patient_code():
@@ -153,19 +145,3 @@ def regenerate_patient_code(
     db.refresh(patient)
 
     return patient
-
-    saved_patient = save_patient(
-        db,
-        patient
-    )
-
-    assignment = PatientTherapist(
-        patient_id=saved_patient.id,
-        therapist_id=therapist_id,
-        is_active=True
-    )
-
-    db.add(assignment)
-    db.commit()
-
-    return saved_patient

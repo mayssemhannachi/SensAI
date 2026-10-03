@@ -15,3 +15,14 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserRegistrationResponse(BaseModel):
+    message: str
+    user_id: int
+
+
+class CurrentUserResponse(BaseModel):
+    user_id: int
+    sub: EmailStr
+    role: str

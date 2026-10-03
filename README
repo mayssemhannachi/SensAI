@@ -95,6 +95,223 @@ Endpoint de vérification :
 GET /health
 ```
 
+## Guide d’intégration frontend
+
+### URL de l’API
+
+En développement local, l’API est disponible à `http://127.0.0.1:8000`. Les routes ne sont pas préfixées par `/api`.
+
+La documentation interactive et le contrat OpenAPI sont disponibles ici :
+
+- Swagger UI : `http://127.0.0.1:8000/docs`
+- Schéma OpenAPI JSON : `http://127.0.0.1:8000/openapi.json`
+- Vérification de disponibilité : `GET http://127.0.0.1:8000/health`
+
+### CORS
+
+Les origines frontend locales autorisées par défaut sont :
+
+- `http://localhost:3000` et `http://127.0.0.1:3000`
+- `http://localhost:5173` et `http://127.0.0.1:5173`
+
+Pour autoriser une autre origine, définir `CORS_ORIGINS` dans `.env` comme un tableau JSON. Remplacer les exemples par les origines réelles du frontend, sans chemin final :
+
+```env
+CORS_ORIGINS='["http://localhost:5173","https://frontend.example.com"]'
+```
+
+Les origines doivent correspondre exactement au protocole, au nom d’hôte et au port utilisés par le navigateur. Les credentials CORS sont activés; l’API n’utilise pas `allow_origins="*"`.
+
+### Authentification
+
+1. Créer un compte avec `POST /auth/register`.
+2. Se connecter avec `POST /auth/login`.
+3. Pour les routes protégées, envoyer le jeton reçu dans l’en-tête `Authorization`.
+
+Exemple de connexion :
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "therapeute@example.com",
+  "password": "mot-de-passe"
+}
+```
+
+Réponse :
+
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "bearer"
+}
+```
+
+En-tête pour les appels protégés :
+
+```http
+Authorization: Bearer <access_token>
+```
+
+`GET /auth/me` retourne `user_id`, `sub` (adresse e-mail) et `role` depuis le jeton. Les erreurs d’authentification sont renvoyées avec un statut `401`.
+
+### Référence des routes
+
+Toutes les routes listées, sauf `GET /health`, nécessitent le jeton Bearer.
+
+| Méthode | Route | Corps de requête | Réponse principale |
+| --- | --- | --- | --- |
+| `POST` | `/auth/register` | `full_name`, `email`, `password` | `UserRegistrationResponse` (`201`) |
+| `POST` | `/auth/login` | `email`, `password` | `TokenResponse` |
+| `GET` | `/auth/me` | Aucun | `CurrentUserResponse` |
+| `POST` | `/patients/` | `first_name`, `last_name`, `age` | `PatientResponse` |
+| `GET` | `/patients/` | Aucun | `PatientResponse[]` |
+| `GET` | `/patients/{patient_id}` | Aucun | `PatientResponse` |
+| `PUT` | `/patients/{patient_id}` | `first_name`, `last_name`, `age` | `PatientResponse` |
+| `DELETE` | `/patients/{patient_id}` | Aucun | `PatientDeleteResponse` |
+| `GET` | `/patients/code/{patient_code}` | Aucun | `PatientResponse` |
+| `POST` | `/patients/{patient_id}/regenerate-code` | Aucun | `PatientResponse` avec le nouveau code |
+| `POST` | `/consultations` ou `/consultations/` | `patient_id`, `consultation_date`, `diagnosis` optionnel | `ConsultationResponse` |
+| `POST` | `/consultation-notes/` | `consultation_id`, `note` | `ConsultationNoteResponse` |
+| `POST` | `/activation-codes/` | `patient_id` | `ActivationCodeResponse` |
+| `POST` | `/patient-transfers/` | `patient_code` | `PatientTransferResponse` |
+| `GET` | `/games/` | Aucun | `GameResponse[]` |
+| `POST` | `/games/` | `name`, `slug`, `description` optionnel | `GameResponse` |
+| `POST` | `/patient-games/` | `patient_id`, `game_id`, `configuration` | `PatientGameResponse` |
+| `GET` | `/patient-games/patient/{patient_id}` | Aucun | `PatientGameResponse[]` |
+| `POST` | `/sessions/` | `patient_game_id`, `duration_sec`, `metrics` | `SessionResponse` |
+| `GET` | `/sessions/patient-game/{patient_game_id}` | Aucun | `SessionResponse[]` |
+| `POST` | `/session-events/` | `session_id`, `timestamp_sec`, `event_data` | `SessionEventResponse` |
+| `GET` | `/session-events/session/{session_id}` | Aucun | `SessionEventResponse[]` |
+
+Les champs `configuration`, `metrics` et `event_data` sont des objets JSON dont la structure dépend des données métier du frontend. Les réponses complètes et leurs champs sont consultables dans Swagger (`/docs`). Les dates de consultation utilisent `YYYY-MM-DD`; les dates-heures retournées par l’API sont des chaînes ISO 8601.
+
+### Exemples d’échanges
+
+Créer un patient :
+
+```http
+POST /patients/
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "first_name": "Lina",
+  "last_name": "Martin",
+  "age": 8
+}
+```
+
+La réponse `PatientResponse` contient notamment `id`, `patient_code`, `therapist_id` et `created_at`. Utiliser l’`id` pour les routes qui attendent `patient_id`; le `patient_code` sert à la recherche par code et au transfert.
+
+Créer une consultation :
+
+```json
+{
+  "patient_id": 12,
+  "consultation_date": "2026-10-03",
+  "diagnosis": "Suivi moteur"
+}
+```
+
+Associer un jeu, puis enregistrer une session :
+
+```json
+{
+  "patient_id": 12,
+  "game_id": 3,
+  "configuration": {"difficulty": "beginner"}
+}
+```
+
+La réponse fournit l’identifiant de l’association patient-jeu (`id`), à envoyer ensuite dans `patient_game_id` :
+
+```json
+{
+  "patient_game_id": 7,
+  "duration_sec": 180,
+  "metrics": {"score": 85}
+}
+```
+
+### Appel TypeScript avec `fetch`
+
+Configurer l’URL du backend dans l’environnement frontend, par exemple `VITE_API_BASE_URL=http://127.0.0.1:8000` pour Vite :
+
+```ts
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+export async function apiFetch<T>(path: string, token?: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json");
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail ?? `Erreur HTTP ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+```
+
+Exemple d’appel :
+
+```ts
+const patients = await apiFetch<PatientResponse[]>("/patients/", accessToken);
+```
+
+Sur `401`, demander une nouvelle connexion. Les erreurs de validation FastAPI (`422`) contiennent généralement `detail` sous forme de liste avec les champs invalides. Certains échecs métier peuvent aussi renvoyer `403` ou `404`; consulter `responses` sur chaque opération dans Swagger.
+
+### Types TypeScript de base
+
+Ces interfaces représentent les formes de réponse principales. Le schéma OpenAPI reste la référence complète :
+
+```ts
+export interface PatientResponse {
+  id: number;
+  first_name: string;
+  last_name: string;
+  age: number;
+  patient_code: string;
+  therapist_id: number;
+  created_at: string;
+}
+
+export interface ConsultationResponse {
+  id: number;
+  patient_id: number;
+  therapist_id: number;
+  consultation_date: string;
+  diagnosis: string | null;
+}
+
+export interface PatientGameResponse {
+  id: number;
+  patient_id: number;
+  game_id: number;
+  configuration: Record<string, unknown>;
+}
+
+export interface SessionResponse {
+  id: number;
+  patient_game_id: number;
+  duration_sec: number;
+  metrics: Record<string, unknown>;
+  created_at: string;
+}
+```
+
 ## Fonctionnalités actuellement implémentées
 
 ### Authentification
