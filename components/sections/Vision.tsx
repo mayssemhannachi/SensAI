@@ -20,7 +20,8 @@ export default function Vision() {
         </svg>
       </div>
 
-      <Sticker name="kawaii_14" size={80} className="top-16 left-6 opacity-40" />
+      <Sticker name="cosmic_35" size={80} className="top-12 -left-2 md:left-4 opacity-40" />
+      <Sticker name="cosmic_11" size={70} className="-bottom-2 left-2 md:left-8 opacity-50" />
       <Sticker name="cosmic_23" size={64} className="bottom-24 right-4 opacity-55" />
 
       <div className="max-w-6xl mx-auto relative z-10">
@@ -62,7 +63,7 @@ export default function Vision() {
           <div className="lg:col-span-4 flex justify-center relative z-10">
             <div className="relative w-full max-w-[340px] hover:scale-[1.01] transition-transform">
               <Image 
-                src="/Assets/Landing Page/vision-photo-bg.png" 
+                src="/Assets/Landing Page/enjoysection.png" 
                 alt="Enfant célébrant ses progrès avec les bras levés" 
                 width={380} 
                 height={380} 

@@ -50,7 +50,7 @@ export default function HomeOrClinic() {
           <div className="lg:col-span-6 flex justify-center">
             <div className="w-full max-w-lg hover:scale-[1.01] transition-transform">
               <Image 
-                src="/Assets/Landing Page/hardware-setup.png" 
+                src="/Assets/Landing Page/hardware.png" 
                 alt="Installation matériel : Caméra + Écran = SensAI" 
                 width={600} 
                 height={350} 

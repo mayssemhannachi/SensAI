@@ -43,9 +43,9 @@ export default function Navbar() {
 
         {/* Sign In Button */}
         <div className="flex items-center">
-          <button className="bg-[#18212F] hover:bg-slate-900 text-white px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all shadow-xs hover:shadow-md">
+          <Link href="/login" className="bg-[#18212F] hover:bg-slate-900 text-white px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all shadow-xs hover:shadow-md">
             Se connecter
-          </button>
+          </Link>
         </div>
       </div>
     </header>

@@ -5,7 +5,7 @@ export default function FinalCTA() {
   return (
     <>
       {/* SVG Cloud divider — fill exactly matches the section background */}
-      <div className="w-full relative z-20 -mb-[1px] pointer-events-none mt-10">
+      <div className="w-full relative z-20 -mb-[1px] pointer-events-none bg-[#FAFAF9]">
         <svg viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[80px] sm:h-[100px] block">
           <path
             d="M0,100 L0,50 C60,20 120,75 200,45 C270,18 330,70 420,42 C500,16 560,68 660,40 C750,14 810,65 910,40 C1000,17 1060,66 1160,42 C1250,18 1320,68 1400,45 L1440,48 L1440,100 Z"
