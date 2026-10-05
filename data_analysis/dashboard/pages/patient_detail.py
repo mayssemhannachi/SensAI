@@ -7,6 +7,7 @@ from dashboard.components.charts import (
     success_rate_chart,
 )
 from dashboard.components.kpi_cards import display_kpi_row
+from dashboard.utils.api_client import api_mode_enabled
 from dashboard.utils.data import (
     load_consultations,
     load_patients,
@@ -109,12 +110,15 @@ def show_patient_detail():
 
         st.caption("Date de naissance")
 
-        birth_date = patient_record.get("date_of_birth")
-
-        if pd.notna(birth_date):
-            st.write(str(birth_date)[:10])
+        if api_mode_enabled():
+            age = patient_record.get("age")
+            st.write(f"{int(age)} ans" if pd.notna(age) else "Non disponible")
         else:
-            st.write("Non disponible")
+            birth_date = patient_record.get("date_of_birth")
+            if pd.notna(birth_date):
+                st.write(str(birth_date)[:10])
+            else:
+                st.write("Non disponible")
 
     with col3:
 
@@ -145,7 +149,10 @@ def show_patient_detail():
                 if pd.notna(diagnosis_value):
                     diagnosis = str(diagnosis_value).strip()
 
-        st.write(diagnosis or "Aucun diagnostic renseigné")
+        if api_mode_enabled():
+            st.write("Lecture indisponible via l’API")
+        else:
+            st.write(diagnosis or "Aucun diagnostic renseigné")
 
     with col4:
 
@@ -158,32 +165,38 @@ def show_patient_detail():
             else "Non disponible"
         )
 
-    with st.expander("Ajouter ou modifier le diagnostic"):
-        with st.form(f"diagnosis_form_{selected_id}"):
-            diagnosis_input = st.text_area(
-                "Diagnostic",
-                value=diagnosis,
-                placeholder="Saisissez le diagnostic du patient…",
-            )
-            diagnosis_submitted = st.form_submit_button(
-                "Enregistrer le diagnostic",
-                type="primary",
-            )
-
-        if diagnosis_submitted:
-            try:
-                therapist_id = patient_record.get("therapist_id")
-                if pd.isna(therapist_id):
-                    therapist_id = None
-                save_patient_diagnosis(
-                    patient_id=selected_id,
-                    diagnosis=diagnosis_input,
-                    therapist_id=therapist_id,
+    if api_mode_enabled():
+        st.info(
+            "Le backend permet d’ajouter une consultation, mais ne fournit pas encore "
+            "de route pour relire les consultations et diagnostics."
+        )
+    else:
+        with st.expander("Ajouter ou modifier le diagnostic"):
+            with st.form(f"diagnosis_form_{selected_id}"):
+                diagnosis_input = st.text_area(
+                    "Diagnostic",
+                    value=diagnosis,
+                    placeholder="Saisissez le diagnostic du patient…",
                 )
-                st.session_state["diagnosis_saved_patient_id"] = selected_id
-                st.rerun()
-            except (OSError, ValueError) as error:
-                st.error(f"Impossible d’enregistrer le diagnostic : {error}")
+                diagnosis_submitted = st.form_submit_button(
+                    "Enregistrer le diagnostic",
+                    type="primary",
+                )
+
+            if diagnosis_submitted:
+                try:
+                    therapist_id = patient_record.get("therapist_id")
+                    if pd.isna(therapist_id):
+                        therapist_id = None
+                    save_patient_diagnosis(
+                        patient_id=selected_id,
+                        diagnosis=diagnosis_input,
+                        therapist_id=therapist_id,
+                    )
+                    st.session_state["diagnosis_saved_patient_id"] = selected_id
+                    st.rerun()
+                except (OSError, ValueError) as error:
+                    st.error(f"Impossible d’enregistrer le diagnostic : {error}")
 
     if patient_data.empty:
         st.info("Aucune séance enregistrée pour ce patient.")
@@ -206,7 +219,11 @@ def show_patient_detail():
     display_kpi_row([
         {
             "title": "Niveau actuel",
-            "value": f"Niveau {int(latest['level_number'])}"
+            "value": (
+                f"Niveau {int(latest['level_number'])}"
+                if pd.notna(latest["level_number"])
+                else "—"
+            )
         },
         {
             "title": "Score récent",

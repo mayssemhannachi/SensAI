@@ -1,10 +1,12 @@
 import streamlit as st
 
+from dashboard.utils.api_client import ApiError, ApiPartialSuccessError, api_mode_enabled
 from dashboard.utils.data import save_patient
 from dashboard.utils.theme import render_html
 
 
 def show_add_patient():
+    backend_mode = api_mode_enabled()
 
     render_html(
         """
@@ -63,23 +65,34 @@ def show_add_patient():
                 placeholder="Ex : Ben Ali",
             )
 
-        col1, col2 = st.columns(
-            2,
-            gap="large",
-        )
-
-        with col1:
-
-            date_of_birth = st.date_input(
-                "Date de naissance *"
+        if backend_mode:
+            age = st.number_input(
+                "Âge *",
+                min_value=0,
+                max_value=18,
+                value=8,
+                step=1,
+            )
+            date_of_birth = None
+            patient_code = None
+            st.caption("Le backend génère automatiquement le code patient.")
+        else:
+            col1, col2 = st.columns(
+                2,
+                gap="large",
             )
 
-        with col2:
+            with col1:
+                date_of_birth = st.date_input(
+                    "Date de naissance *"
+                )
 
-            patient_code = st.text_input(
-                "Code patient *",
-                placeholder="Ex : KID-2026-001",
-            )
+            with col2:
+                patient_code = st.text_input(
+                    "Code patient *",
+                    placeholder="Ex : KID-2026-001",
+                )
+            age = None
 
         render_html(
             """
@@ -122,7 +135,7 @@ def show_add_patient():
                 "Le nom est obligatoire."
             )
 
-        if not patient_code.strip():
+        if not backend_mode and not patient_code.strip():
             errors.append(
                 "Le code patient est obligatoire."
             )
@@ -142,13 +155,40 @@ def show_add_patient():
                 date_of_birth=date_of_birth,
                 patient_code=patient_code,
                 diagnosis=diagnosis,
+                age=age,
             )
 
-            st.success(
-                f"Patient créé avec succès. ID : {patient_id}"
-            )
+            if backend_mode:
+                st.success(
+                    "Patient enregistré dans le backend. "
+                    f"ID : {patient_id['id']} · Code : {patient_id['patient_code']}"
+                )
+            else:
+                st.success(
+                    f"Patient créé avec succès. ID : {patient_id}"
+                )
 
             st.balloons()
+
+        except ApiPartialSuccessError as error:
+            if error.status_code == 401:
+                st.session_state.pop("api_access_token", None)
+                st.session_state["api_auth_notice"] = (
+                    f"{error} Patient déjà créé : ID {error.patient.get('id')} · "
+                    f"code {error.patient.get('patient_code')}"
+                )
+                st.rerun()
+            st.warning(
+                f"{error} Le patient reste bien enregistré : "
+                f"ID {error.patient.get('id')} · code {error.patient.get('patient_code')}"
+            )
+
+        except ApiError as error:
+            if error.status_code == 401:
+                st.session_state.pop("api_access_token", None)
+                st.session_state["api_auth_notice"] = str(error)
+                st.rerun()
+            st.error(f"Erreur backend : {error}")
 
         except ValueError as error:
 

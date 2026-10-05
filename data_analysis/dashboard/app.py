@@ -22,6 +22,7 @@ if str(DATA_ANALYSIS_ROOT) not in sys.path:
 
 import streamlit as st
 
+from dashboard.utils.api_client import ApiError, api_mode_enabled, login as api_login
 from dashboard.utils.theme import apply_theme, render_html
 
 
@@ -62,11 +63,37 @@ if "selected_patient_id" not in st.session_state:
     ] = None
 
 
+if api_mode_enabled() and not st.session_state.get("api_access_token"):
+    st.title("Connexion thérapeute")
+    st.caption("Connectez-vous avec votre compte backend KineKids AI.")
+    auth_notice = st.session_state.pop("api_auth_notice", None)
+    if auth_notice:
+        st.info(auth_notice)
+    with st.form("backend_login_form"):
+        email = st.text_input("Adresse e-mail")
+        password = st.text_input("Mot de passe", type="password")
+        submitted = st.form_submit_button("Se connecter", type="primary")
+
+    if submitted:
+        try:
+            st.session_state["api_access_token"] = api_login(email.strip(), password)
+            st.rerun()
+        except ApiError as error:
+            st.error(str(error))
+    st.stop()
+
+
 # ==========================================================
 # SIDEBAR
 # ==========================================================
 
 with st.sidebar:
+
+    if api_mode_enabled():
+        st.caption("Connecté au backend KineKids AI")
+        if st.button("Se déconnecter", key="backend_logout"):
+            st.session_state.pop("api_access_token", None)
+            st.rerun()
 
     render_html(
         """
@@ -193,38 +220,29 @@ with st.sidebar:
 
 page = st.session_state["page"]
 
+try:
+    if page == "Vue globale":
+        from dashboard.pages.global_view import show_global_view
 
-if page == "Vue globale":
+        show_global_view()
 
-    from dashboard.pages.global_view import (
-        show_global_view,
-    )
+    elif page == "Patients":
+        from dashboard.pages.patients import show_patients
 
-    show_global_view()
+        show_patients()
 
+    elif page == "Fiche patient":
+        from dashboard.pages.patient_detail import show_patient_detail
 
-elif page == "Patients":
+        show_patient_detail()
 
-    from dashboard.pages.patients import (
-        show_patients,
-    )
+    elif page == "Ajouter un patient":
+        from dashboard.pages.add_patient import show_add_patient
 
-    show_patients()
-
-
-elif page == "Fiche patient":
-
-    from dashboard.pages.patient_detail import (
-        show_patient_detail,
-    )
-
-    show_patient_detail()
-
-
-elif page == "Ajouter un patient":
-
-    from dashboard.pages.add_patient import (
-        show_add_patient,
-    )
-
-    show_add_patient()
+        show_add_patient()
+except ApiError as error:
+    if error.status_code == 401:
+        st.session_state.pop("api_access_token", None)
+        st.session_state["api_auth_notice"] = str(error)
+        st.rerun()
+    st.error(str(error))

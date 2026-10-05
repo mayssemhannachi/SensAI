@@ -1,0 +1,501 @@
+id_session,patient_id,first_name,last_name,exercise_id,name,game_id,name_game,level_number,session_date,score,success_rate,repetitions,duration,previous_score,progression,progression_status
+1,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-04-30 15:50:31,60.6,60.2,9,4,,,Première séance
+2,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-05-04 15:00:15,52.5,52.7,9,8,60.6,-13.37,Diminution
+4,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-05-07 15:00:09,63.8,68.7,10,5,52.5,21.52,Amélioration
+6,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-05-12 15:10:22,60.3,59.0,6,4,63.8,-5.49,Diminution
+8,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-05-16 10:45:20,62.7,70.3,11,9,60.3,3.98,Amélioration
+10,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-05-21 15:40:50,61.0,60.4,14,7,62.7,-2.71,Diminution
+13,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-05-25 15:20:30,68.5,72.1,7,4,61.0,12.3,Amélioration
+18,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-05-30 10:15:13,68.9,55.4,10,6,68.5,0.58,Amélioration
+44,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-06-17 15:40:41,65.4,58.3,11,9,68.9,-5.08,Diminution
+60,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-06-20 10:30:31,60.3,60.6,16,10,65.4,-7.8,Diminution
+78,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-06-27 10:00:27,68.2,61.6,13,7,60.3,13.1,Amélioration
+144,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-07-17 15:00:21,72.1,58.6,10,8,68.2,5.72,Amélioration
+166,1,Yasmine,Bouzid,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-07-21 15:30:00,79.5,67.5,11,9,72.1,10.26,Amélioration
+3,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-05-05 15:20:38,47.1,52.7,10,6,,,Première séance
+5,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-05-08 15:20:48,48.7,61.3,13,7,47.1,3.4,Amélioration
+7,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-05-12 15:55:04,57.5,62.4,7,6,48.7,18.07,Amélioration
+9,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-05-18 15:00:36,52.9,55.8,9,6,57.5,-8.0,Diminution
+11,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-05-22 15:50:42,50.6,54.7,13,8,52.9,-4.35,Diminution
+16,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-05-28 15:50:49,48.6,54.6,8,7,50.6,-3.95,Diminution
+39,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-15 15:30:51,58.1,54.2,8,5,48.6,19.55,Amélioration
+56,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-20 10:00:32,63.3,67.2,10,3,58.1,8.95,Amélioration
+80,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-27 10:45:14,54.1,49.3,8,6,63.3,-14.53,Diminution
+90,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-01 15:00:53,65.7,78.0,18,9,54.1,21.44,Amélioration
+105,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-07 15:50:21,61.6,60.2,9,7,65.7,-6.24,Diminution
+126,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-13 15:10:20,65.1,65.8,14,9,61.6,5.68,Amélioration
+145,1,Yasmine,Bouzid,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-17 15:55:17,68.2,62.0,9,3,65.1,4.76,Amélioration
+101,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-04 10:15:37,57.4,57.3,7,5,,,Première séance
+121,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-11 10:15:52,55.7,55.2,9,5,57.4,-2.96,Diminution
+136,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-16 15:20:56,58.2,55.5,13,6,55.7,4.49,Amélioration
+151,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-18 10:15:14,51.3,57.0,15,8,58.2,-11.86,Diminution
+175,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-23 15:20:37,65.9,68.1,16,8,51.3,28.46,Amélioration
+195,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-28 15:50:36,53.0,54.7,5,3,65.9,-19.58,Diminution
+300,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-15 10:30:57,55.7,57.6,15,7,53.0,5.09,Amélioration
+329,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-21 15:40:44,54.3,43.3,14,8,55.7,-2.51,Diminution
+347,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-24 15:20:57,57.8,59.9,11,8,54.3,6.45,Amélioration
+389,2,Amira,Jebali,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-29 10:15:09,57.6,55.6,18,9,57.8,-0.35,Diminution
+65,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-23 15:40:41,45.8,57.8,12,7,,,Première séance
+83,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-27 10:45:44,50.0,48.8,9,7,45.8,9.17,Amélioration
+96,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-03 15:00:38,56.7,67.7,15,9,50.0,13.4,Amélioration
+111,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-09 15:50:54,51.4,47.0,11,8,56.7,-9.35,Diminution
+129,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-14 15:20:38,51.1,53.3,12,9,51.4,-0.58,Diminution
+158,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-18 10:45:29,50.7,52.8,10,6,51.1,-0.78,Diminution
+189,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-25 10:45:51,56.0,57.3,15,10,50.7,10.45,Amélioration
+204,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-31 15:10:58,58.5,54.7,11,6,56.0,4.46,Amélioration
+234,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-05 15:10:04,54.9,60.7,11,5,58.5,-6.15,Diminution
+255,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-08 10:15:00,51.2,60.3,13,8,54.9,-6.74,Diminution
+293,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-15 10:00:13,58.3,47.0,15,8,51.2,13.87,Amélioration
+313,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-18 15:00:45,64.6,70.1,13,8,58.3,10.81,Amélioration
+328,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-21 15:00:49,49.5,57.3,14,8,64.6,-23.37,Diminution
+368,2,Amira,Jebali,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-27 15:50:59,53.0,58.5,12,6,49.5,7.07,Amélioration
+308,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-08-17 15:00:45,63.3,52.2,16,8,,,Première séance
+326,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-08-20 15:40:36,62.2,58.2,16,7,63.3,-1.74,Diminution
+343,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-08-22 10:30:49,55.6,64.0,16,8,62.2,-10.61,Diminution
+374,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-08-28 15:10:39,62.9,59.7,16,10,55.6,13.13,Amélioration
+407,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-09-01 15:30:06,62.8,63.3,14,6,62.9,-0.16,Diminution
+417,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-09-03 15:40:29,60.9,62.8,14,7,62.8,-3.03,Diminution
+436,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-09-05 10:15:43,61.4,60.2,16,9,60.9,0.82,Amélioration
+447,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-09-08 15:00:27,72.6,74.8,16,8,61.4,18.24,Amélioration
+464,3,Fatma,Tlili,4,Seated Knee Extension,2,Step Quest,3,2026-09-10 15:20:45,60.1,59.8,18,11,72.6,-17.22,Diminution
+159,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-07-18 10:45:49,48.0,57.6,16,7,,,Première séance
+169,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-07-22 15:40:31,60.3,63.4,20,10,48.0,25.62,Amélioration
+185,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-07-25 10:00:56,56.0,57.1,15,8,60.3,-7.13,Diminution
+193,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-07-28 15:30:01,64.1,64.8,19,10,56.0,14.46,Amélioration
+217,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-08-01 10:30:35,52.9,52.7,19,11,64.1,-17.47,Diminution
+235,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-08-05 15:50:19,65.8,71.9,17,9,52.9,24.39,Amélioration
+244,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-08-07 15:50:04,50.1,47.3,17,9,65.8,-23.86,Diminution
+265,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-08-10 15:30:00,47.2,53.0,26,14,50.1,-5.79,Diminution
+276,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-08-12 15:30:10,50.4,60.6,19,10,47.2,6.78,Amélioration
+302,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-08-15 10:45:30,50.6,48.3,19,12,50.4,0.4,Amélioration
+443,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-09-05 11:15:24,55.3,52.6,15,8,50.6,9.29,Amélioration
+450,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-09-08 15:40:30,56.9,66.3,21,11,55.3,2.89,Amélioration
+462,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-09-10 15:00:06,57.9,63.6,16,10,56.9,1.76,Amélioration
+473,3,Fatma,Tlili,6,Step Up,2,Step Quest,2,2026-09-12 10:00:55,56.9,63.3,17,11,57.9,-1.73,Diminution
+12,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-05-23 10:45:44,49.5,55.2,16,6,,,Première séance
+25,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-08 15:20:54,55.8,66.9,19,7,49.5,12.73,Amélioration
+27,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-10 15:50:05,41.8,40.0,17,9,55.8,-25.09,Diminution
+34,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-12 15:10:00,55.5,55.1,20,11,41.8,32.78,Amélioration
+38,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-15 15:00:19,53.6,57.8,22,11,55.5,-3.42,Diminution
+49,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-19 15:40:01,51.2,64.8,22,9,53.6,-4.48,Diminution
+59,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-20 10:15:19,51.4,56.0,16,8,51.2,0.39,Amélioration
+64,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-23 15:00:44,56.3,60.4,23,12,51.4,9.53,Amélioration
+77,3,Fatma,Tlili,8,Forearm Rotation,3,Wrist Wizard,1,2026-06-27 10:00:26,56.6,62.9,18,8,56.3,0.53,Amélioration
+132,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-14 17:00:19,52.3,48.2,14,7,,,Première séance
+140,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-16 17:10:57,51.1,57.1,15,7,52.3,-2.29,Diminution
+161,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-18 11:30:19,56.3,55.5,18,11,51.1,10.18,Amélioration
+164,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-20 17:20:36,60.3,61.1,19,10,56.3,7.1,Amélioration
+221,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-01 11:15:14,54.0,62.0,14,7,60.3,-10.45,Diminution
+231,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-04 17:20:24,48.3,51.1,16,9,54.0,-10.56,Diminution
+248,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-07 17:40:36,60.1,52.2,21,11,48.3,24.43,Amélioration
+257,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-08 10:15:33,50.9,52.4,16,6,60.1,-15.31,Diminution
+281,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-12 17:40:31,58.4,53.2,20,10,50.9,14.73,Amélioration
+289,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-14 17:20:38,57.4,64.2,15,7,58.4,-1.71,Diminution
+294,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-15 10:00:18,65.3,53.8,16,11,57.4,13.76,Amélioration
+422,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-09-03 17:40:44,58.9,64.2,17,10,65.3,-9.8,Diminution
+439,4,Malek,Hamdi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-09-05 10:30:26,51.2,59.8,17,9,58.9,-13.07,Diminution
+141,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-07-16 17:40:28,45.4,49.4,17,9,,,Première séance
+156,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-07-18 10:30:51,39.3,43.8,12,6,45.4,-13.44,Diminution
+173,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-07-22 17:40:43,54.0,55.8,18,10,39.3,37.4,Amélioration
+182,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-07-25 10:00:08,50.9,56.7,16,10,54.0,-5.74,Diminution
+202,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-07-29 17:30:19,50.8,57.1,15,9,50.9,-0.2,Diminution
+220,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-08-01 10:45:23,56.1,52.4,15,7,50.8,10.43,Amélioration
+230,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-08-04 17:00:33,55.9,52.9,16,8,56.1,-0.36,Diminution
+340,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-08-22 10:15:48,58.5,57.9,20,10,55.9,4.65,Amélioration
+359,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-08-25 17:40:52,56.0,54.3,21,9,58.5,-4.27,Diminution
+381,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-08-28 17:30:53,61.3,58.6,17,7,56.0,9.46,Amélioration
+385,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-08-29 10:00:09,58.6,56.9,14,9,61.3,-4.4,Diminution
+412,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-09-01 17:00:53,59.6,65.7,18,7,58.6,1.71,Amélioration
+431,4,Malek,Hamdi,8,Forearm Rotation,3,Wrist Wizard,1,2026-09-04 17:50:18,60.7,49.6,26,11,59.6,1.85,Amélioration
+190,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-07-27 15:20:34,38.5,45.2,12,8,,,Première séance
+218,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-01 10:45:01,44.8,52.9,9,5,38.5,16.36,Amélioration
+227,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-04 15:50:41,55.2,48.1,18,10,44.8,23.21,Amélioration
+238,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-06 15:00:53,47.1,51.6,14,9,55.2,-14.67,Diminution
+254,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-08 10:00:38,60.5,58.0,13,7,47.1,28.45,Amélioration
+287,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-14 15:40:14,54.1,57.7,7,5,60.5,-10.58,Diminution
+307,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-17 15:00:16,52.8,53.0,14,7,54.1,-2.4,Diminution
+330,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-21 15:50:04,51.6,55.7,18,9,52.8,-2.27,Diminution
+354,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-25 15:30:38,55.7,62.5,20,11,51.6,7.95,Amélioration
+376,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-28 15:50:46,59.5,57.1,11,6,55.7,6.82,Amélioration
+399,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-31 15:20:37,66.1,66.4,14,7,59.5,11.09,Amélioration
+424,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-04 15:00:20,58.1,57.6,10,6,66.1,-12.1,Diminution
+433,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-05 10:15:32,62.9,57.0,12,6,58.1,8.26,Amélioration
+463,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-10 15:20:36,53.6,55.3,14,9,62.9,-14.79,Diminution
+483,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-16 15:40:05,60.7,58.6,10,4,53.6,13.25,Amélioration
+499,5,Zied,Gharbi,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-21 15:40:59,59.4,63.5,11,8,60.7,-2.14,Diminution
+205,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-07-31 15:40:59,47.4,58.8,18,12,,,Première séance
+228,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-04 16:35:29,44.5,55.9,14,8,47.4,-6.12,Diminution
+243,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-07 15:20:03,48.4,51.3,11,7,44.5,8.76,Amélioration
+266,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-10 15:30:22,58.8,55.9,14,8,48.4,21.49,Amélioration
+292,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-15 10:00:05,47.8,49.8,10,6,58.8,-18.71,Diminution
+319,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-19 15:30:42,57.6,59.9,11,6,47.8,20.5,Amélioration
+344,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-22 10:45:07,58.6,68.0,15,8,57.6,1.74,Amélioration
+375,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-28 15:30:09,60.7,59.8,14,10,58.6,3.58,Amélioration
+406,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-01 15:20:00,65.3,59.7,17,9,60.7,7.58,Amélioration
+442,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-05 11:15:14,67.6,77.8,19,10,65.3,3.52,Amélioration
+448,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-08 15:00:57,71.8,72.5,15,10,67.6,6.21,Amélioration
+481,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-15 15:00:59,71.4,74.9,17,9,71.8,-0.56,Diminution
+492,5,Zied,Gharbi,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-19 10:00:58,73.0,71.5,14,8,71.4,2.24,Amélioration
+119,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-07-11 10:15:19,42.7,47.7,11,7,,,Première séance
+135,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-07-16 15:20:53,55.4,63.1,15,7,42.7,29.74,Amélioration
+162,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-07-20 15:10:30,58.6,53.9,13,7,55.4,5.78,Amélioration
+174,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-07-23 15:10:42,54.3,47.5,13,7,58.6,-7.34,Diminution
+187,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-07-25 10:15:21,66.1,68.6,13,8,54.3,21.73,Amélioration
+194,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-07-28 15:30:28,67.2,69.2,11,7,66.1,1.66,Amélioration
+222,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-08-01 11:30:56,63.5,58.3,9,5,67.2,-5.51,Diminution
+246,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-08-07 16:15:02,65.7,55.1,13,6,63.5,3.46,Amélioration
+262,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-08-08 10:30:45,70.7,70.3,14,9,65.7,7.61,Amélioration
+275,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-08-12 15:00:01,68.6,64.5,16,8,70.7,-2.97,Diminution
+378,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-08-28 16:15:56,71.1,68.8,18,8,68.6,3.64,Amélioration
+386,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-08-29 10:00:10,73.7,77.2,16,8,71.1,3.66,Amélioration
+497,5,Zied,Gharbi,5,Mini Squat,2,Step Quest,3,2026-09-19 11:00:59,73.9,69.6,12,8,73.7,0.27,Amélioration
+124,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-07-11 10:30:32,44.9,45.3,9,6,,,Première séance
+142,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-07-16 17:40:44,39.3,36.2,12,6,44.9,-12.47,Diminution
+160,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-07-18 11:00:39,45.7,44.2,13,7,39.3,16.28,Amélioration
+179,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-07-24 17:00:10,51.1,50.9,17,9,45.7,11.82,Amélioration
+192,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-07-27 17:00:17,57.8,66.2,14,8,51.1,13.11,Amélioration
+233,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-04 17:30:44,57.4,62.2,13,7,57.8,-0.69,Diminution
+260,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-08 10:30:09,53.2,50.5,17,11,57.4,-7.32,Diminution
+280,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-12 17:20:34,51.8,55.6,14,9,53.2,-2.63,Diminution
+312,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-17 17:40:13,57.5,53.9,15,7,51.8,11.0,Amélioration
+334,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-21 17:30:28,57.1,61.8,16,8,57.5,-0.7,Diminution
+366,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-08-26 17:00:37,56.5,43.7,19,7,57.1,-1.05,Diminution
+410,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-01 17:00:40,52.4,55.0,11,6,56.5,-7.26,Diminution
+430,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-04 17:10:51,68.4,66.7,16,6,52.4,30.53,Amélioration
+457,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-08 18:25:58,59.1,50.8,15,8,68.4,-13.6,Diminution
+472,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-11 18:35:06,69.5,75.1,14,8,59.1,17.6,Amélioration
+489,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-17 18:05:10,59.5,69.6,16,8,69.5,-14.39,Diminution
+498,6,Eya,Haddad,1,Forward Arm Raise,1,Bubble Reach,3,2026-09-19 11:45:07,61.6,70.6,15,10,59.5,3.53,Amélioration
+98,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-07-03 17:30:44,51.3,59.3,15,8,,,Première séance
+114,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-07-09 17:10:51,51.9,58.9,15,9,51.3,1.17,Amélioration
+180,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-07-24 17:50:04,53.7,58.5,11,6,51.9,3.47,Amélioration
+198,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-07-28 17:45:35,58.2,65.0,13,9,53.7,8.38,Amélioration
+225,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-03 17:40:38,57.8,59.7,14,8,58.2,-0.69,Diminution
+240,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-06 17:30:06,64.2,63.1,16,9,57.8,11.07,Amélioration
+269,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-10 17:40:04,57.1,61.6,12,4,64.2,-11.06,Diminution
+306,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-15 11:30:14,70.7,69.0,18,12,57.1,23.82,Amélioration
+316,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-18 17:00:06,55.9,50.8,16,8,70.7,-20.93,Diminution
+336,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-21 17:50:21,59.2,47.1,15,8,55.9,5.9,Amélioration
+353,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-24 18:35:00,57.1,56.1,12,6,59.2,-3.55,Diminution
+382,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-08-28 17:40:59,60.0,53.3,12,6,57.1,5.08,Amélioration
+415,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-02 17:40:24,60.9,52.8,12,9,60.0,1.5,Amélioration
+456,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-08 17:30:57,69.6,62.9,16,8,60.9,14.29,Amélioration
+479,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-12 11:30:25,69.5,61.9,16,8,69.6,-0.14,Diminution
+490,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-17 18:25:53,72.1,70.1,18,11,69.5,3.74,Amélioration
+491,6,Eya,Haddad,2,Lateral Arm Raise,1,Bubble Reach,3,2026-09-19 09:30:52,70.7,72.8,15,6,72.1,-1.94,Diminution
+149,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-07-17 17:50:59,44.0,51.8,14,8,,,Première séance
+155,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-07-18 10:30:43,45.1,46.4,15,7,44.0,2.5,Amélioration
+184,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-07-25 10:00:52,43.2,40.7,16,5,45.1,-4.21,Diminution
+197,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-07-28 17:10:31,47.0,52.5,14,5,43.2,8.8,Amélioration
+214,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-08-01 10:15:12,53.6,54.2,14,8,47.0,14.04,Amélioration
+297,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-08-15 10:30:05,60.8,57.6,17,9,53.6,13.43,Amélioration
+327,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-08-20 17:50:57,59.3,61.0,18,9,60.8,-2.47,Diminution
+352,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-08-24 17:40:13,58.8,57.2,12,9,59.3,-0.84,Diminution
+369,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-08-27 17:00:56,52.9,59.9,13,7,58.8,-10.03,Diminution
+404,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-08-31 17:50:39,61.8,57.7,18,7,52.9,16.82,Amélioration
+441,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-09-05 10:45:44,51.6,55.8,18,7,61.8,-16.5,Diminution
+460,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-09-09 17:10:20,60.8,72.4,16,6,51.6,17.83,Amélioration
+475,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-09-12 10:30:50,61.8,66.5,12,8,60.8,1.64,Amélioration
+488,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-09-17 17:30:10,57.0,50.3,16,8,61.8,-7.77,Diminution
+493,6,Eya,Haddad,5,Mini Squat,2,Step Quest,2,2026-09-19 10:15:43,71.6,68.2,18,10,57.0,25.61,Amélioration
+75,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-06-25 17:50:08,49.5,49.8,12,6,,,Première séance
+88,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-06-30 17:50:09,55.5,57.7,9,4,49.5,12.12,Amélioration
+102,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-07-04 10:15:59,54.3,47.0,17,11,55.5,-2.16,Diminution
+115,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-07-09 17:40:51,64.9,63.8,14,7,54.3,19.52,Amélioration
+208,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-07-31 17:00:11,62.2,63.2,15,6,64.9,-4.16,Diminution
+249,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-08-07 17:50:20,62.6,54.2,16,8,62.2,0.64,Amélioration
+283,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-08-13 17:20:13,63.2,65.5,17,8,62.6,0.96,Amélioration
+305,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-08-15 11:00:20,64.9,68.8,16,7,63.2,2.69,Amélioration
+324,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-08-19 17:40:44,65.2,66.9,16,8,64.9,0.46,Amélioration
+338,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-08-22 10:15:01,66.3,69.9,16,9,65.2,1.69,Amélioration
+372,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-08-27 17:45:24,73.1,76.6,17,7,66.3,10.26,Amélioration
+384,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-08-29 10:00:07,73.9,65.6,13,8,73.1,1.09,Amélioration
+423,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-09-03 17:50:22,70.7,67.3,15,7,73.9,-4.33,Diminution
+446,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-09-07 17:50:48,68.4,56.1,14,7,70.7,-3.25,Diminution
+470,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-09-11 17:30:17,75.0,66.9,21,11,68.4,9.65,Amélioration
+484,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-09-16 17:40:15,71.6,72.0,17,10,75.0,-4.53,Diminution
+494,6,Eya,Haddad,6,Step Up,2,Step Quest,3,2026-09-19 10:45:27,76.0,80.2,15,7,71.6,6.15,Amélioration
+36,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-06-12 17:00:44,42.4,44.9,15,7,,,Première séance
+54,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-06-19 18:25:28,47.6,43.5,14,7,42.4,12.26,Amélioration
+72,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-06-24 18:35:11,60.8,53.7,16,10,47.6,27.73,Amélioration
+92,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-01 17:50:50,53.6,54.5,14,8,60.8,-11.84,Diminution
+109,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-07 17:45:19,54.9,52.6,13,8,53.6,2.43,Amélioration
+128,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-13 17:20:49,51.4,56.8,9,5,54.9,-6.38,Diminution
+152,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-18 10:30:29,48.2,52.5,13,6,51.4,-6.23,Diminution
+172,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-22 17:20:34,57.5,59.1,14,10,48.2,19.29,Amélioration
+199,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-28 17:50:41,53.4,59.0,14,12,57.5,-7.13,Diminution
+210,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-31 17:40:53,61.4,66.3,15,9,53.4,14.98,Amélioration
+237,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-05 17:00:03,55.7,48.9,17,10,61.4,-9.28,Diminution
+270,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-10 17:50:50,53.0,68.5,16,9,55.7,-4.85,Diminution
+291,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-14 17:50:51,59.1,60.4,13,8,53.0,11.51,Amélioration
+317,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-18 17:10:30,58.8,63.7,16,8,59.1,-0.51,Diminution
+332,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-21 17:00:41,64.1,62.1,13,6,58.8,9.01,Amélioration
+371,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-27 17:40:24,61.4,58.7,12,6,64.1,-4.21,Diminution
+411,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-09-01 17:00:43,59.1,56.1,18,11,61.4,-3.75,Diminution
+435,7,Yassine,Sassi,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-09-05 10:15:34,62.5,61.7,16,9,59.1,5.75,Amélioration
+52,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-19 17:30:00,46.4,43.4,10,5,,,Première séance
+71,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-24 17:50:41,55.7,65.6,11,7,46.4,20.04,Amélioration
+82,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-27 10:45:42,47.4,45.6,16,7,55.7,-14.9,Diminution
+95,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-02 17:30:14,56.7,58.7,15,6,47.4,19.62,Amélioration
+108,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-07 17:00:01,63.5,74.2,11,7,56.7,11.99,Amélioration
+120,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-11 10:15:39,65.5,65.3,11,9,63.5,3.15,Amélioration
+148,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-17 17:20:15,59.3,59.7,9,6,65.5,-9.47,Diminution
+215,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-01 10:15:33,68.5,58.7,13,9,59.3,15.51,Amélioration
+258,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-08 10:15:37,58.8,56.7,8,6,68.5,-14.16,Diminution
+285,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-13 17:40:17,68.9,61.3,14,11,58.8,17.18,Amélioration
+323,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-19 17:40:42,61.1,55.5,12,8,68.9,-11.32,Diminution
+367,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-26 17:30:21,65.8,61.7,16,9,61.1,7.69,Amélioration
+402,7,Yassine,Sassi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-31 17:10:17,70.3,71.0,18,10,65.8,6.84,Amélioration
+69,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-24 16:40:30,54.3,59.4,8,4,,,Première séance
+86,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-06-30 16:50:21,57.3,66.8,16,9,54.3,5.52,Amélioration
+137,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-16 16:10:25,59.4,55.7,13,9,57.3,3.66,Amélioration
+167,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-21 16:10:55,65.2,72.6,11,5,59.4,9.76,Amélioration
+181,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-25 10:00:06,62.8,64.5,12,7,65.2,-3.68,Diminution
+203,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-30 16:00:53,68.4,61.9,9,5,62.8,8.92,Amélioration
+216,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-01 10:15:49,62.2,57.5,15,11,68.4,-9.06,Diminution
+350,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-24 16:50:18,59.9,68.0,10,8,62.2,-3.7,Diminution
+392,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-29 10:30:11,61.8,64.0,11,6,59.9,3.17,Amélioration
+421,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-03 16:50:17,70.5,82.6,12,4,61.8,14.08,Amélioration
+465,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-10 16:00:23,68.6,60.1,12,6,70.5,-2.7,Diminution
+480,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-14 16:20:40,70.0,57.8,11,4,68.6,2.04,Amélioration
+496,8,Hiba,Khelifi,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-19 10:45:56,72.5,65.3,12,6,70.0,3.57,Amélioration
+122,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-07-11 10:30:13,49.5,48.2,6,4,,,Première séance
+133,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-07-14 17:20:34,50.5,61.0,7,6,49.5,2.02,Amélioration
+165,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-07-20 17:30:10,49.0,49.7,9,6,50.5,-2.97,Diminution
+177,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-07-23 17:20:26,48.8,48.2,9,6,49.0,-0.41,Diminution
+196,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-07-28 17:00:30,54.0,52.8,11,7,48.8,10.66,Amélioration
+211,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-07-31 17:40:57,51.7,59.8,10,6,54.0,-4.26,Diminution
+232,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-08-04 17:30:18,54.7,51.7,9,6,51.7,5.8,Amélioration
+250,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-08-08 10:00:06,63.4,58.7,7,4,54.7,15.9,Amélioration
+290,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-08-14 17:40:45,56.6,54.1,10,7,63.4,-10.73,Diminution
+337,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-08-21 17:55:01,57.2,59.2,10,6,56.6,1.06,Amélioration
+380,9,Adam,Mejri,5,Mini Squat,2,Step Quest,2,2026-08-28 17:30:14,65.5,60.8,11,6,57.2,14.51,Amélioration
+32,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-06-11 17:20:05,44.1,53.6,10,5,,,Première séance
+37,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-06-13 10:15:12,51.9,44.0,6,4,44.1,17.69,Amélioration
+48,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-06-18 17:30:31,49.0,48.2,8,6,51.9,-5.59,Diminution
+67,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-06-23 17:00:53,55.3,54.5,7,6,49.0,12.86,Amélioration
+89,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-06-30 17:50:11,51.9,45.2,12,9,55.3,-6.15,Diminution
+99,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-07-04 10:00:46,51.9,61.8,10,8,51.9,0.0,Stable
+116,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-07-10 17:00:38,57.2,49.9,6,5,51.9,10.21,Amélioration
+213,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-08-01 10:15:08,60.2,61.9,12,6,57.2,5.24,Amélioration
+247,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-08-07 17:00:49,59.3,60.6,7,3,60.2,-1.5,Diminution
+274,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-08-11 17:30:29,63.3,66.3,9,7,59.3,6.75,Amélioration
+299,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-08-15 10:30:49,59.3,69.5,7,5,63.3,-6.32,Diminution
+333,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-08-21 17:10:03,61.4,64.3,16,12,59.3,3.54,Amélioration
+351,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-08-24 17:20:32,57.4,63.8,11,5,61.4,-6.51,Diminution
+394,9,Adam,Mejri,6,Step Up,2,Step Quest,3,2026-08-29 10:30:26,55.7,50.2,15,7,57.4,-2.96,Diminution
+46,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-06-17 17:20:54,45.8,49.6,9,6,,,Première séance
+53,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-06-19 17:50:36,52.0,44.8,8,7,45.8,13.54,Amélioration
+63,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-06-22 17:00:41,56.8,42.8,11,4,52.0,9.23,Amélioration
+74,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-06-25 17:30:47,57.2,61.8,5,3,56.8,0.7,Amélioration
+87,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-06-30 17:00:20,62.3,61.1,8,7,57.2,8.92,Amélioration
+143,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-07-16 17:50:29,56.3,50.5,12,10,62.3,-9.63,Diminution
+157,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-07-18 10:45:27,55.6,58.2,12,6,56.3,-1.24,Diminution
+171,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-07-22 17:00:16,60.3,66.5,13,8,55.6,8.45,Amélioration
+183,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-07-25 10:00:18,60.9,67.2,7,6,60.3,1.0,Amélioration
+209,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-07-31 17:10:36,53.4,49.9,10,4,60.9,-12.32,Diminution
+226,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-08-03 17:50:35,66.5,62.3,13,9,53.4,24.53,Amélioration
+259,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-08-08 10:15:47,63.1,69.8,16,8,66.5,-5.11,Diminution
+267,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-08-10 17:00:21,64.8,60.0,9,6,63.1,2.69,Amélioration
+304,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-08-15 11:00:06,64.7,64.3,7,4,64.8,-0.15,Diminution
+322,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-08-19 17:30:04,63.9,55.7,15,7,64.7,-1.24,Diminution
+461,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-09-09 17:20:22,74.7,70.9,14,8,63.9,16.9,Amélioration
+471,10,Maya,Trabelsi,4,Seated Knee Extension,2,Step Quest,3,2026-09-11 17:50:33,72.4,66.3,12,7,74.7,-3.08,Diminution
+241,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-06 17:50:00,50.1,52.6,8,4,,,Première séance
+268,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-10 17:20:55,53.7,50.5,10,6,50.1,7.19,Amélioration
+284,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-13 17:40:05,54.6,52.2,9,5,53.7,1.68,Amélioration
+296,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-15 10:15:47,69.9,61.0,9,6,54.6,28.02,Amélioration
+335,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-21 17:40:58,62.7,49.9,7,7,69.9,-10.3,Diminution
+360,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-25 17:50:31,64.1,54.3,9,6,62.7,2.23,Amélioration
+373,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-27 17:50:05,68.2,67.2,14,8,64.1,6.4,Amélioration
+393,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-08-29 10:30:23,72.4,73.8,12,8,68.2,6.16,Amélioration
+413,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-09-01 17:50:25,60.3,56.7,17,10,72.4,-16.71,Diminution
+440,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-09-05 10:45:12,65.5,69.9,12,6,60.3,8.62,Amélioration
+467,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-09-10 17:40:51,59.5,64.3,7,6,65.5,-9.16,Diminution
+474,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-09-12 10:15:37,62.8,56.8,14,8,59.5,5.55,Amélioration
+487,10,Maya,Trabelsi,6,Step Up,2,Step Quest,2,2026-09-17 17:20:28,63.6,65.3,11,8,62.8,1.27,Amélioration
+15,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-05-27 16:30:20,52.2,53.2,16,6,,,Première séance
+19,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-05-30 10:45:54,53.3,51.3,20,13,52.2,2.11,Amélioration
+20,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-02 16:50:43,51.0,60.4,12,7,53.3,-4.32,Diminution
+23,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-06 10:30:38,51.4,46.6,14,7,51.0,0.78,Amélioration
+31,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-11 16:50:03,56.3,56.1,12,8,51.4,9.53,Amélioration
+41,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-15 16:50:56,58.7,51.9,18,9,56.3,4.26,Amélioration
+47,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-18 16:20:08,60.5,61.1,15,10,58.7,3.07,Amélioration
+61,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-20 10:30:43,62.8,59.8,14,9,60.5,3.8,Amélioration
+62,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-22 16:00:38,51.3,48.5,11,7,62.8,-18.31,Diminution
+68,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-24 16:10:48,55.3,46.8,18,9,51.3,7.8,Amélioration
+85,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-06-29 16:45:08,51.0,48.1,20,9,55.3,-7.78,Diminution
+93,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-07-02 16:00:58,57.0,54.3,14,6,51.0,11.76,Amélioration
+107,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-07-07 16:30:52,55.7,64.9,16,9,57.0,-2.28,Diminution
+113,11,Sirine,Ben Salah,5,Mini Squat,2,Step Quest,2,2026-07-09 17:05:41,57.1,61.7,17,11,55.7,2.51,Amélioration
+35,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-06-12 16:10:50,54.8,48.3,11,9,,,Première séance
+45,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-06-17 16:00:55,59.2,54.0,13,9,54.8,8.03,Amélioration
+51,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-06-19 16:30:54,53.2,55.4,16,7,59.2,-10.14,Diminution
+66,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-06-23 16:50:44,47.8,51.1,15,9,53.2,-10.15,Diminution
+79,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-06-27 10:30:03,63.4,69.1,16,7,47.8,32.64,Amélioration
+84,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-06-29 16:00:04,58.4,59.4,16,8,63.4,-7.89,Diminution
+91,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-07-01 16:30:20,58.5,48.7,19,7,58.4,0.17,Amélioration
+103,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-07-04 10:30:33,59.1,60.4,14,7,58.5,1.03,Amélioration
+112,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-07-09 16:20:23,61.7,67.4,13,5,59.1,4.4,Amélioration
+118,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-07-11 10:00:44,68.9,70.2,19,10,61.7,11.67,Amélioration
+131,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-07-14 16:40:56,66.5,69.5,17,9,68.9,-3.48,Diminution
+146,11,Sirine,Ben Salah,6,Step Up,2,Step Quest,2,2026-07-17 16:40:19,61.3,53.5,11,6,66.5,-7.82,Diminution
+212,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-08-01 10:00:32,49.1,44.1,11,4,,,Première séance
+242,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-08-07 15:00:51,46.6,53.1,15,9,49.1,-5.09,Diminution
+278,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-08-12 15:50:22,43.8,47.4,16,8,46.6,-6.01,Diminution
+295,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-08-15 10:00:47,43.0,37.8,13,8,43.8,-1.83,Diminution
+331,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-08-21 15:50:04,47.0,54.4,14,8,43.0,9.3,Amélioration
+437,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-09-05 10:15:44,41.6,43.3,13,8,47.0,-11.49,Diminution
+477,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-09-12 10:30:53,49.5,43.9,12,9,41.6,18.99,Amélioration
+482,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-09-15 15:10:28,40.8,48.3,16,9,49.5,-17.58,Diminution
+495,12,Rim,Ayari,1,Forward Arm Raise,1,Bubble Reach,1,2026-09-19 10:45:39,48.0,45.8,18,10,40.8,17.65,Amélioration
+201,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-07-29 15:50:22,48.1,51.9,19,8,,,Première séance
+224,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-03 15:20:43,63.3,53.5,19,10,48.1,31.6,Amélioration
+239,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-06 15:50:58,53.1,55.8,15,11,63.3,-16.11,Diminution
+263,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-08 10:45:51,65.8,63.6,17,9,53.1,23.92,Amélioration
+277,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-12 15:40:45,72.2,60.9,15,9,65.8,9.73,Amélioration
+314,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-18 15:30:24,63.5,57.5,19,12,72.2,-12.05,Diminution
+325,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-20 15:00:58,46.9,50.9,14,8,63.5,-26.14,Diminution
+341,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-22 10:30:08,50.1,57.7,17,11,46.9,6.82,Amélioration
+459,13,Nour,Zouari,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-09-09 15:30:27,65.0,66.9,19,10,50.1,29.74,Amélioration
+256,13,Nour,Zouari,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-08 10:15:20,53.9,62.3,15,8,,,Première séance
+286,13,Nour,Zouari,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-14 15:00:24,67.6,72.4,18,10,53.9,25.42,Amélioration
+303,13,Nour,Zouari,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-15 10:45:32,44.3,48.7,18,12,67.6,-34.47,Diminution
+388,13,Nour,Zouari,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-29 10:00:42,57.0,58.3,17,8,44.3,28.67,Amélioration
+405,13,Nour,Zouari,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-01 15:10:33,53.9,52.4,19,8,57.0,-5.44,Diminution
+418,13,Nour,Zouari,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-03 15:50:26,60.1,58.6,21,9,53.9,11.5,Amélioration
+438,13,Nour,Zouari,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-05 10:30:04,63.6,69.9,15,7,60.1,5.82,Amélioration
+163,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-07-20 15:30:54,85.1,81.2,16,9,,,Première séance
+170,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-07-22 15:40:47,60.7,58.1,16,8,85.1,-28.67,Diminution
+191,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-07-27 15:40:54,66.1,71.2,13,8,60.7,8.9,Amélioration
+200,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-07-29 15:30:06,76.7,69.8,16,9,66.1,16.04,Amélioration
+223,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-08-03 15:00:03,43.3,47.8,11,7,76.7,-43.55,Diminution
+253,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-08-08 10:00:30,53.5,44.4,14,7,43.3,23.56,Amélioration
+363,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-08-26 15:20:35,51.5,57.9,11,7,53.5,-3.74,Diminution
+398,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-08-29 10:45:49,78.8,81.3,10,7,51.5,53.01,Amélioration
+426,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-09-04 15:40:01,61.0,53.3,21,12,78.8,-22.59,Diminution
+444,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-09-07 15:40:20,65.8,65.5,19,10,61.0,7.87,Amélioration
+458,14,Ilyes,Belhaj,7,Wrist Flexion and Extension,3,Wrist Wizard,3,2026-09-09 15:20:18,53.6,46.7,14,9,65.8,-18.54,Diminution
+271,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-11 15:30:04,39.7,47.7,18,13,,,Première séance
+298,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-15 10:30:14,54.5,53.6,20,10,39.7,37.28,Amélioration
+318,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-19 15:20:13,69.9,61.2,14,6,54.5,28.26,Amélioration
+342,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-22 10:30:28,58.8,54.6,15,8,69.9,-15.88,Diminution
+362,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-26 15:00:30,47.0,56.4,16,10,58.8,-20.07,Diminution
+390,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-29 10:15:50,60.3,59.5,16,9,47.0,28.3,Amélioration
+408,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-01 15:40:32,50.5,55.5,17,8,60.3,-16.25,Diminution
+425,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-04 15:20:49,45.1,50.8,18,8,50.5,-10.69,Diminution
+449,14,Ilyes,Belhaj,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-08 15:40:01,56.0,59.7,17,10,45.1,24.17,Amélioration
+311,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-08-17 17:30:33,57.1,41.5,12,10,,,Première séance
+345,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-08-22 10:45:32,56.8,56.5,16,10,57.1,-0.53,Diminution
+358,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-08-25 17:40:23,53.8,67.3,15,8,56.8,-5.28,Diminution
+370,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-08-27 17:30:46,60.3,47.8,21,11,53.8,12.08,Amélioration
+387,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-08-29 10:00:15,60.6,55.4,15,8,60.3,0.5,Amélioration
+403,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-08-31 17:20:54,56.0,61.5,16,8,60.6,-7.59,Diminution
+414,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-09-02 17:20:18,57.5,55.1,18,9,56.0,2.68,Amélioration
+434,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-09-05 10:15:33,56.1,60.1,19,9,57.5,-2.43,Diminution
+455,15,Aymen,Nasri,7,Wrist Flexion and Extension,3,Wrist Wizard,1,2026-09-08 17:10:59,59.9,53.5,18,10,56.1,6.77,Amélioration
+361,15,Aymen,Nasri,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-25 18:35:44,59.6,58.8,21,10,,,Première séance
+395,15,Aymen,Nasri,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-29 10:45:08,55.2,50.9,23,11,59.6,-7.38,Diminution
+416,15,Aymen,Nasri,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-02 18:05:20,51.5,56.1,18,9,55.2,-6.7,Diminution
+445,15,Aymen,Nasri,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-07 17:10:01,50.9,48.3,17,8,51.5,-1.17,Diminution
+468,15,Aymen,Nasri,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-10 17:40:59,53.6,44.9,17,9,50.9,5.3,Amélioration
+478,15,Aymen,Nasri,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-12 10:45:12,58.2,54.5,18,10,53.6,8.58,Amélioration
+252,16,Rayan,Mansouri,4,Seated Knee Extension,2,Step Quest,2,2026-08-08 10:00:25,55.2,58.7,16,10,,,Première séance
+356,16,Rayan,Mansouri,4,Seated Knee Extension,2,Step Quest,2,2026-08-25 16:20:09,68.7,66.0,15,8,55.2,24.46,Amélioration
+397,16,Rayan,Mansouri,4,Seated Knee Extension,2,Step Quest,2,2026-08-29 10:45:47,62.3,61.7,8,6,68.7,-9.32,Diminution
+420,16,Rayan,Mansouri,4,Seated Knee Extension,2,Step Quest,2,2026-09-03 16:50:01,61.9,61.2,16,7,62.3,-0.64,Diminution
+454,16,Rayan,Mansouri,4,Seated Knee Extension,2,Step Quest,2,2026-09-08 16:40:26,64.3,76.8,14,7,61.9,3.88,Amélioration
+476,16,Rayan,Mansouri,4,Seated Knee Extension,2,Step Quest,2,2026-09-12 10:30:50,62.2,64.0,12,7,64.3,-3.27,Diminution
+485,16,Rayan,Mansouri,4,Seated Knee Extension,2,Step Quest,2,2026-09-17 16:20:26,64.5,65.4,16,7,62.2,3.7,Amélioration
+272,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-08-11 16:10:02,44.7,50.7,15,8,,,Première séance
+310,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-08-17 16:30:44,55.3,51.9,14,6,44.7,23.71,Amélioration
+348,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-08-24 16:10:00,61.7,64.4,17,8,55.3,11.57,Amélioration
+365,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-08-26 16:40:57,51.6,51.0,13,7,61.7,-16.37,Diminution
+383,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-08-29 10:00:03,48.4,59.4,14,10,51.6,-6.2,Diminution
+428,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-09-04 16:10:54,42.4,44.3,13,9,48.4,-12.4,Diminution
+466,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-09-10 16:10:04,56.3,54.2,18,9,42.4,32.78,Amélioration
+486,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-09-17 16:55:06,53.8,50.1,19,10,56.3,-4.44,Diminution
+500,16,Rayan,Mansouri,5,Mini Squat,2,Step Quest,3,2026-09-22 16:30:42,46.0,51.7,15,7,53.8,-14.5,Diminution
+76,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-06-27 10:00:10,48.6,49.8,14,7,,,Première séance
+94,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-07-02 17:10:26,53.1,43.9,14,10,48.6,9.26,Amélioration
+104,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-07-04 10:45:11,50.3,58.9,13,8,53.1,-5.27,Diminution
+117,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-07-10 17:10:46,51.5,43.1,11,6,50.3,2.39,Amélioration
+125,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-07-11 10:45:28,56.7,54.6,16,10,51.5,10.1,Amélioration
+134,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-07-15 17:10:58,51.1,47.9,19,11,56.7,-9.88,Diminution
+147,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-07-17 17:00:27,50.7,60.4,11,8,51.1,-0.78,Diminution
+150,17,Skander,Karoui,1,Forward Arm Raise,1,Bubble Reach,1,2026-07-18 10:00:21,52.4,54.3,19,9,50.7,3.35,Amélioration
+22,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-06-06 10:00:19,44.5,48.2,19,9,,,Première séance
+33,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-06-11 17:50:59,51.6,59.6,15,8,44.5,15.96,Amélioration
+42,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-06-15 17:50:32,41.1,46.2,15,9,51.6,-20.35,Diminution
+58,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-06-20 10:15:13,43.9,51.2,14,6,41.1,6.81,Amélioration
+70,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-06-24 17:10:18,49.1,45.0,11,7,43.9,11.85,Amélioration
+81,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-06-27 10:45:15,50.0,54.4,13,7,49.1,1.83,Amélioration
+154,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-07-18 10:30:43,43.6,55.7,14,10,50.0,-12.8,Diminution
+178,17,Skander,Karoui,3,Overhead Reach,1,Bubble Reach,1,2026-07-23 17:20:30,52.7,55.9,14,6,43.6,20.87,Amélioration
+176,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-07-23 16:40:33,63.3,64.6,14,5,,,Première séance
+188,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-07-25 10:15:44,50.4,50.8,15,9,63.3,-20.38,Diminution
+207,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-07-31 16:50:55,45.5,41.4,14,5,50.4,-9.72,Diminution
+236,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-08-05 16:30:18,69.4,66.3,13,8,45.5,52.53,Amélioration
+264,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-08-08 11:15:22,34.8,43.0,15,9,69.4,-49.86,Diminution
+279,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-08-12 16:00:50,67.9,68.2,17,11,34.8,95.11,Amélioration
+301,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-08-15 10:45:06,44.8,62.3,12,7,67.9,-34.02,Diminution
+321,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-08-19 16:40:59,59.3,66.3,13,9,44.8,32.37,Amélioration
+346,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-08-22 11:00:19,34.5,39.0,21,12,59.3,-41.82,Diminution
+377,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-08-28 16:00:36,35.8,40.5,16,8,34.5,3.77,Amélioration
+409,18,Lina,Chaouch,4,Seated Knee Extension,2,Step Quest,2,2026-09-01 16:10:55,50.0,55.3,16,8,35.8,39.66,Amélioration
+261,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-08 10:30:38,53.6,56.7,13,5,,,Première séance
+282,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-13 16:50:59,58.2,48.3,16,9,53.6,8.58,Amélioration
+315,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-18 16:20:43,52.5,45.1,18,9,58.2,-9.79,Diminution
+339,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-22 10:15:18,56.7,62.4,15,8,52.5,8.0,Amélioration
+357,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-25 16:40:49,74.1,79.4,16,9,56.7,30.69,Amélioration
+379,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-28 16:20:33,37.3,39.0,12,6,74.1,-49.66,Diminution
+401,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-08-31 16:50:27,48.6,45.8,18,8,37.3,30.29,Amélioration
+427,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-09-04 16:00:25,49.2,53.9,14,8,48.6,1.23,Amélioration
+452,18,Lina,Chaouch,7,Wrist Flexion and Extension,3,Wrist Wizard,2,2026-09-08 16:20:18,57.2,56.5,17,7,49.2,16.26,Amélioration
+97,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-03 16:00:49,31.4,28.1,13,7,,,Première séance
+106,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-07 16:10:42,36.0,24.6,13,7,31.4,14.65,Amélioration
+123,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-11 10:30:29,53.5,56.0,16,9,36.0,48.61,Amélioration
+130,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-14 16:00:51,53.9,58.8,15,6,53.5,0.75,Amélioration
+206,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-07-31 16:30:40,47.9,41.7,14,9,53.9,-11.13,Diminution
+229,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-04 16:50:35,24.2,29.6,14,10,47.9,-49.48,Diminution
+245,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-07 16:10:48,50.1,54.9,17,12,24.2,107.02,Amélioration
+273,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-11 16:50:03,64.9,55.8,15,8,50.1,29.54,Amélioration
+391,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-08-29 10:15:51,49.6,54.3,15,8,64.9,-23.57,Diminution
+419,18,Lina,Chaouch,8,Forearm Rotation,3,Wrist Wizard,2,2026-09-03 16:00:24,58.9,60.4,15,9,49.6,18.75,Amélioration
+29,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-06-11 16:10:50,43.0,45.6,11,4,,,Première séance
+43,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-06-16 16:10:03,52.1,48.8,13,8,43.0,21.16,Amélioration
+55,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-06-20 10:00:16,52.2,47.2,8,5,52.1,0.19,Amélioration
+110,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-07-08 16:40:13,57.5,48.4,13,8,52.2,10.15,Amélioration
+139,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-07-16 16:30:56,63.4,73.0,7,4,57.5,10.26,Amélioration
+219,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-08-01 10:45:05,62.2,60.2,14,9,63.4,-1.89,Diminution
+251,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-08-08 10:00:08,66.1,69.9,10,8,62.2,6.27,Amélioration
+355,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-08-25 16:00:31,60.0,63.2,12,7,66.1,-9.23,Diminution
+396,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-08-29 10:45:13,65.4,68.7,17,8,60.0,9.0,Amélioration
+432,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-09-05 10:00:45,67.9,74.7,17,7,65.4,3.82,Amélioration
+453,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-09-08 16:40:14,69.2,75.4,14,9,67.9,1.91,Amélioration
+469,19,Mohamed,Slimani,4,Seated Knee Extension,2,Step Quest,3,2026-09-11 16:00:31,71.0,72.5,14,9,69.2,2.6,Amélioration
+14,20,Omar,Dridi,1,Forward Arm Raise,1,Bubble Reach,2,2026-05-26 16:20:38,41.5,41.6,16,8,,,Première séance
+17,20,Omar,Dridi,1,Forward Arm Raise,1,Bubble Reach,2,2026-05-29 16:00:50,48.0,41.6,13,7,41.5,15.66,Amélioration
+21,20,Omar,Dridi,1,Forward Arm Raise,1,Bubble Reach,2,2026-06-03 16:30:17,41.2,36.8,14,6,48.0,-14.17,Diminution
+24,20,Omar,Dridi,1,Forward Arm Raise,1,Bubble Reach,2,2026-06-06 10:45:50,45.0,49.3,14,8,41.2,9.22,Amélioration
+26,20,Omar,Dridi,1,Forward Arm Raise,1,Bubble Reach,2,2026-06-09 16:40:48,41.6,42.5,16,9,45.0,-7.56,Diminution
+30,20,Omar,Dridi,1,Forward Arm Raise,1,Bubble Reach,2,2026-06-11 16:20:46,41.2,44.2,17,10,41.6,-0.96,Diminution
+100,20,Omar,Dridi,1,Forward Arm Raise,1,Bubble Reach,2,2026-07-04 10:15:26,44.2,46.7,18,9,41.2,7.28,Amélioration
+186,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-07-25 10:00:56,55.1,63.7,17,8,,,Première séance
+288,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-08-14 16:00:46,55.4,52.3,18,9,55.1,0.54,Amélioration
+309,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-08-17 16:20:16,52.7,53.2,15,9,55.4,-4.87,Diminution
+320,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-08-19 16:00:18,55.6,59.5,12,8,52.7,5.5,Amélioration
+349,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-08-24 16:30:26,55.0,59.7,20,9,55.6,-1.08,Diminution
+364,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-08-26 16:40:56,51.8,56.0,15,7,55.0,-5.82,Diminution
+400,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-08-31 16:50:25,49.9,47.0,17,9,51.8,-3.67,Diminution
+429,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-09-04 16:50:41,53.1,53.5,11,5,49.9,6.41,Amélioration
+451,20,Omar,Dridi,3,Overhead Reach,1,Bubble Reach,1,2026-09-08 16:20:03,52.6,53.1,14,8,53.1,-0.94,Diminution
+28,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-06-11 16:00:42,46.7,52.4,13,7,,,Première séance
+40,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-06-15 16:30:27,43.5,47.6,9,4,46.7,-6.85,Diminution
+50,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-06-19 16:10:38,44.5,42.4,14,8,43.5,2.3,Amélioration
+57,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-06-20 10:00:50,43.4,45.7,18,10,44.5,-2.47,Diminution
+73,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-06-25 16:40:38,49.3,53.7,16,7,43.4,13.59,Amélioration
+127,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-07-13 16:20:32,49.2,55.9,14,10,49.3,-0.2,Diminution
+138,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-07-16 16:20:15,49.6,48.5,18,12,49.2,0.81,Amélioration
+153,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-07-18 10:30:38,49.1,37.5,12,6,49.6,-1.01,Diminution
+168,20,Omar,Dridi,6,Step Up,2,Step Quest,3,2026-07-21 16:20:57,48.5,60.2,9,7,49.1,-1.22,Diminution

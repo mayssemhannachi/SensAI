@@ -1,0 +1,13 @@
+metric,value
+patients,20.0
+sessions,500.0
+exercises,8.0
+games,3.0
+mean_score,56.78
+mean_success_rate,57.34
+mean_duration,7.84
+mean_repetitions,14.16
+mean_progression,3.0
+improved_sessions,260.0
+declined_sessions,196.0
+sessions_without_progression,43.0

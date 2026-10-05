@@ -1,0 +1,9 @@
+id_exercise,game_id,name_exercise,description_exercise,id_game,name_game,body_part,description_game
+1,1,Forward Arm Raise,Raise the arm forward to shoulder height and above to catch bubbles,1,Bubble Reach,Shoulder,Arcade game where the child pops floating bubbles by lifting and moving the arm to target positions
+2,1,Lateral Arm Raise,Raise the arm sideways to reach bubbles on the left or right,1,Bubble Reach,Shoulder,Arcade game where the child pops floating bubbles by lifting and moving the arm to target positions
+3,1,Overhead Reach,Reach above the head to pop the highest bubbles,1,Bubble Reach,Shoulder,Arcade game where the child pops floating bubbles by lifting and moving the arm to target positions
+4,2,Seated Knee Extension,Extend the knee from a seated position to kick a ball,2,Step Quest,Knee,Adventure game where the child controls a hero by performing knee and leg movements to cross obstacles
+5,2,Mini Squat,Perform a shallow squat to duck under obstacles,2,Step Quest,Knee,Adventure game where the child controls a hero by performing knee and leg movements to cross obstacles
+6,2,Step Up,Step up onto a platform to climb the path,2,Step Quest,Knee,Adventure game where the child controls a hero by performing knee and leg movements to cross obstacles
+7,3,Wrist Flexion and Extension,Bend the wrist up and down to steer the magic wand,3,Wrist Wizard,Wrist,Magic-themed game where wrist and forearm movements cast spells and solve puzzles
+8,3,Forearm Rotation,Rotate the forearm palm up and palm down to turn magic keys,3,Wrist Wizard,Wrist,Magic-themed game where wrist and forearm movements cast spells and solve puzzles

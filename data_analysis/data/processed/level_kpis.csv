@@ -1,0 +1,4 @@
+level_number,sessions,mean_score,mean_success_rate,mean_duration,mean_repetitions,mean_progression
+1,65,51.98,53.45,8.49,16.11,1.72
+2,248,56.05,56.82,7.92,14.29,3.52
+3,187,59.41,59.38,7.52,13.32,2.76

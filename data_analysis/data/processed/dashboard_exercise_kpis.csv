@@ -1,0 +1,9 @@
+exercise_id,name,sessions,mean_score,mean_success_rate,mean_duration,mean_repetitions,mean_progression
+1,Forward Arm Raise,57,51.75,52.49,7.84,14.14,2.36
+2,Lateral Arm Raise,30,60.43,61.29,8.2,14.5,3.23
+3,Overhead Reach,17,50.45,53.78,7.88,14.94,1.35
+4,Seated Knee Extension,56,59.24,59.92,7.38,13.14,3.79
+5,Mini Squat,62,56.38,56.65,7.52,13.85,3.14
+6,Step Up,79,58.37,58.65,7.73,13.85,2.16
+7,Wrist Flexion and Extension,92,58.37,57.71,8.2,14.57,2.11
+8,Forearm Rotation,107,55.84,57.15,7.94,14.56,4.45

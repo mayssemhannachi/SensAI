@@ -40,7 +40,12 @@ def show_global_view():
 
         return
 
-    latest_data_date = df["session_date"].max().normalize()
+    valid_dates = df["session_date"].dropna()
+    if valid_dates.empty:
+        st.info("Les séances reçues ne contiennent pas de date exploitable.")
+        return
+
+    latest_data_date = valid_dates.max().normalize()
     page_header(latest_data_date)
 
     period_options = {
@@ -100,7 +105,7 @@ def show_global_view():
             },
             {
                 "title": "Réussite moyenne",
-                "value": f"{mean_success:.1f}%",
+                "value": f"{mean_success:.1f}%" if pd.notna(mean_success) else "—",
                 "description": f"Moyenne · {selected_period.lower()}",
             },
             {
