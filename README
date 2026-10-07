@@ -47,13 +47,18 @@ CREATE DATABASE kinekids_db;
 
 ## 5. Configurer les variables d'environnement
 
-Créer un fichier `.env` à la racine du projet :
+Copier le modèle puis modifier `.env` à la racine du projet :
+
+```powershell
+Copy-Item .env.example .env
+```
 
 ```env
 DATABASE_URL=postgresql+psycopg2://postgres:YOUR_PASSWORD@localhost:5432/kinekids_db
+SECRET_KEY=replace-with-a-long-random-secret
 ```
 
-Remplacer `YOUR_PASSWORD` par le mot de passe PostgreSQL local.
+Remplacer `YOUR_PASSWORD` par le mot de passe PostgreSQL local et générer une valeur secrète unique pour `SECRET_KEY` (par exemple avec `python -c "import secrets; print(secrets.token_urlsafe(48))"`). L’API et les migrations utilisent ce même fichier `.env`.
 
 > Le fichier `.env` contient des informations sensibles et ne doit pas être ajouté au dépôt Git.
 
