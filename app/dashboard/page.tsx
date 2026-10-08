@@ -10,6 +10,15 @@ import {
 
 const exercises = [
   {
+    title: "Le Hibou",
+    image: "/Assets/dashboard/Magical Owl Valley Adventure.png", // Placeholder image until you add the owl graphic
+    category: "Rééducation cervicale",
+    limb: "Tête / Cou",
+    level: 1,
+    active: true,
+    href: "/dashboard/game/le-hibou",
+  },
+  {
     title: "Color Touch",
     image: "/Assets/dashboard/ex-color-touch.png",
     category: "Jeu de couleur",
@@ -300,9 +309,12 @@ export default function DashboardPage() {
 
           {/* Cards row */}
           <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
-            {exercises.map((ex, i) => (
-              <div
-                key={i}
+            {exercises.map((ex, i) => {
+              const CardWrapper = ex.active && ex.href ? Link : "div";
+              return (
+                <CardWrapper
+                  href={ex.href || "#"}
+                  key={i}
                 className={`flex-shrink-0 rounded-2xl border p-3 flex flex-col transition-all group snap-start ${
                   ex.active
                     ? "bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-purple-200 cursor-pointer"
@@ -371,8 +383,8 @@ export default function DashboardPage() {
                     <Image src="/Assets/dashboard/Glossy Lavender Padlock Icon.png" width={12} height={12} alt="Lock" className="opacity-70 grayscale" /> Débloqué au niveau {ex.lockedAt}
                   </div>
                 )}
-              </div>
-            ))}
+              </CardWrapper>
+            )})}
           </div>
         </div>
       </div>
