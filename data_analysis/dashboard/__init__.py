@@ -1,0 +1,3 @@
+"""
+KineKids AI Dashboard package.
+"""
