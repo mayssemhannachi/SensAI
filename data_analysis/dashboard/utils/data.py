@@ -25,6 +25,7 @@ from dashboard.utils.api_client import (
     api_base_url,
     get as api_get,
     post as api_post,
+    put as api_put,
 )
 
 # ==========================================================
@@ -50,7 +51,18 @@ SESSION_COLUMNS = [
 
 GAME_COLUMNS = ["id", "name", "body_part", "description"]
 
-PATIENT_GAME_COLUMNS = ["patient_game_id", "patient_id", "game_id", "game_name"]
+PATIENT_GAME_COLUMNS = ["patient_game_id", "patient_id", "game_id", "game_name", "configuration"]
+
+# Réglages d'un jeu assigné (même vocabulaire que le frontend et les jeux).
+GAME_SETTINGS_DEFAULTS = {
+    "target_angle": 30,      # degrés
+    "hold_seconds": 3,       # secondes de maintien
+    "repetitions": 6,        # répétitions par séance
+    "speed": "lente",        # lente | moderee | rapide
+    "difficulty": "moyenne", # faible | moyenne | elevee
+    "safety_limit": 35,      # degrés à ne pas dépasser
+    "active": True,
+}
 
 NUMERIC_SESSION_COLUMNS = [
     "session_id", "patient_id", "patient_game_id", "game_id", "level",
@@ -305,7 +317,7 @@ def load_demo_dataset() -> Dataset:
     patient_games = (
         sessions[["patient_id", "game_id", "game_name"]]
         .drop_duplicates()
-        .assign(patient_game_id=pd.NA)[PATIENT_GAME_COLUMNS]
+        .assign(patient_game_id=pd.NA, configuration=None)[PATIENT_GAME_COLUMNS]
     )
     return Dataset(
         source="demo",
@@ -361,17 +373,38 @@ def fetch_api_payload(token: str) -> dict:
             "patient_id": pg["patient_id"],
             "game_id": pg["game_id"],
             "game_name": game.get("name") or f"Jeu {pg['game_id']}",
+            "configuration": pg.get("configuration") or {},
         })
         for session in sessions:
             session_rows.append(
                 api_session_to_row(session, int(pg["patient_id"]), int(pg["id"]), game)
             )
 
+    # Diagnostic : dernière consultation de chaque patient (route récente du backend).
+    def latest_diagnosis(patient: dict):
+        try:
+            consultations = api_get(f"/consultations/patient/{int(patient['id'])}", token) or []
+        except ApiError as error:
+            if error.status_code in {404, 405}:
+                return None  # route absente sur cette version du backend
+            raise
+        for consultation in consultations:
+            if consultation.get("diagnosis"):
+                return consultation["diagnosis"]
+        return ""
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        diagnoses_list = list(pool.map(latest_diagnosis, patients))
+    readable = bool(patients) and all(d is not None for d in diagnoses_list)
+    diagnoses = {int(p["id"]): d for p, d in zip(patients, diagnoses_list) if d}
+
     return {
         "patients": patients,
         "games": games,
         "patient_games": pg_rows,
         "sessions": session_rows,
+        "diagnoses": diagnoses,
+        "diagnosis_readable": readable,
     }
 
 
@@ -382,8 +415,9 @@ def _cached_api_payload(token: str, base_url: str) -> dict:  # base_url = clé d
 
 def build_api_dataset(payload: dict, diagnoses: dict | None = None) -> Dataset:
     patients = pd.DataFrame(payload.get("patients") or [])
+    merged = {**(payload.get("diagnoses") or {}), **(diagnoses or {})}
     if not patients.empty:
-        patients["diagnosis"] = patients["id"].map(diagnoses or {})
+        patients["diagnosis"] = patients["id"].map(merged)
     patients = normalize_patients(patients)
 
     games = pd.DataFrame(payload.get("games") or [], columns=None)
@@ -403,7 +437,7 @@ def build_api_dataset(payload: dict, diagnoses: dict | None = None) -> Dataset:
         games=games[GAME_COLUMNS],
         patient_games=patient_games,
         reference_date=pd.Timestamp.now().normalize(),
-        diagnosis_readable=False,
+        diagnosis_readable=bool(payload.get("diagnosis_readable")),
     )
 
 
@@ -495,18 +529,37 @@ def save_patient_diagnosis(patient_id: int, diagnosis: str) -> None:
             },
         )
         _session_diagnoses()[int(patient_id)] = diagnosis
+        refresh_data()
         return
     _demo_store()["diagnoses"][int(patient_id)] = diagnosis
 
 
-def assign_game(patient_id: int, game_id: int) -> dict:
-    """Associe un jeu à un patient (backend uniquement)."""
+def assign_game(patient_id: int, game_id: int, configuration: dict | None = None) -> dict:
+    """Associe un jeu à un patient avec ses réglages (backend uniquement)."""
     if not state.api_mode_enabled():
         raise ValueError("L’association de jeux est disponible en mode Backend.")
     result = api_post(
         "/patient-games/",
         _require_token(),
-        {"patient_id": int(patient_id), "game_id": int(game_id), "configuration": {}},
+        {"patient_id": int(patient_id), "game_id": int(game_id),
+         "configuration": configuration if configuration is not None else dict(GAME_SETTINGS_DEFAULTS)},
     )
     refresh_data()
     return result
+
+
+def update_game_settings(patient_game_id: int, configuration: dict) -> dict:
+    """Modifie les réglages d'un jeu assigné (backend uniquement)."""
+    if not state.api_mode_enabled():
+        raise ValueError("La modification des réglages est disponible en mode Backend.")
+    result = api_put(f"/patient-games/{int(patient_game_id)}", _require_token(),
+                     {"configuration": configuration})
+    refresh_data()
+    return result
+
+
+def create_activation_code(patient_id: int) -> dict:
+    """Génère le code à 6 caractères que le patient saisit sur le site pour créer son compte."""
+    if not state.api_mode_enabled():
+        raise ValueError("Les codes d’activation sont disponibles en mode Backend.")
+    return api_post("/activation-codes/", _require_token(), {"patient_id": int(patient_id)})

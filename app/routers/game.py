@@ -16,7 +16,7 @@ from app.services.game_service import (
 )
 
 from app.services.auth_service import (
-    get_current_user
+    get_current_therapist
 )
 
 router = APIRouter(
@@ -36,7 +36,7 @@ router = APIRouter(
 def create_new_game(
     request: GameCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     return create_game(
         db,
@@ -54,6 +54,6 @@ def create_new_game(
 )
 def get_all_games_route(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     return get_games(db)

@@ -10,7 +10,7 @@ from app.services.session_service import (
 )
 
 from app.services.auth_service import (
-    get_current_user
+    get_current_therapist
 )
 
 router = APIRouter(
@@ -30,7 +30,7 @@ router = APIRouter(
 def create_new_session(
     request: SessionCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     try:
         return create_session(
@@ -53,7 +53,7 @@ def create_new_session(
 def get_sessions(
     patient_game_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     try:
         return get_patient_game_sessions(

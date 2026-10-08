@@ -80,6 +80,7 @@ def test_fetch_api_payload_walks_patients_games_sessions():
             "/sessions/patient-game/45": [
                 {"id": 91, "patient_game_id": 45, "duration_sec": 60, "created_at": "2026-10-05T12:00:00",
                  "metrics": {"score": 80, "success_rate": 70}}],
+            "/consultations/patient/12": [{"id": 1, "diagnosis": "Torticolis"}],
         }[path]
 
     with patch.object(data, "api_get", side_effect=fake_get):
@@ -88,6 +89,7 @@ def test_fetch_api_payload_walks_patients_games_sessions():
     assert payload["sessions"][0]["game_name"] == "Wrist Wizard"
     assert payload["patient_games"][0]["patient_game_id"] == 45
     assert "/sessions/patient-game/45" in calls
+    assert payload["diagnoses"] == {12: "Torticolis"} and payload["diagnosis_readable"]
 
 
 def test_demo_dataset_is_consistent():

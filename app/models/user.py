@@ -20,6 +20,7 @@ class User(Base):
     patients: Mapped[list["Patient"]] = relationship(
         "Patient",
         back_populates="therapist",
+        foreign_keys="Patient.therapist_id",
     )
 
     consultations: Mapped[list["Consultation"]] = relationship(

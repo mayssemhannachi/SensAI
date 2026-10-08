@@ -48,3 +48,14 @@ def get_games_for_patient(
         db,
         patient_id
     )
+
+def update_game_configuration(db, patient_game_id: int, configuration: dict, therapist_id: int):
+    patient_game = db.query(PatientGame).filter(PatientGame.id == patient_game_id).first()
+    if not patient_game:
+        raise HTTPException(status_code=404, detail="Patient game not found")
+    if patient_game.patient.therapist_id != therapist_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    patient_game.configuration = configuration
+    db.commit()
+    db.refresh(patient_game)
+    return patient_game

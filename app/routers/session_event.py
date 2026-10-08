@@ -14,7 +14,7 @@ from app.services.session_event_service import (
 )
 
 from app.services.auth_service import (
-    get_current_user
+    get_current_therapist
 )
 
 router = APIRouter(
@@ -34,7 +34,7 @@ router = APIRouter(
 def add_event(
     request: SessionEventCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     try:
         return create_event(
@@ -57,7 +57,7 @@ def add_event(
 def get_session_events_route(
     session_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     try:
         return get_events(

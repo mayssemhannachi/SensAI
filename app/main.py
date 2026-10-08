@@ -11,6 +11,7 @@ from app.routers.game import router as game_router
 from app.routers.patient_game import router as patient_game_router
 from app.routers.session import router as session_router
 from app.routers.session_event import router as session_event_router
+from app.routers.me import router as me_router
 from app.core.config import settings
 from app.schemas.common_schema import HealthResponse
 
@@ -29,6 +30,7 @@ app = FastAPI(
         {"name": "Session Events", "description": "Événements détaillés enregistrés pendant une session."},
         {"name": "Activation Codes", "description": "Codes d’activation des patients."},
         {"name": "Patient Transfers", "description": "Transfert de patient vers le thérapeute authentifié."},
+        {"name": "Patient Space", "description": "Espace du patient connecté : profil, jeux assignés et séances."},
         {"name": "Health", "description": "État de disponibilité de l’API."},
     ],
 )
@@ -69,4 +71,4 @@ app.include_router(session_router)
 app.include_router(
     session_event_router
 )
-
+app.include_router(me_router)

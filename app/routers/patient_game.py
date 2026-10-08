@@ -12,11 +12,13 @@ from app.schemas.patient_game_schema import (
 
 from app.services.patient_game_service import (
     assign_game,
-    get_games_for_patient
+    get_games_for_patient,
+    update_game_configuration,
 )
+from app.schemas.patient_game_schema import PatientGameUpdate
 
 from app.services.auth_service import (
-    get_current_user
+    get_current_therapist
 )
 
 router = APIRouter(
@@ -34,7 +36,7 @@ router = APIRouter(
 def assign_game_to_patient(
     request: PatientGameCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     try:
         return assign_game(
@@ -55,7 +57,7 @@ def assign_game_to_patient(
 def get_patient_games_route(
     patient_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     try:
         return get_games_for_patient(
@@ -65,3 +67,19 @@ def get_patient_games_route(
         )
     except HTTPException:
         raise
+
+
+@router.put(
+    "/{patient_game_id}",
+    response_model=PatientGameResponse,
+    summary="Modifier les réglages d’un jeu assigné",
+    description="Remplace la configuration (angle cible, maintien, vitesse, difficulté…) d’un jeu assigné à un patient du thérapeute.",
+    responses={401: {"description": "Authentification requise ou jeton invalide."}, 403: {"description": "Accès refusé."}, 404: {"description": "Association introuvable."}},
+)
+def update_patient_game_route(
+    patient_game_id: int,
+    request: PatientGameUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_therapist)
+):
+    return update_game_configuration(db, patient_game_id, request.configuration, current_user["user_id"])

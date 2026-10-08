@@ -110,14 +110,16 @@ def remove_patient(
 
 def find_patient_by_code(
     db,
-    patient_code
+    patient_code,
+    therapist_id=None
 ):
     patient = get_patient_by_code(
         db,
         patient_code
     )
 
-    if not patient:
+    # Un thérapeute ne peut consulter que ses propres patients.
+    if not patient or (therapist_id is not None and patient.therapist_id != therapist_id):
         raise HTTPException(
             status_code=404,
             detail="Patient not found"

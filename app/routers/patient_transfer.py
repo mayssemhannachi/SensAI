@@ -15,7 +15,7 @@ from app.services.patient_transfer_service import (
 )
 
 from app.services.auth_service import (
-    get_current_user
+    get_current_therapist
 )
 
 router = APIRouter(
@@ -35,7 +35,7 @@ router = APIRouter(
 def transfer(
     request: PatientTransferRequest,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     return transfer_patient(
         db,

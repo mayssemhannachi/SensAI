@@ -24,6 +24,10 @@ class Patient(Base):
     )
 
     therapist_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    # Compte patient créé lors de l'activation (rôle "patient").
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, unique=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -33,6 +37,7 @@ class Patient(Base):
     therapist: Mapped["User"] = relationship(
         "User",
         back_populates="patients",
+        foreign_keys=[therapist_id],
     )
 
     consultations: Mapped[list["Consultation"]] = relationship(

@@ -71,13 +71,17 @@ def login_user(
             "Invalid credentials"
         )
 
-    token = create_access_token(
-        {
-            "user_id": user.id,
-            "sub": user.email,
-            "role": user.role
-        }
-    )
+    claims = {
+        "user_id": user.id,
+        "sub": user.email,
+        "role": user.role
+    }
+    if user.role == "patient":
+        from app.models.patient import Patient
+        patient = db.query(Patient).filter(Patient.user_id == user.id).first()
+        if patient:
+            claims["patient_id"] = patient.id
+    token = create_access_token(claims)
 
     return token
 from fastapi import Depends
@@ -99,3 +103,17 @@ def get_current_user(
         )
 
     return payload
+
+
+def get_current_therapist(current_user=Depends(get_current_user)):
+    """Réservé aux comptes thérapeutes (les comptes patients sont refusés)."""
+    if current_user.get("role", "therapist") != "therapist":
+        raise HTTPException(status_code=403, detail="Therapist account required")
+    return current_user
+
+
+def get_current_patient_user(current_user=Depends(get_current_user)):
+    """Réservé aux comptes patients créés par activation."""
+    if current_user.get("role") != "patient":
+        raise HTTPException(status_code=403, detail="Patient account required")
+    return current_user

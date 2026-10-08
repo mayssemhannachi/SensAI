@@ -14,3 +14,11 @@ class PatientGameResponse(BaseModel):
     patient_id: int
     game_id: int
     configuration: dict
+
+class PatientGameUpdate(BaseModel):
+    configuration: dict
+
+
+class PatientGameDetail(PatientGameResponse):
+    game_name: str | None = None
+    game_slug: str | None = None

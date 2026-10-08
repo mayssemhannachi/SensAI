@@ -25,7 +25,14 @@ from dashboard.components.ui import (
 )
 from dashboard.utils import analytics, state
 from dashboard.utils.api_client import ApiError
-from dashboard.utils.data import assign_game, load_dataset, save_patient_diagnosis
+from dashboard.utils.data import (
+    GAME_SETTINGS_DEFAULTS,
+    assign_game,
+    create_activation_code,
+    load_dataset,
+    save_patient_diagnosis,
+    update_game_settings,
+)
 
 
 def _patient_selector(patients: pd.DataFrame):
@@ -92,14 +99,16 @@ def _hero(patient: pd.Series, history: pd.DataFrame, status: str, alerts, refere
 def _diagnosis_editor(data, patient) -> None:
     label = "Mettre à jour le diagnostic" if patient["diagnosis"] else "Ajouter un diagnostic"
     with st.expander(f"✎ {label}"):
-        if not data.is_demo:
-            st.caption(
-                "Le diagnostic est enregistré comme nouvelle consultation dans le backend. "
-                "L’API ne permet pas encore de relire les consultations : le diagnostic "
-                "affiché ici est celui saisi pendant cette session."
-            )
-        else:
+        if data.is_demo:
             st.caption("Mode démo : la modification est conservée jusqu’à la fermeture du dashboard.")
+        elif data.diagnosis_readable:
+            st.caption("Le diagnostic est enregistré comme nouvelle consultation dans le backend.")
+        else:
+            st.caption(
+                "Le diagnostic est enregistré comme nouvelle consultation. Cette version du "
+                "backend ne permet pas de relire les consultations : seul le diagnostic saisi "
+                "pendant cette session est affiché."
+            )
         with st.form(f"diagnosis_form_{patient['id']}", clear_on_submit=False):
             text = st.text_area("Diagnostic", value=patient["diagnosis"],
                                 placeholder="Ex. : trouble développemental de la coordination…")
@@ -117,35 +126,93 @@ def _diagnosis_editor(data, patient) -> None:
                 st.error(f"Le backend a refusé l’enregistrement : {error}")
 
 
+SPEEDS = {"lente": "Lente", "moderee": "Modérée", "rapide": "Rapide"}
+DIFFICULTIES = {"faible": "Faible", "moyenne": "Moyenne", "elevee": "Élevée"}
+
+
+def _settings_form(key: str, current: dict) -> dict | None:
+    """Formulaire des réglages d'un jeu ; renvoie la configuration si validé."""
+    config = {**GAME_SETTINGS_DEFAULTS, **(current or {})}
+    with st.form(key):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            target = st.number_input("Angle cible (°)", 5, 90, int(config["target_angle"]), step=5)
+            safety = st.number_input("Limite de sécurité (°)", 5, 120, int(config["safety_limit"]), step=5)
+        with c2:
+            hold = st.number_input("Maintien (s)", 1, 15, int(config["hold_seconds"]))
+            reps = st.number_input("Répétitions", 1, 30, int(config["repetitions"]))
+        with c3:
+            speed = st.selectbox("Vitesse", list(SPEEDS), format_func=SPEEDS.get,
+                                 index=list(SPEEDS).index(config["speed"]) if config["speed"] in SPEEDS else 0)
+            difficulty = st.selectbox("Difficulté", list(DIFFICULTIES), format_func=DIFFICULTIES.get,
+                                      index=list(DIFFICULTIES).index(config["difficulty"])
+                                      if config["difficulty"] in DIFFICULTIES else 1)
+        active = st.toggle("Jeu visible pour le patient", value=bool(config.get("active", True)))
+        if st.form_submit_button("Enregistrer les réglages", type="primary"):
+            if safety < target:
+                st.error("La limite de sécurité doit être supérieure ou égale à l’angle cible.")
+                return None
+            return {**config, "target_angle": int(target), "safety_limit": int(safety),
+                    "hold_seconds": int(hold), "repetitions": int(reps), "speed": speed,
+                    "difficulty": difficulty, "active": bool(active)}
+    return None
+
+
 def _game_assignment(data, patient) -> None:
-    """Associer un jeu au patient (backend) pour que les séances puissent être enregistrées."""
-    if data.is_demo or data.games.empty:
+    """Jeux assignés au patient, leurs réglages, et code d'activation (mode Backend)."""
+    if data.is_demo:
         return
     assigned = data.patient_games[data.patient_games["patient_id"] == patient["id"]]
-    assigned_ids = set(pd.to_numeric(assigned["game_id"], errors="coerce").dropna().astype(int))
-    available = data.games[~data.games["id"].isin(assigned_ids)]
-    with st.expander(f"🎮 Jeux assignés ({len(assigned_ids)})"):
-        if assigned.empty:
-            st.caption("Aucun jeu assigné : le patient ne peut pas encore enregistrer de séance.")
-        else:
-            render_html(" ".join(badge(name, "brand") for name in assigned["game_name"]))
-        if available.empty:
-            st.caption("Tous les jeux du catalogue sont déjà assignés.")
-            return
-        with st.form(f"assign_game_{patient['id']}"):
+    with st.expander(f"🎮 Jeux et réglages ({len(assigned)})"):
+        st.caption("Les jeux visibles apparaissent dans l’espace du patient sur le site, "
+                   "avec ces réglages.")
+        for row in assigned.itertuples(index=False):
+            config = row.configuration if isinstance(row.configuration, dict) else {}
+            state_label = "visible" if config.get("active", True) else "masqué"
+            st.markdown(f"**{row.game_name}** · {state_label}")
+            updated = _settings_form(f"settings_{row.patient_game_id}", config)
+            if updated is not None:
+                try:
+                    update_game_settings(row.patient_game_id, updated)
+                    st.toast("Réglages enregistrés", icon="✅")
+                    st.rerun()
+                except ApiError as error:
+                    if error.status_code == 401:
+                        raise
+                    st.error(str(error))
+
+        assigned_ids = set(pd.to_numeric(assigned["game_id"], errors="coerce").dropna().astype(int))
+        available = data.games[~data.games["id"].isin(assigned_ids)]
+        if not available.empty:
+            st.markdown("**Assigner un nouveau jeu**")
             game_id = st.selectbox(
-                "Assigner un jeu", available["id"].tolist(),
+                "Jeu", available["id"].tolist(), key=f"new_game_{patient['id']}",
                 format_func=lambda gid: data.games.set_index("id").loc[gid, "name"],
             )
-            if st.form_submit_button("Assigner", type="primary"):
+            config = _settings_form(f"assign_game_{patient['id']}", GAME_SETTINGS_DEFAULTS)
+            if config is not None:
                 try:
-                    assign_game(patient["id"], game_id)
+                    assign_game(patient["id"], game_id, config)
                     st.toast("Jeu assigné", icon="✅")
                     st.rerun()
                 except ApiError as error:
                     if error.status_code == 401:
                         raise
                     st.error(str(error))
+
+    with st.expander("🔑 Code d’activation du compte patient"):
+        st.caption("Le patient (ou son parent) saisit ce code sur la page « Activer mon compte » "
+                   "du site pour créer ses identifiants. Valable 30 jours, utilisable une fois.")
+        code_key = f"activation_code_{patient['id']}"
+        if st.button("Générer un code", key=f"gen_code_{patient['id']}"):
+            try:
+                st.session_state[code_key] = create_activation_code(patient["id"])["code"]
+            except ApiError as error:
+                if error.status_code == 401:
+                    raise
+                st.error(str(error))
+        if st.session_state.get(code_key):
+            st.code(st.session_state[code_key], language=None)
 
 
 def show_patient_detail():

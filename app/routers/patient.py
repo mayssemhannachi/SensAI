@@ -8,7 +8,7 @@ from app.schemas.patient_schema import (
     PatientResponse,
     PatientUpdate,
 )
-from app.services.auth_service import get_current_user
+from app.services.auth_service import get_current_therapist
 from app.services.patient_service import (
     create_patient,
     get_my_patients,
@@ -36,7 +36,7 @@ router = APIRouter(
 def create_new_patient(
     request: PatientCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_therapist),
 ):
     patient = create_patient(
         db,
@@ -57,7 +57,7 @@ def create_new_patient(
 )
 def get_patients(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_therapist),
 ):
     return get_my_patients(
         db,
@@ -76,11 +76,12 @@ def get_patients(
 def get_patient_by_code_route(
     patient_code: str,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     return find_patient_by_code(
         db,
-        patient_code
+        patient_code,
+        current_user["user_id"]
     )
 
 
@@ -95,7 +96,7 @@ def get_patient_by_code_route(
 def get_patient_by_id(
     patient_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_therapist),
 ):
     return get_patient(
         db,
@@ -116,7 +117,7 @@ def update_patient_route(
     patient_id: int,
     request: PatientUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_therapist),
 ):
     return update_patient(
         db,
@@ -137,7 +138,7 @@ def update_patient_route(
 def delete_patient_route(
     patient_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_therapist),
 ):
     return remove_patient(
         db,
@@ -156,7 +157,7 @@ def delete_patient_route(
 def regenerate_code_route(
     patient_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_therapist)
 ):
     return regenerate_patient_code(
         db,

@@ -50,9 +50,16 @@ def test_patient_requires_names_and_age():
 def test_assign_game_payload():
     a, b, c, d = _api_mode()
     with a, b, c, d, patch.object(data, "api_post", return_value={"id": 5}) as post:
-        data.assign_game(31, 3)
+        data.assign_game(31, 3, {"target_angle": 25})
     assert post.call_args.args == (
-        "/patient-games/", "tok", {"patient_id": 31, "game_id": 3, "configuration": {}})
+        "/patient-games/", "tok", {"patient_id": 31, "game_id": 3, "configuration": {"target_angle": 25}})
+
+
+def test_update_game_settings_uses_put():
+    a, b, c, d = _api_mode()
+    with a, b, c, d, patch.object(data, "api_put", return_value={"id": 5}) as put:
+        data.update_game_settings(5, {"target_angle": 20})
+    assert put.call_args.args == ("/patient-games/5", "tok", {"configuration": {"target_angle": 20}})
 
 
 def test_assign_game_refused_in_demo():

@@ -23,6 +23,9 @@ from app.services.auth_service import (
     login_user
 )
 from app.services.auth_service import get_current_user
+from app.core.security import decode_token
+from app.schemas.auth_schema import ActivateRequest
+from app.services.activation_code_service import activate_patient_account
 
 router = APIRouter(
     prefix="/auth",
@@ -85,9 +88,11 @@ def login(
             request.password
         )
 
+        payload = decode_token(token) or {}
         return {
             "access_token": token,
-            "token_type": "bearer"
+            "token_type": "bearer",
+            "role": payload.get("role"),
         }
 
     except ValueError as e:
@@ -107,6 +112,31 @@ def login(
     responses={401: {"description": "Authentification requise ou jeton invalide."}},
 )
 def get_me(
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    return current_user
+    from app.models.user import User
+
+    user = db.query(User).filter(User.id == current_user["user_id"]).first()
+    return {**current_user, "full_name": user.full_name if user else None}
+
+
+
+@router.post(
+    "/activate",
+    response_model=TokenResponse,
+    status_code=201,
+    summary="Activer un compte patient",
+    description=(
+        "Crée les identifiants du patient (ou de son parent) à partir du code d’activation "
+        "fourni par le thérapeute, puis renvoie directement un jeton de connexion."
+    ),
+    responses={
+        404: {"description": "Code non reconnu."},
+        409: {"description": "Code déjà utilisé ou e-mail déjà pris."},
+        410: {"description": "Code expiré."},
+    },
+)
+def activate(request: ActivateRequest, db: Session = Depends(get_db)):
+    token = activate_patient_account(db, request.code, request.email, request.password)
+    return {"access_token": token, "token_type": "bearer", "role": "patient"}
