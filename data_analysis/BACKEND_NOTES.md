@@ -4,7 +4,10 @@ Le dashboard thérapeute (partie Data Analysis) est **entièrement fonctionnel a
 connexion, liste des patients, séances, jeux, création de patient, diagnostic et assignation de jeux ont
 été testés de bout en bout contre la branche `backend-fastapi` (PostgreSQL + migrations Alembic).
 
-Aucun fichier du backend n’a été modifié. Les points ci-dessous relèvent du backend ; ils sont classés
+Sur la branche publiée `feature/dashboard-analytics`, aucun fichier du backend n’a été modifié.
+La branche locale `local/back-connecte` propose une implémentation des points 1 à 3 ci-dessous,
+plus les comptes patients (`POST /auth/activate`, routes `/me/*`) et `PUT /patient-games/{id}`
+(voir `LANCER_LE_PROJET.md`). L’équipe backend peut la reprendre ou s’en inspirer. Les points ci-dessous relèvent du backend ; ils sont classés
 par impact sur le dashboard et contournés côté dashboard en attendant.
 
 ## À traiter en priorité
