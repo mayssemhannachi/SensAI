@@ -1,8 +1,19 @@
-# KineKids AI — Analyse et tableau de bord thérapeute
+# KineKids AI — Data Analysis & Therapist Dashboard
 
-Ce dossier contient le prototype Streamlit du tableau de bord thérapeute et les modules d’analyse de données.
+Ce dossier contient la partie **Data Analysis** du projet SensAI / KineKids AI :
 
-## Lancer le dashboard
+- `notebooks/` et `src/` : pipeline d’analyse des données synthétiques (chargement, nettoyage, intégration, KPI, progression) ;
+- `dashboard/` : le **tableau de bord thérapeute** (Streamlit), connecté au backend FastAPI **ou** aux données de démonstration ;
+- `scripts/seed_backend.py` : remplit le backend avec les données de démo, via l’API ;
+- `tests/` : tests automatiques (calculs, contrat API, rendu de chaque page).
+
+```
+🎮 Jeux + Computer Vision → 📊 métriques → PostgreSQL → FastAPI → 📈 Dashboard → 👩‍⚕️ Thérapeute
+                                                                    ↑
+                                              data/ (CSV synthétiques, mode Démo)
+```
+
+## 1. Installation
 
 Depuis le dossier `data_analysis` :
 
@@ -10,47 +21,102 @@ Depuis le dossier `data_analysis` :
 python -m venv .venv
 .venv\Scripts\activate
 python -m pip install -r requirements.txt
-streamlit run dashboard/app.py
 ```
 
-Ouvrir l’adresse locale affichée par Streamlit dans le navigateur.
+## 2. Lancer le dashboard
 
-## Données de démonstration
-
-Le dashboard lit actuellement les patients dans `data/raw/patients.csv` et les séances analysées dans `data/processed/session_analysis.csv`. Ces fichiers sont des données de démonstration synthétiques ; ils ne doivent pas être remplacés par des données médicales identifiantes dans le dépôt.
-
-Le mode CSV reste le mode par défaut et permet de présenter le prototype sans backend.
-
-## Connexion au backend FastAPI
-
-Le dashboard appelle l’API FastAPI ; il ne se connecte jamais directement à PostgreSQL. L’équipe backend doit d’abord démarrer l’API, appliquer ses migrations et fournir un compte thérapeute de test. L’URL locale par défaut est `http://127.0.0.1:8000`.
-
-Dans PowerShell, depuis le dossier `data_analysis`, activez le mode API avant de lancer Streamlit :
+**Toujours depuis le dossier `data_analysis`** (pour que le thème `.streamlit/config.toml` soit appliqué) :
 
 ```powershell
-$env:KINEKIDS_DATA_SOURCE = "api"
-$env:KINEKIDS_API_URL = "http://127.0.0.1:8000"
 streamlit run dashboard/app.py
 ```
 
-Le dashboard affiche alors un formulaire de connexion. Il utilise `POST /auth/login` puis envoie le jeton reçu dans l’en-tête Bearer des appels protégés. Aucun mot de passe ni jeton ne doit être inscrit dans le code ou commité.
+Le dashboard s’ouvre en **mode Démo** par défaut. La source de données se change à tout moment dans le menu de gauche (**Démo / Backend**) — aucun redémarrage nécessaire.
 
-Pour revenir au mode CSV dans le terminal courant, définissez `KINEKIDS_DATA_SOURCE` à `csv` ou ouvrez un nouveau terminal.
+| Mode | Données | Usage |
+|------|---------|-------|
+| **Démo** | CSV synthétiques de `data/` (20 patients, 500 séances, 3 jeux) | Présentation sans backend, toujours fonctionnelle |
+| **Backend** | API FastAPI KineKids AI, après connexion du thérapeute | Fonctionnement réel |
 
-### Contrat actuel côté API
+Variables d’environnement optionnelles (ou fichier `.env`) :
 
-- Création patient : `POST /patients/` avec `first_name`, `last_name` et `age`. L’API produit le code patient et rattache le thérapeute connecté. Le formulaire utilise donc l’âge dans ce mode ; la date de naissance et le code personnalisé sont uniquement disponibles en mode CSV.
-- Jeux : le dashboard lit `GET /games/` et les associations par `GET /patient-games/patient/{patient_id}`.
-- Séances : l’API les expose par `GET /sessions/patient-game/{patient_game_id}`. Le dashboard les rassemble en parcourant les patients et leurs jeux associés.
-- Durée : l’API fournit `duration_sec`; le dashboard la convertit en minutes pour correspondre aux graphiques CSV existants.
-- Mesures : les jeux et l’équipe backend doivent convenir des clés JSON `metrics` communes. Le dashboard reconnaît `score`, `success_rate`, `progression`, `repetitions`, `level_number`, `exercise_id` et `exercise_name`. `success_rate` doit être un pourcentage de 0 à 100 ; progression est un pourcentage signé. Les mesures absentes restent indisponibles, elles ne sont pas inventées.
-- Diagnostic : l’API permet de créer une consultation avec `POST /consultations/`, mais n’expose pas encore de route de lecture des consultations. Le dashboard peut soumettre le diagnostic lors de la création du patient, mais ne peut pas ensuite l’afficher dans la fiche.
+```powershell
+$env:KINEKIDS_DATA_SOURCE = "api"                  # source au démarrage : demo (défaut) ou api
+$env:KINEKIDS_API_URL = "http://127.0.0.1:8000"    # adresse du backend
+```
 
-**À confirmer avec l’équipe backend avant la démonstration :** les jeux doivent être initialisés dans le catalogue de l’API et envoyer les mêmes clés et unités pour `metrics`. Pour des volumes supérieurs au prototype, une route API de synthèse listant les séances accessibles au thérapeute évitera les appels successifs par patient et par jeu.
+## 3. Utiliser le mode Backend
 
-## Navigation actuelle
+1. Démarrer le backend (voir le README à la racine) : `uvicorn app.main:app --reload`.
+2. (Première fois) remplir le backend avec les données de démo :
 
-- Vue globale : indicateurs filtrables par période, graphiques, signaux à revoir et séances récentes.
-- Patients : recherche et accès aux fiches.
-- Fiche patient : historique, indicateurs et diagnostic.
-- Ajouter un patient : création d’un profil de démonstration.
+   ```powershell
+   python scripts/seed_backend.py --email demo@kinekids.tn --password demo1234 --register
+   ```
+
+   Le script crée le compte thérapeute, le catalogue de jeux, les 20 patients, leurs diagnostics, leurs jeux assignés et les 500 séances. Il ignore les patients déjà présents.
+3. Dans le dashboard, choisir **Backend** puis se connecter avec ce compte.
+
+Le dashboard n’accède **jamais** directement à PostgreSQL : il passe uniquement par l’API avec le jeton Bearer obtenu à la connexion. Les données sont mises en cache 2 minutes (bouton **↻ Actualiser** pour forcer).
+
+## 4. Pages
+
+| Page | Contenu |
+|------|---------|
+| **Vue globale** | KPI comparés à la période précédente (7 j / 30 j / 90 j / tout), tendance hebdomadaire score & réussite, répartition des taux de réussite, réussite par jeu, **patients à surveiller** avec la raison de l’alerte, dernières séances |
+| **Patients** | Recherche (nom, code), filtre par statut, tri, cartes avec mini-courbe du score, export CSV |
+| **Fiche patient** | Statut et alertes, diagnostic, KPI, **KineKids Intelligence** (lecture automatique de l’historique), courbes réussite / score / progression / par jeu, avant-maintenant par jeu, historique exportable ; en mode Backend : ajout de diagnostic et **assignation de jeux** |
+| **Jeux** | Réussite par jeu et par semaine, difficulté par niveau, matrice patients × jeux |
+| **Ajouter un patient** | Création du profil (backend : code patient généré par l’API) |
+
+### Règles d’analyse (modifiables dans `dashboard/utils/analytics.py`)
+
+- **Réussite faible** : dernière séance < 40 % de réussite.
+- **Score en baisse** : pente du score ≤ −1 point par séance sur les 5 dernières séances.
+- **Inactif** : aucune séance depuis plus de 14 jours.
+- **Statut** : *À surveiller* (réussite faible ou score en baisse), *En progression* (pente ≥ +1), *Stable*, *Nouveau* (aucune séance).
+- **Progression** : variation du score (%) par rapport à la séance précédente du même exercice ; calculée par le dashboard si le jeu ne l’envoie pas.
+
+Ce sont des indicateurs d’aide à la décision, pas des critères diagnostiques.
+
+## 5. Contrat de données attendu des jeux (`metrics` d’une session)
+
+`POST /sessions/` avec `patient_game_id`, `duration_sec` et un objet `metrics` :
+
+| Clé | Type | Obligatoire | Description |
+|-----|------|-------------|-------------|
+| `score` | nombre 0–100 | oui | Score de la séance |
+| `success_rate` | nombre 0–100 (ou ratio 0–1) | oui | Taux de réussite |
+| `repetitions` | entier | conseillé | Nombre de répétitions |
+| `level_number` | entier | conseillé | Niveau de l’exercice |
+| `exercise_name` | texte | conseillé | Nom de l’exercice |
+| `played_at` | date ISO 8601 | optionnel | Date réelle de la séance (sinon `created_at`) |
+| `progression` | nombre (%) | optionnel | Sinon calculée par le dashboard |
+
+Alias acceptés : `reps`, `level`, `successRate`, `accuracy`, `name_exercise`, `session_date`.
+
+## 6. Tests
+
+```powershell
+python -m pytest -q
+```
+
+32 tests : calculs d’analyse, normalisation des données API, contrat d’écriture vers l’API, rendu de chaque page et de chaque fiche patient en mode démo, écran de connexion.
+
+## 7. Structure
+
+```
+dashboard/
+├── app.py                 # point d’entrée : thème, menu, source de données, connexion, routage
+├── navigation.py          # pages et navigation
+├── pages/                 # global_view, patients, patient_detail, games, add_patient, login
+├── components/            # ui (cartes, badges, KPI), charts (Plotly), patient_table
+└── utils/
+    ├── api_client.py      # client HTTP du backend + messages d’erreur
+    ├── data.py            # sources Démo / Backend → même format normalisé
+    ├── analytics.py       # calculs purs (KPI, tendances, alertes, insights)
+    ├── state.py           # source de données, jeton, patient sélectionné
+    └── theme.py           # design system (couleurs, CSS)
+```
+
+Les points qui relèvent du backend (et non du dashboard) sont listés dans `BACKEND_NOTES.md`.

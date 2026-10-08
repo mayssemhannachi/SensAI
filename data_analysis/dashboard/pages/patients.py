@@ -1,282 +1,118 @@
 import pandas as pd
 import streamlit as st
 
-from dashboard.utils.data import (
-    get_initials,
-    load_patients,
-    load_session_analysis,
-)
-from dashboard.utils.theme import render_html
+from dashboard import navigation
+from dashboard.components.patient_table import patient_card_html
+from dashboard.components.ui import card, empty_state, page_header, render_html
+from dashboard.utils import analytics
+from dashboard.utils.data import load_dataset
+
+SORTS = {
+    "Priorité (à surveiller d’abord)": (["status_rank", "last_session"], [True, False]),
+    "Dernière séance": (["last_session"], [False]),
+    "Nom": (["last_name", "first_name"], [True, True]),
+    "Réussite (croissante)": (["recent_success"], [True]),
+    "Nombre de séances": (["sessions"], [False]),
+}
+
+COLUMNS_PER_ROW = 3
 
 
 def show_patients():
+    data = load_dataset()
+    reference = data.reference_date
 
-    render_html(
-        """
-        <div class="page-header animate">
-
-            <div class="page-kicker">
-                SUIVI DES ENFANTS
-            </div>
-
-            <div class="page-title">
-                Mes patients ✨
-            </div>
-
-            <div class="page-description">
-                Recherchez rapidement un enfant et accédez à son parcours
-                de rééducation.
-            </div>
-
-        </div>
-        """,
+    page_header(
+        "Suivi thérapeutique",
+        "Mes patients",
+        "Retrouvez les enfants suivis, leur statut et leurs dernières performances.",
+        meta=f"{len(data.patients)} patient(s)",
     )
 
-    patients = load_patients()
-    sessions = load_session_analysis()
-
-    if patients.empty:
-
-        st.info(
-            "Aucun patient enregistré."
-        )
-
+    if data.patients.empty:
+        empty_state("👤", "Aucun patient enregistré", "Créez un premier profil pour démarrer le suivi.")
+        if st.button("＋ Ajouter un patient", type="primary"):
+            navigation.go("add_patient")
         return
 
-    # ======================================================
-    # SEARCH
-    # ======================================================
+    overview = analytics.patient_overview(data.patients, data.sessions, reference)
 
-    search = st.text_input(
-        "Rechercher",
-        placeholder="Nom, prénom ou code patient...",
-        label_visibility="collapsed",
+    # --------------------------------------------------------
+    # FILTRES
+    # --------------------------------------------------------
+    search_col, status_col, sort_col = st.columns([2, 1.6, 1.3], vertical_alignment="bottom")
+    with search_col:
+        query = st.text_input(
+            "Rechercher", placeholder="🔎  Nom, prénom ou code patient…", key="patients_search"
+        )
+    with status_col:
+        statuses = [s for s in analytics.STATUS_ORDER if s in set(overview["status"])]
+        selected_status = st.multiselect(
+            "Statut", statuses, key="patients_status_filter", placeholder="Tous les statuts"
+        )
+    with sort_col:
+        sort_label = st.selectbox("Trier par", list(SORTS), key="patients_sort")
+
+    filtered = overview
+    if query.strip():
+        q = query.strip().lower()
+        haystack = (
+            filtered["full_name"].str.lower() + " " + filtered["patient_code"].astype(str).str.lower()
+        )
+        filtered = filtered[haystack.str.contains(q, regex=False, na=False)]
+    if selected_status:
+        filtered = filtered[filtered["status"].isin(selected_status)]
+    columns, ascending = SORTS[sort_label]
+    filtered = filtered.sort_values(columns, ascending=ascending, na_position="last")
+
+    # Résumé par statut
+    counts = overview["status"].value_counts()
+    chips = " ".join(
+        f"<span class='kk-badge {tone}'>{status} · {counts.get(status, 0)}</span>"
+        for status, tone in [("À surveiller", "warning"), ("En progression", "good"),
+                             ("Stable", "info"), ("Nouveau", "neutral")]
+        if counts.get(status, 0)
+    )
+    render_html(
+        f"<div style='display:flex;justify-content:space-between;align-items:center;"
+        f"gap:10px;flex-wrap:wrap;margin:6px 0 14px'>"
+        f"<div style='display:flex;gap:6px;flex-wrap:wrap'>{chips}</div>"
+        f"<div style='font-size:12.5px;color:#667085'>{len(filtered)} résultat(s)</div></div>"
     )
 
-    filtered = patients.copy()
+    if filtered.empty:
+        empty_state("🔎", "Aucun patient ne correspond", "Modifiez la recherche ou les filtres.")
+        return
 
-    if search.strip():
-
-        query = search.lower().strip()
-
-        mask = (
-            filtered["first_name"]
-            .astype(str)
-            .str.lower()
-            .str.contains(query, na=False)
-            |
-            filtered["last_name"]
-            .astype(str)
-            .str.lower()
-            .str.contains(query, na=False)
-            |
-            filtered["patient_code"]
-            .astype(str)
-            .str.lower()
-            .str.contains(query, na=False)
-        )
-
-        filtered = filtered[mask]
-
-    # ======================================================
-    # COUNT
-    # ======================================================
-
-    st.caption(
-        f"{len(filtered)} patient(s) trouvé(s)"
-    )
-
-    # ======================================================
-    # PATIENT CARDS
-    # ======================================================
-
-    for start in range(
-        0,
-        len(filtered),
-        2,
-    ):
-
-        row = filtered.iloc[
-            start:start + 2
-        ]
-
-        columns = st.columns(
-            len(row),
-            gap="medium",
-        )
-
-        for column, (_, patient) in zip(
-            columns,
-            row.iterrows(),
-        ):
-
+    # --------------------------------------------------------
+    # GRILLE DE CARTES
+    # --------------------------------------------------------
+    rows = list(filtered.itertuples(index=False))
+    for start in range(0, len(rows), COLUMNS_PER_ROW):
+        columns = st.columns(COLUMNS_PER_ROW, gap="medium")
+        for column, row in zip(columns, rows[start:start + COLUMNS_PER_ROW]):
+            record = pd.Series(row._asdict())
             with column:
+                with card(f"patient-{record['id']}"):
+                    render_html(patient_card_html(record, reference))
+                    if st.button("Voir la fiche →", key=f"open_patient_{record['id']}", width="stretch"):
+                        navigation.open_patient(record["id"])
 
-                patient_id = patient["id"]
-
-                patient_sessions = sessions[
-                    sessions["patient_id"]
-                    == patient_id
-                ]
-
-                if not patient_sessions.empty:
-
-                    latest = (
-                        patient_sessions
-                        .sort_values("session_date")
-                        .iloc[-1]
-                    )
-
-                    score = latest["score"]
-
-                    success = latest[
-                        "success_rate"
-                    ]
-
-                    progression = latest[
-                        "progression"
-                    ]
-
-                else:
-
-                    score = None
-                    success = None
-                    progression = None
-
-                initials = get_initials(
-                    patient["first_name"],
-                    patient["last_name"],
-                )
-
-                score_text = (
-                    f"{score:.1f}"
-                    if pd.notna(score)
-                    else "—"
-                )
-
-                success_text = (
-                    f"{success:.1f}%"
-                    if pd.notna(success)
-                    else "—"
-                )
-
-                if pd.notna(progression):
-
-                    progression_text = (
-                        f"{progression:+.1f}%"
-                    )
-
-                    badge_class = (
-                        "badge-positive"
-                        if progression >= 0
-                        else "badge-negative"
-                    )
-
-                else:
-
-                    progression_text = "—"
-                    badge_class = "badge-neutral"
-
-                render_html(
-                    f"""
-                    <div class="patient-card animate">
-
-                        <div style="
-                            display:flex;
-                            align-items:center;
-                            gap:14px;
-                        ">
-
-                            <div class="patient-avatar">
-                                {initials}
-                            </div>
-
-                            <div>
-                                <div style="
-                                    font-family:Nunito;
-                                    font-weight:900;
-                                    font-size:17px;
-                                ">
-                                    {patient["first_name"]}
-                                    {patient["last_name"]}
-                                </div>
-
-                                <div style="
-                                    color:#777B8C;
-                                    font-size:11px;
-                                ">
-                                    Code :
-                                    {patient.get("patient_code", "—")}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div style="
-                            display:grid;
-                            grid-template-columns:
-                                repeat(3,1fr);
-                            gap:8px;
-                            margin-top:18px;
-                        ">
-
-                            <div>
-                                <div style="
-                                    color:#777B8C;
-                                    font-size:10px;
-                                ">
-                                    Score
-                                </div>
-
-                                <strong>
-                                    {score_text}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <div style="
-                                    color:#777B8C;
-                                    font-size:10px;
-                                ">
-                                    Réussite
-                                </div>
-
-                                <strong>
-                                    {success_text}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <div style="
-                                    color:#777B8C;
-                                    font-size:10px;
-                                ">
-                                    Progression
-                                </div>
-
-                                <span class="badge {badge_class}">
-                                    {progression_text}
-                                </span>
-                            </div>
-
-                        </div>
-
-                    </div>
-                    """,
-                )
-
-                if st.button(
-                    "Ouvrir la fiche",
-                    key=f"patient_{patient_id}",
-                    width="stretch",
-                ):
-
-                    st.session_state[
-                        "selected_patient_id"
-                    ] = patient_id
-
-                    st.session_state[
-                        "page"
-                    ] = "Fiche patient"
-
-                    st.rerun()
+    # --------------------------------------------------------
+    # EXPORT
+    # --------------------------------------------------------
+    export = filtered[[
+        "patient_code", "full_name", "age", "status", "sessions", "last_session",
+        "last_score", "recent_success", "trend",
+    ]].rename(columns={
+        "patient_code": "code", "full_name": "patient", "age": "age", "status": "statut",
+        "sessions": "seances", "last_session": "derniere_seance", "last_score": "dernier_score",
+        "recent_success": "reussite_recente", "trend": "tendance_score_par_seance",
+    })
+    st.write("")
+    st.download_button(
+        "⤓ Exporter la liste (CSV)",
+        export.to_csv(index=False).encode("utf-8-sig"),
+        file_name="kinekids_patients.csv",
+        mime="text/csv",
+    )

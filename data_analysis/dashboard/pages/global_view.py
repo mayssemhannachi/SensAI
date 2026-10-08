@@ -1,403 +1,207 @@
 import pandas as pd
 import streamlit as st
 
-from dashboard.components.charts import (
-    game_performance_chart,
-    global_progression_chart,
-    global_score_evolution_chart,
-    success_distribution_chart,
+from dashboard import navigation
+from dashboard.components import charts
+from dashboard.components.ui import (
+    alert_badges,
+    avatar,
+    card,
+    card_title,
+    delta_chip,
+    empty_state,
+    esc,
+    fmt_date,
+    fmt_number,
+    kpi_card,
+    kpi_row,
+    note,
+    page_header,
+    render_html,
+    section,
 )
-from dashboard.components.kpi_cards import display_kpi_row
-from dashboard.utils.data import load_session_analysis
+from dashboard.utils import analytics
+from dashboard.utils.data import load_dataset
 
 
-def page_header(last_session_date):
-
-    st.markdown(
-        f"""
-        <div class="page-header animate">
-            <div class="page-kicker">ESPACE THÉRAPEUTE · SUIVI PÉDIATRIQUE</div>
-            <div class="page-title">Vue d’ensemble</div>
-            <div class="page-description">
-                Les indicateurs clés et les séances récentes de vos patients.
-            </div>
-            <div class="page-meta">Données jusqu’au {last_session_date:%d/%m/%Y}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+def _period_label(days):
+    return "tout l’historique" if days is None else f"les {days} derniers jours"
 
 
 def show_global_view():
+    data = load_dataset()
+    reference = data.reference_date
+    sessions_all = data.sessions
 
-    df = load_session_analysis()
+    last_data = sessions_all["session_date"].max() if not sessions_all.empty else None
+    page_header(
+        "Espace thérapeute · suivi pédiatrique",
+        "Vue d’ensemble",
+        "L’activité, les performances et les patients qui demandent votre attention, en un coup d’œil.",
+        meta=f"<span class='kk-dot on'></span>Dernière séance : {fmt_date(last_data)}",
+    )
 
-    if df.empty:
-
-        st.warning(
-            "Aucune donnée de séance disponible."
-        )
-
+    if data.patients.empty:
+        empty_state("👋", "Aucun patient pour le moment",
+                    "Ajoutez un premier patient pour commencer le suivi.")
+        if st.button("＋ Ajouter un patient", type="primary"):
+            navigation.go("add_patient")
         return
 
-    valid_dates = df["session_date"].dropna()
-    if valid_dates.empty:
-        st.info("Les séances reçues ne contiennent pas de date exploitable.")
+    if sessions_all.empty:
+        empty_state("🎮", "Aucune séance enregistrée",
+                    "Les indicateurs apparaîtront dès que les jeux enverront leurs premières séances.")
         return
 
-    latest_data_date = valid_dates.max().normalize()
-    page_header(latest_data_date)
-
-    period_options = {
-        "30 derniers jours": 30,
-        "90 derniers jours": 90,
-        "Tout l’historique": None,
-    }
-    filter_column, period_note = st.columns([1, 2.5], vertical_alignment="center")
-    with filter_column:
-        selected_period = st.selectbox(
+    # --------------------------------------------------------
+    # PÉRIODE
+    # --------------------------------------------------------
+    period_col, info_col = st.columns([1.3, 2], vertical_alignment="bottom")
+    with period_col:
+        period = st.segmented_control(
             "Période d’analyse",
-            list(period_options),
-            index=1,
-            key="global_analysis_period",
+            list(analytics.PERIODS),
+            default="30 jours",
+            key="overview_period",
+        ) or "30 jours"
+    days = analytics.PERIODS[period]
+    current = analytics.filter_period(sessions_all, days, reference)
+    previous = analytics.previous_period(sessions_all, days, reference)
+    start, _ = analytics.period_bounds(sessions_all, days, reference)
+    with info_col:
+        render_html(
+            f"<div style='text-align:right;font-size:12.5px;color:#667085;padding-bottom:6px'>"
+            f"Du <b>{fmt_date(start)}</b> au <b>{fmt_date(reference)}</b>"
+            f"{' · comparé à la période précédente' if days else ''}</div>"
         )
 
-    period_days = period_options[selected_period]
-    if period_days is not None:
-        period_start = latest_data_date - pd.Timedelta(days=period_days - 1)
-        df = df[df["session_date"] >= period_start].copy()
-    else:
-        period_start = df["session_date"].min().normalize()
+    overview = analytics.patient_overview(data.patients, sessions_all, reference)
+    watch = overview[overview["status"] == "À surveiller"] if not overview.empty else overview
 
-    if df.empty:
-        st.info("Aucune séance enregistrée pour cette période.")
+    # --------------------------------------------------------
+    # KPI
+    # --------------------------------------------------------
+    k = analytics.global_kpis(current, previous)
+    vs = "vs période précédente" if days else "sur tout l’historique"
+    kpi_row([
+        kpi_card("Patients actifs", fmt_number(k["patients"]["value"]), "◉", "tone-violet",
+                 foot=f"sur {len(data.patients)} suivis",
+                 delta_html=delta_chip(k["patients"]["delta"], decimals=0)),
+        kpi_card("Séances réalisées", fmt_number(k["sessions"]["value"]), "▶", "tone-blue",
+                 foot=vs, delta_html=delta_chip(k["sessions"]["delta"], decimals=0)),
+        kpi_card("Réussite moyenne", fmt_number(k["success"]["value"], 1), "✓", "tone-green",
+                 unit=" %", foot=vs, delta_html=delta_chip(k["success"]["delta"], " pts")),
+        kpi_card("Score moyen", fmt_number(k["score"]["value"], 1), "★", "tone-orange",
+                 foot=vs, delta_html=delta_chip(k["score"]["delta"], " pt")),
+        kpi_card("À surveiller", fmt_number(len(watch)), "!", "tone-pink",
+                 foot="patients avec un signal actif"),
+    ])
+
+    if current.empty:
+        st.write("")
+        empty_state("🗓️", "Aucune séance sur cette période",
+                    "Élargissez la période d’analyse pour voir les tendances.")
         return
 
-    with period_note:
-        st.caption(
-            f"Du {period_start:%d/%m/%Y} au {latest_data_date:%d/%m/%Y} "
-            f"· {df['id_session'].nunique()} séances"
-        )
-
-    # ======================================================
-    # KPI
-    # ======================================================
-
-    patient_count = df["patient_id"].nunique()
-
-    session_count = df["id_session"].nunique()
-
-    mean_success = df["success_rate"].mean()
-
-    mean_progression = df["progression"].mean()
-
-    display_kpi_row(
-        [
-            {
-                "title": "Patients actifs",
-                "value": patient_count,
-                "description": f"Sur {selected_period.lower()}",
-            },
-            {
-                "title": "Séances réalisées",
-                "value": session_count,
-                "description": f"Sur {selected_period.lower()}",
-            },
-            {
-                "title": "Réussite moyenne",
-                "value": f"{mean_success:.1f}%" if pd.notna(mean_success) else "—",
-                "description": f"Moyenne · {selected_period.lower()}",
-            },
-            {
-                "title": "Progression moyenne",
-                "value": (
-                    f"{mean_progression:+.1f}%"
-                    if pd.notna(mean_progression)
-                    else "—"
-                ),
-                "description": f"Moyenne · {selected_period.lower()}",
-            },
-        ]
-    )
-
-    st.markdown("### La progression en un coup d’œil")
-    st.caption("Les tendances globales de rééducation")
-
-    # ======================================================
-    # SCORE EVOLUTION
-    # ======================================================
-
-    daily_data = df.dropna(subset=["session_date"]).copy()
-    daily_data["session_date"] = daily_data["session_date"].dt.normalize()
-    daily_score = (
-        daily_data.groupby("session_date", as_index=False)
-        .agg(mean_score=("score", "mean"))
-        .sort_values("session_date")
-    )
-
-    if not daily_score.empty:
-
-        daily_score["session_date"] = pd.to_datetime(
-            daily_score["session_date"]
-        )
-
-        col1, col2 = st.columns(
-            [1.65, 1],
-            gap="large",
-        )
-
-        with col1, st.container():
-            st.markdown("**Évolution du score moyen**")
-
-            fig = global_score_evolution_chart(daily_score)
-
+    # --------------------------------------------------------
+    # TENDANCES
+    # --------------------------------------------------------
+    section("Tendances", f"Évolution hebdomadaire sur {_period_label(days)}.")
+    left, right = st.columns([1.7, 1], gap="medium")
+    with left:
+        with card("trend"):
+            card_title("Score et réussite par semaine",
+                       "Moyenne de toutes les séances de la semaine (échelle 0–100).")
+            weekly = analytics.weekly_trend(current)
+            st.plotly_chart(charts.weekly_trend_chart(weekly), config=charts.CHART_CONFIG,
+                            key="overview_weekly")
+    with right:
+        with card("distribution"):
+            card_title("Répartition des taux de réussite", "Nombre de séances par tranche.")
             st.plotly_chart(
-                fig,
-                width="stretch",
-                config={"displayModeBar": False},
+                charts.success_distribution_chart(analytics.success_distribution(current)),
+                config=charts.CHART_CONFIG, key="overview_distribution",
             )
 
-        # ==================================================
-        # SUCCESS DISTRIBUTION
-        # ==================================================
-
-        bins = [
-            float("-inf"),
-            40,
-            50,
-            60,
-            70,
-            80,
-            float("inf"),
-        ]
-
-        labels = [
-            "< 40%",
-            "40–50%",
-            "50–60%",
-            "60–70%",
-            "70–80%",
-            "80%+",
-        ]
-
-        temp = df.copy()
-
-        temp["success_range"] = pd.cut(
-            temp["success_rate"],
-            bins=bins,
-            labels=labels,
-            include_lowest=True,
-        )
-
-        distribution = (
-            temp["success_range"]
-            .value_counts()
-            .reindex(labels)
-            .fillna(0)
-            .reset_index()
-        )
-
-        distribution.columns = [
-            "range",
-            "count",
-        ]
-
-        with col2, st.container():
-            st.markdown("**Répartition des performances**")
-
-            fig = success_distribution_chart(distribution)
-
-            st.plotly_chart(
-                fig,
-                width="stretch",
-                config={"displayModeBar": False},
-            )
-
-    # ======================================================
-    # GAMES
-    # ======================================================
-
-    st.markdown("### Les jeux KineKids")
-
-    game_data = (
-        df.groupby(
-            "name_game",
-            as_index=False,
-        )
-        .agg(
-            mean_success_rate=(
-                "success_rate",
-                "mean",
-            )
-        )
-        .sort_values(
-            "mean_success_rate",
-            ascending=False,
-        )
-    )
-
-    col1, col2 = st.columns(
-        [1.2, 1],
-        gap="large",
-    )
-
-    with col1, st.container():
-        st.markdown("**Performance moyenne par jeu**")
-
-        fig = game_performance_chart(game_data)
-
-        st.plotly_chart(
-            fig,
-            width="stretch",
-            config={"displayModeBar": False},
-        )
-
-    # ======================================================
-    # ATTENTION PATIENTS
-    # ======================================================
-
-    latest = (
-        df.dropna(subset=["session_date"])
-        .sort_values("session_date")
-        .groupby(
-            "patient_id",
-            as_index=False,
-        )
-        .tail(1)
-        .copy()
-    )
-
-    attention = latest[
-        (latest["progression"] < 0)
-        | (latest["success_rate"] < 40)
-    ].copy()
-
-    with col2, st.container():
-        st.markdown("**Séances à revoir**")
-        st.caption(
-            "Signal automatique si réussite < 40 % ou progression négative ; "
-            "à interpréter dans le contexte clinique."
-        )
-
-        if attention.empty:
-            st.success("Aucun signal à revoir sur la période sélectionnée.")
-        else:
-            for _, row in attention.head(6).iterrows():
-                with st.container(border=True):
-                    name_column, metric_column, action_column = st.columns(
-                        [1.6, 1.4, 0.8],
-                        vertical_alignment="center",
-                    )
-                    with name_column:
-                        st.markdown(
-                            f"**{row['first_name']} {row['last_name']}**"
+    # --------------------------------------------------------
+    # JEUX + PATIENTS À SURVEILLER
+    # --------------------------------------------------------
+    section("Jeux et vigilance", "Comparer les activités et repérer les patients à revoir.")
+    left, right = st.columns([1.15, 1], gap="medium")
+    colors = charts.game_colors(sessions_all["game_name"])
+    with left:
+        with card("games"):
+            card_title("Réussite moyenne par jeu", "Survolez une barre pour le détail.")
+            summary = analytics.game_summary(current)
+            st.plotly_chart(charts.game_comparison_chart(summary, colors), config=charts.CHART_CONFIG,
+                            key="overview_games")
+            if st.button("Voir l’analyse par jeu →", key="overview_to_games"):
+                navigation.go("games")
+    with right:
+        with card("watch"):
+            card_title(f"Patients à surveiller ({len(watch)})",
+                       "Signaux calculés sur l’historique complet de chaque patient.")
+            if watch.empty:
+                render_html(
+                    "<div class='kk-watch'><span class='kk-badge good'>✓</span>"
+                    "<div class='kk-watch-detail'>Aucun signal d’alerte : tous les patients "
+                    "suivent une trajectoire stable ou en progression.</div></div>"
+                )
+            else:
+                ordered = watch.assign(
+                    _n=watch["alerts"].map(lambda a: -sum(x.level == "critical" for x in a))
+                ).sort_values(["_n", "trend"])
+                for row in ordered.head(6).itertuples(index=False):
+                    info, action = st.columns([4, 1.1], vertical_alignment="center")
+                    with info:
+                        detail = row.alerts[0].detail if row.alerts else ""
+                        render_html(
+                            f"""
+                            <div class="kk-watch">
+                              {avatar(row.first_name, row.last_name, seed=row.id)}
+                              <div>
+                                <div class="kk-watch-name">{esc(row.full_name)}</div>
+                                <div class="kk-alerts" style="margin-top:3px">{alert_badges(row.alerts)}</div>
+                                <div class="kk-watch-detail">{esc(detail)}</div>
+                              </div>
+                            </div>
+                            """
                         )
-                        st.caption(f"Séance du {row['session_date']:%d/%m/%Y}")
-                    with metric_column:
-                        st.caption(f"Réussite · {row['success_rate']:.1f}%")
-                        if pd.notna(row["progression"]):
-                            st.caption(f"Progression · {row['progression']:+.1f}%")
-                        else:
-                            st.caption("Progression · non calculée")
-                    with action_column:
-                        if st.button(
-                            "Ouvrir",
-                            key=f"open_attention_patient_{row['patient_id']}",
-                            width="stretch",
-                        ):
-                            st.session_state["selected_patient_id"] = row["patient_id"]
-                            st.session_state["page"] = "Fiche patient"
-                            st.rerun()
+                    with action:
+                        if st.button("Fiche", key=f"watch_{row.id}", width="stretch"):
+                            navigation.open_patient(row.id)
+                if len(watch) > 6:
+                    if st.button(f"Voir les {len(watch)} patients à surveiller →", key="watch_all"):
+                        st.session_state["patients_status_filter"] = ["À surveiller"]
+                        navigation.go("patients")
+            note("ces signaux sont une aide à la décision et doivent être interprétés "
+                 "dans leur contexte clinique.", title="Aide à la décision")
 
-    # ======================================================
-    # PROGRESSION
-    # ======================================================
-
-    st.markdown("### Évolution globale")
-
-    progression_data = (
-        daily_data.groupby("session_date", as_index=False)
-        .agg(mean_progression=("progression", "mean"))
-        .sort_values("session_date")
-    )
-
-    if not progression_data.empty:
-
-        progression_data["session_date"] = pd.to_datetime(
-            progression_data["session_date"]
-        )
-
-        fig = global_progression_chart(progression_data)
-
-        st.plotly_chart(
-            fig,
-            width="stretch",
-            config={"displayModeBar": False},
-        )
-
-    # ======================================================
+    # --------------------------------------------------------
     # DERNIÈRES SÉANCES
-    # ======================================================
-
-    st.markdown("### Dernières séances")
-
-    recent = (
-        df.sort_values(
-            "session_date",
-            ascending=False,
-        )
-        .head(8)
-        .copy()
+    # --------------------------------------------------------
+    section("Dernières séances", "Les 10 séances les plus récentes de la période.")
+    recent = current.sort_values("session_date", ascending=False).head(10)
+    table = pd.DataFrame({
+        "Date": recent["session_date"],
+        "Patient": recent["patient_name"],
+        "Jeu": recent["game_name"],
+        "Niveau": recent["level"],
+        "Score": recent["score"],
+        "Réussite": recent["success_rate"],
+        "Progression": recent["progression"],
+        "Durée": recent["duration_min"],
+    })
+    st.dataframe(
+        table,
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "Date": st.column_config.DatetimeColumn(format="DD/MM/YYYY HH:mm"),
+            "Niveau": st.column_config.NumberColumn(format="%d"),
+            "Score": st.column_config.NumberColumn(format="%.1f"),
+            "Réussite": st.column_config.ProgressColumn(format="%.0f %%", min_value=0, max_value=100),
+            "Progression": st.column_config.NumberColumn(format="%+.1f %%"),
+            "Durée": st.column_config.NumberColumn("Durée (min)", format="%.1f"),
+        },
     )
-
-    if recent.empty:
-        st.info("Aucune séance récente à afficher.")
-    else:
-        recent["Date"] = recent["session_date"].dt.strftime("%d/%m/%Y")
-        recent_display = recent[
-            [
-                "Date",
-                "first_name",
-                "last_name",
-                "name_game",
-                "score",
-                "success_rate",
-                "progression",
-            ]
-        ].copy()
-        recent_display["Patient"] = (
-            recent_display["first_name"]
-            + " "
-            + recent_display["last_name"]
-        )
-        recent_display = recent_display[
-            [
-                "Date",
-                "Patient",
-                "name_game",
-                "score",
-                "success_rate",
-                "progression",
-            ]
-        ]
-        recent_display.columns = [
-            "Date",
-            "Patient",
-            "Jeu",
-            "Score",
-            "Réussite (%)",
-            "Progression (%)",
-        ]
-
-        st.caption(f"Les {len(recent_display)} séances les plus récentes")
-        st.dataframe(
-            recent_display,
-            width="stretch",
-            height=360,
-            hide_index=True,
-            column_config={
-                "Score": st.column_config.NumberColumn(format="%.1f"),
-                "Réussite (%)": st.column_config.NumberColumn(format="%.1f%%"),
-                "Progression (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-            },
-        )

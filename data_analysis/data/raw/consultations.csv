@@ -1,0 +1,21 @@
+id,patient_id,therapist_id,consultation_date,diagnosis
+1,1,3,2026-04-23,Paralysie obstétricale du plexus brachial (forme légère)
+2,2,1,2026-06-17,Raideur du poignet après immobilisation
+3,3,3,2026-05-14,Rééducation après entorse du genou
+4,4,2,2026-07-08,Paralysie obstétricale du plexus brachial (forme légère)
+5,5,3,2026-07-06,Trouble développemental de la coordination (membres supérieurs)
+6,6,3,2026-06-16,Limitation de l’élévation de l’épaule
+7,7,2,2026-06-07,Paralysie obstétricale du plexus brachial (forme légère)
+8,8,2,2026-06-17,Raideur du poignet après immobilisation
+9,9,3,2026-06-01,Rééducation après entorse du genou
+10,10,2,2026-06-12,Trouble développemental de la coordination (membres inférieurs)
+11,11,3,2026-05-21,Hémiparésie droite — membre inférieur
+12,12,3,2026-07-25,Limitation de l’élévation de l’épaule
+13,13,3,2026-07-25,Paralysie obstétricale du plexus brachial (forme légère)
+14,14,1,2026-07-15,Raideur du poignet après immobilisation
+15,15,3,2026-08-09,Rééducation post-fracture du poignet
+16,16,1,2026-07-30,Trouble développemental de la coordination (membres inférieurs)
+17,17,1,2026-06-02,Trouble développemental de la coordination (membres supérieurs)
+18,18,2,2026-06-27,Rééducation post-fracture du poignet
+19,19,2,2026-06-02,Trouble développemental de la coordination (membres inférieurs)
+20,20,2,2026-05-22,Trouble développemental de la coordination (membres supérieurs)

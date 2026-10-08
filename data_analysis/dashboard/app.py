@@ -1,248 +1,220 @@
+"""KineKids AI — Dashboard thérapeute (Streamlit).
+
+Lancement (depuis le dossier ``data_analysis``) :
+    streamlit run dashboard/app.py
+"""
+
 import sys
 from pathlib import Path
 
-# ==========================================================
-# PROJECT ROOT
-# ==========================================================
-
-DATA_ANALYSIS_ROOT = Path(
-    __file__
-).resolve().parents[1]
-
+DATA_ANALYSIS_ROOT = Path(__file__).resolve().parents[1]
 if str(DATA_ANALYSIS_ROOT) not in sys.path:
-    sys.path.insert(
-        0,
-        str(DATA_ANALYSIS_ROOT),
-    )
+    sys.path.insert(0, str(DATA_ANALYSIS_ROOT))
 
+import streamlit as st  # noqa: E402
 
-# ==========================================================
-# STREAMLIT
-# ==========================================================
-
-import streamlit as st
-
-from dashboard.utils.api_client import ApiError, api_mode_enabled, login as api_login
-from dashboard.utils.theme import apply_theme, render_html
-
-
-# ==========================================================
-# PAGE CONFIG
-# ==========================================================
+from dashboard import navigation  # noqa: E402
+from dashboard.components.ui import esc, render_html  # noqa: E402
+from dashboard.utils import api_client, state  # noqa: E402
+from dashboard.utils.api_client import ApiError  # noqa: E402
+from dashboard.utils.data import refresh_data  # noqa: E402
+from dashboard.utils.theme import apply_theme  # noqa: E402
 
 st.set_page_config(
-    page_title="KineKids AI",
+    page_title="KineKids AI · Thérapeute",
     page_icon="✦",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-
-# ==========================================================
-# THEME
-# ==========================================================
-
 apply_theme()
 
 
 # ==========================================================
-# SESSION STATE
+# PAGES (import paresseux pour garder un démarrage rapide)
 # ==========================================================
 
-if "page" not in st.session_state:
-
-    st.session_state[
-        "page"
-    ] = "Vue globale"
+def _overview():
+    from dashboard.pages.global_view import show_global_view
+    show_global_view()
 
 
-if "selected_patient_id" not in st.session_state:
-
-    st.session_state[
-        "selected_patient_id"
-    ] = None
+def _patients():
+    from dashboard.pages.patients import show_patients
+    show_patients()
 
 
-if api_mode_enabled() and not st.session_state.get("api_access_token"):
-    st.title("Connexion thérapeute")
-    st.caption("Connectez-vous avec votre compte backend KineKids AI.")
-    auth_notice = st.session_state.pop("api_auth_notice", None)
-    if auth_notice:
-        st.info(auth_notice)
-    with st.form("backend_login_form"):
-        email = st.text_input("Adresse e-mail")
-        password = st.text_input("Mot de passe", type="password")
-        submitted = st.form_submit_button("Se connecter", type="primary")
+def _patient():
+    from dashboard.pages.patient_detail import show_patient_detail
+    show_patient_detail()
 
-    if submitted:
-        try:
-            st.session_state["api_access_token"] = api_login(email.strip(), password)
-            st.rerun()
-        except ApiError as error:
-            st.error(str(error))
-    st.stop()
+
+def _games():
+    from dashboard.pages.games import show_games
+    show_games()
+
+
+def _add_patient():
+    from dashboard.pages.add_patient import show_add_patient
+    show_add_patient()
+
+
+def _login():
+    from dashboard.pages.login import show_login
+    show_login()
+
+
+PAGE_FUNCTIONS = {
+    "overview": _overview,
+    "patients": _patients,
+    "patient": _patient,
+    "games": _games,
+    "add_patient": _add_patient,
+}
 
 
 # ==========================================================
 # SIDEBAR
 # ==========================================================
 
-with st.sidebar:
+def _on_source_change():
+    choice = st.session_state.get("source_selector")
+    if choice:
+        state.set_data_source(choice)
+    else:  # désélection : on garde la source courante
+        st.session_state["source_selector"] = state.get_data_source()
 
-    if api_mode_enabled():
-        st.caption("Connecté au backend KineKids AI")
-        if st.button("Se déconnecter", key="backend_logout"):
-            st.session_state.pop("api_access_token", None)
-            st.rerun()
 
-    render_html(
-        """
-        <div class="sidebar-brand">
-
-            <div class="brand-logo">
-                ✦
+def render_sidebar(current_key: str | None, authenticated: bool) -> None:
+    with st.sidebar:
+        render_html(
+            """
+            <div class="kk-brand">
+              <div class="kk-brand-logo">K</div>
+              <div>
+                <div class="kk-brand-name">KineKids AI</div>
+                <div class="kk-brand-sub">Espace thérapeute</div>
+              </div>
             </div>
-
-            <div class="brand-title">
-                KineKids AI
-            </div>
-
-            <div class="brand-subtitle">
-                Rééducation pédiatrique intelligente
-            </div>
-
-        </div>
-        """,
-    )
-
-    render_html(
-        """
-        <div style="
-            font-size:11px;
-            font-weight:800;
-            color:#777B8C;
-            margin:0 0 8px 6px;
-            text-transform:uppercase;
-            letter-spacing:1px;
-        ">
-            Navigation
-        </div>
-        """,
-    )
-
-    pages = [
-        (
-            "Vue globale",
-            "◈",
-        ),
-        (
-            "Patients",
-            "○",
-        ),
-        (
-            "Fiche patient",
-            "◇",
-        ),
-        (
-            "Ajouter un patient",
-            "+",
-        ),
-    ]
-
-    for page_name, icon in pages:
-
-        is_active = (
-            st.session_state["page"]
-            == page_name
+            """
         )
 
-        if st.button(
-            f"{icon}  {page_name}",
-            key=f"nav_{page_name}",
+        if authenticated:
+            render_html('<div class="kk-side-label">Navigation</div>')
+            for key, (title, icon, _) in navigation.PAGES.items():
+                if st.button(
+                    f"{icon}  {title}",
+                    key=f"nav_{key}",
+                    width="stretch",
+                    type="primary" if key == current_key else "secondary",
+                ):
+                    navigation.go(key)
+
+        render_html('<div class="kk-side-label">Source des données</div>')
+        if st.session_state.get("source_selector") != state.get_data_source():
+            st.session_state["source_selector"] = state.get_data_source()
+        st.segmented_control(
+            "Source des données",
+            options=list(state.SOURCE_LABELS),
+            format_func=lambda key: state.SOURCE_LABELS[key],
+            key="source_selector",
+            on_change=_on_source_change,
+            label_visibility="collapsed",
             width="stretch",
-            type=(
-                "primary"
-                if is_active
-                else "secondary"
-            ),
-        ):
+        )
 
-            st.session_state[
-                "page"
-            ] = page_name
+        if state.api_mode_enabled():
+            user = state.current_user()
+            if authenticated:
+                email = esc(user.get("sub") or "Thérapeute connecté")
+                render_html(
+                    f"""
+                    <div class="kk-conn"><span class="kk-dot on"></span>
+                      <div>Backend connecté<small>{email}</small></div></div>
+                    """
+                )
+            else:
+                online = api_client.health()
+                dot, text = ("on", "Backend disponible") if online else ("off", "Backend injoignable")
+                render_html(
+                    f"""
+                    <div class="kk-conn"><span class="kk-dot {dot}"></span>
+                      <div>{text}<small>{esc(api_client.api_base_url())}</small></div></div>
+                    """
+                )
+        else:
+            render_html(
+                """
+                <div class="kk-conn"><span class="kk-dot demo"></span>
+                  <div>Mode démo<small>Données synthétiques, aucune donnée réelle</small></div></div>
+                """
+            )
 
+        if authenticated:
+            col_refresh, col_logout = st.columns(2) if state.api_mode_enabled() else (st.container(), None)
+            with col_refresh:
+                if st.button("↻ Actualiser", key="refresh_data", width="stretch",
+                             help="Recharger les données"):
+                    refresh_data()
+                    st.rerun()
+            if col_logout is not None:
+                with col_logout:
+                    if st.button("Déconnexion", key="backend_logout", width="stretch"):
+                        state.sign_out()
+                        st.rerun()
+
+        render_html('<div class="kk-side-foot">KineKids AI · Data Analysis & Therapist Dashboard</div>')
+
+
+# ==========================================================
+# GESTION DES ERREURS
+# ==========================================================
+
+def render_api_error(error: ApiError) -> None:
+    from dashboard.components.ui import empty_state
+
+    empty_state("⚠️", "Le backend n’a pas pu fournir les données", str(error))
+    st.write("")
+    _, col_retry, col_demo, _ = st.columns([1, 1, 1, 1])
+    with col_retry:
+        if st.button("Réessayer", type="primary", width="stretch", key="err_retry"):
+            refresh_data()
+            st.rerun()
+    with col_demo:
+        if st.button("Passer en mode démo", width="stretch", key="err_demo"):
+            state.set_data_source("demo")
             st.rerun()
 
-    render_html("<br>")
-
-    render_html(
-        """
-        <div class="soft-card">
-
-            <div style="
-                font-family:Nunito;
-                font-weight:900;
-                font-size:14px;
-            ">
-                ✨ KineKids Intelligence
-            </div>
-
-            <div style="
-                color:#777B8C;
-                font-size:11px;
-                margin-top:5px;
-            ">
-                Analyse des performances,
-                progression et suivi personnalisé.
-            </div>
-
-        </div>
-        """,
-    )
-
-    render_html(
-        """
-        <div style="
-            margin-top:20px;
-            text-align:center;
-            color:#777B8C;
-            font-size:10px;
-        ">
-            KineKids AI · Prototype
-        </div>
-        """,
-    )
-
 
 # ==========================================================
-# ROUTER
+# ROUTAGE
 # ==========================================================
 
-page = st.session_state["page"]
+authenticated = not state.api_mode_enabled() or bool(state.get_token())
+
+if authenticated:
+    pages = {
+        key: st.Page(PAGE_FUNCTIONS[key], title=title, url_path=url, default=(key == "overview"))
+        for key, (title, _, url) in navigation.PAGES.items()
+    }
+else:
+    pages = {"login": st.Page(_login, title="Connexion", url_path="connexion", default=True)}
+
+navigation.register(pages)
+current = st.navigation(list(pages.values()), position="hidden")
+current_key = next((k for k, p in pages.items() if p.url_path == current.url_path), None)
+
+render_sidebar(current_key, authenticated)
+
+if not state.api_mode_enabled():
+    render_html(
+        '<div class="kk-banner">🧪 <span><b>Mode démo</b> — données synthétiques. '
+        'Basculez sur « Backend » dans le menu pour utiliser les données réelles.</span></div>'
+    )
 
 try:
-    if page == "Vue globale":
-        from dashboard.pages.global_view import show_global_view
-
-        show_global_view()
-
-    elif page == "Patients":
-        from dashboard.pages.patients import show_patients
-
-        show_patients()
-
-    elif page == "Fiche patient":
-        from dashboard.pages.patient_detail import show_patient_detail
-
-        show_patient_detail()
-
-    elif page == "Ajouter un patient":
-        from dashboard.pages.add_patient import show_add_patient
-
-        show_add_patient()
+    current.run()
 except ApiError as error:
     if error.status_code == 401:
-        st.session_state.pop("api_access_token", None)
-        st.session_state["api_auth_notice"] = str(error)
+        state.sign_out(notice=str(error))
         st.rerun()
-    st.error(str(error))
+    render_api_error(error)
