@@ -1,0 +1,65 @@
+{
+  "players": [
+    {
+      "id": "p_muztcw58",
+      "name": "m",
+      "createdAt": "2026-10-08T17:31:46.749Z",
+      "sessions": [
+        {
+          "sessionId": "s_muzt6hia",
+          "date": "2026-10-08T17:31:46.712Z",
+          "durationSec": 9,
+          "affectedArm": "R",
+          "mode": "hemi",
+          "thresholdDeg": 90,
+          "elbowMinDeg": 140,
+          "restToleranceDeg": 35,
+          "summary": {
+            "repsValidated": 0,
+            "maxAngleDeg": 0,
+            "meanPeakDeg": 0,
+            "compensations": 0
+          },
+          "events": []
+        }
+      ]
+    },
+    {
+      "id": "p_muztdikw",
+      "name": "Anonyme",
+      "createdAt": "2026-10-08T17:32:15.824Z",
+      "sessions": [
+        {
+          "sessionId": "s_muztd4rc",
+          "date": "2026-10-08T17:32:15.804Z",
+          "durationSec": 5071,
+          "affectedArm": "R",
+          "mode": "hemi",
+          "thresholdDeg": 90,
+          "elbowMinDeg": 140,
+          "restToleranceDeg": 35,
+          "summary": {
+            "repsValidated": 0,
+            "maxAngleDeg": 0,
+            "meanPeakDeg": 0,
+            "compensations": 2
+          },
+          "events": [
+            {
+              "tSec": 42.2,
+              "type": "compensation",
+              "angleDeg": 25,
+              "thresholdDeg": 90
+            },
+            {
+              "tSec": 42.7,
+              "type": "compensation",
+              "angleDeg": 26,
+              "thresholdDeg": 90
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

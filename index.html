@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Le Gardien des Lucioles</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--jaune:#ffe066;--menthe:#7dffcf;--rose:#ff8fd0;--nuit:#1b1464;--texte:#3b2a7a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#8fd8ff;color:var(--texte);font:18px/1.35 Fredoka,"Trebuchet MS",sans-serif;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;overflow:hidden;
+  background:linear-gradient(180deg,#4fc3ff 0%,#a5e4ff 55%,#e3f8ff 100%)}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;transform:scaleX(-1);opacity:.3}
+#game{position:absolute;inset:0}
+#game canvas{width:100%!important;height:100%!important}
+
+#intro{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2)}
+.card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:clamp(18px,3vw,36px) clamp(24px,5vw,60px);
+  border-radius:40px;background:rgba(255,255,255,.93);border:6px solid #ffb938;
+  box-shadow:0 10px 0 #e89a1a,0 18px 40px rgba(0,80,160,.35);text-align:center;max-width:92%}
+.card h1{margin:0;font-size:clamp(28px,5vw,58px);line-height:1.05;color:#ff6b3d;text-shadow:0 4px 0 #b8381a}
+.card .owl{font-size:clamp(40px,7vw,80px);animation:bob 2.4s ease-in-out infinite}
+.card p{margin:0;font-size:clamp(15px,2vw,22px);color:#5b4a9e}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-4deg)}}
+@media (prefers-reduced-motion:reduce){.owl{animation:none}}
+input,select,button{font:inherit}
+#pname{width:min(360px,80%);padding:12px 20px;border-radius:999px;border:4px solid #4fd8a8;background:#fff;color:#3b2a7a;text-align:center;font-size:clamp(16px,2vw,24px)}
+#pname::placeholder{color:#a79ddb}
+.btn{cursor:pointer;border:0;border-radius:999px;font-weight:700;padding:12px 30px;font-size:clamp(16px,2.2vw,26px);min-width:280px;
+  color:#3a2500;background:linear-gradient(180deg,#fff08a,#ffb938);box-shadow:0 6px 0 #c77d00,0 10px 20px rgba(0,0,0,.35);transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #c77d00}
+.btn.alt{color:#06382d;background:linear-gradient(180deg,#b6ffe6,#4fd8a8);box-shadow:0 6px 0 #1f9c75,0 10px 20px rgba(0,0,0,.35)}
+.btn:focus-visible,#pname:focus-visible,select:focus-visible,input:focus-visible,#gear:focus-visible{outline:4px solid #3b2a7a;outline-offset:3px}
+
+#gear{position:absolute;top:12px;right:12px;z-index:30;width:46px;height:46px;border-radius:50%;border:3px solid #ffb938;
+  background:#fff;color:#3b2a7a;font-size:22px;cursor:pointer}
+#panel{position:absolute;top:66px;right:12px;z-index:30;width:300px;max-height:calc(100% - 80px);overflow:auto;display:none;flex-direction:column;gap:10px;
+  padding:16px;border-radius:24px;background:rgba(255,255,255,.97);border:4px solid #4fd8a8;font-size:15px}
+#panel.open{display:flex}
+#panel label{display:flex;flex-direction:column;gap:4px}
+#panel select,#panel input{padding:8px 12px;border-radius:12px;border:2px solid #b9b0ee;background:#fff;color:#3b2a7a}
+#panel .btn{min-width:0;font-size:15px;padding:9px 14px;box-shadow:0 4px 0 #1f9c75}
+#stats{background:#eaf6ff;border-radius:14px;padding:10px;white-space:pre-line;font-size:14px}
+#msg{position:absolute;bottom:64px;left:0;right:0;text-align:center;color:#d9480f;z-index:25;pointer-events:none;font-weight:600}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="cam" playsinline muted></video>
+  <div id="game"></div>
+
+  <div id="intro"><div class="card">
+    <div class="owl">🦉</div>
+    <h1>Le Gardien<br>des Lucioles</h1>
+    <p>Lève ton bras magique pour attirer les lucioles dans la lanterne de Léo !</p>
+    <input id="pname" placeholder="Ton prénom" maxlength="30" autocomplete="off">
+    <button id="start" class="btn">📷 Jouer avec la caméra</button>
+    <button id="demo" class="btn alt">⌨️ Essayer au clavier</button>
+  </div></div>
+
+  <div id="msg"></div>
+  <button id="gear" title="Réglages du kiné" aria-label="Réglages du kiné">⚙</button>
+
+  <div id="panel">
+    <label>Bras atteint (à entraîner)
+      <select id="side"><option value="R">Droit</option><option value="L">Gauche</option></select></label>
+    <label>Mode
+      <select id="mode"><option value="hemi">Hémiplégie : asymétrique</option><option value="bi">Bilatéral : sans contrôle de l'autre bras</option></select></label>
+    <label>Seuil d'abduction : <b><span id="thrV">90</span>°</b>
+      <input id="thr" type="range" min="30" max="170" step="5" value="90"></label>
+    <label>Extension min. du coude : <b><span id="elbV">140</span>°</b>
+      <input id="elb" type="range" min="90" max="180" step="5" value="140"></label>
+    <label>Tolérance bras au repos : <b><span id="restV">35</span>°</b>
+      <input id="rest" type="range" min="10" max="60" step="5" value="35"></label>
+    <button id="json" class="btn alt">Exporter les joueurs (JSON)</button>
+    <button id="csv" class="btn alt">Exporter la séance (CSV)</button>
+    <div id="stats"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+<script type="module">
+import {PoseLandmarker, FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+const $ = id => document.getElementById(id);
+const IDX = {R:{s:12,e:14,w:16,h:24}, L:{s:11,e:13,w:15,h:23}};
+const S = {side:'R', mode:'hemi', thr:90, elbMin:140, restMax:35, player:'', sid:'',
+  ok:false, demo:false, abd:0, elb:180, restAbd:0, comp:false, pts:null,
+  reps:0, peak:0, compCount:0, log:[], t0:Date.now(), started:false, readyHold:0};
+
+S.dbg = {model:false, det:false, vis:0, fr:0};
+addEventListener('error', e => { $('msg').textContent = 'Erreur : ' + e.message; });
+addEventListener('unhandledrejection', e => { $('msg').textContent = 'Erreur : ' + (e.reason?.message || e.reason); });
+
+// ---------- Réglages kiné ----------
+$('gear').onclick = () => $('panel').classList.toggle('open');
+[['thr','thr','thrV'],['elb','elbMin','elbV'],['rest','restMax','restV']].forEach(([id,k,v])=>{
+  $(id).oninput = e => { S[k] = +e.target.value; $(v).textContent = S[k]; };
+});
+$('side').onchange = e => S.side = e.target.value;
+$('mode').onchange = e => S.mode = e.target.value;
+
+// ---------- Géométrie ----------
+const ang = (a,b,c) => {
+  const v1=[a.x-b.x,a.y-b.y], v2=[c.x-b.x,c.y-b.y];
+  const d=v1[0]*v2[0]+v1[1]*v2[1], n=Math.hypot(...v1)*Math.hypot(...v2)||1;
+  return Math.acos(Math.max(-1,Math.min(1,d/n)))*180/Math.PI;
+};
+function armMetrics(lm, ix, vw, vh){
+  const p = i => ({x:lm[i].x*vw, y:lm[i].y*vh, v:lm[i].visibility});
+  const s=p(ix.s), e=p(ix.e), w=p(ix.w);
+  let h=p(ix.h);
+  // Hanche hors champ (webcam) : on utilise la verticale sous l'épaule comme référence
+  if(!(h.v>0.3)) h = {x:s.x, y:s.y+100, v:1};
+  return {abd:ang(h,s,e), elb:ang(s,e,w), vis:(s.v+e.v+w.v)/3, pts:[lm[ix.s],lm[ix.e],lm[ix.w]]};
+}
+
+// ---------- MediaPipe ----------
+let landmarker, lastT = -1;
+async function startCamera(){
+  $('intro').style.display = 'none';
+  $('msg').textContent = 'Léo prépare la magie…';
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:'user'}});
+    const cam = $('cam'); cam.srcObject = stream; await cam.play();
+    const fs = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+    const opts = d => ({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:d},runningMode:"VIDEO",numPoses:1});
+    try{ landmarker = await PoseLandmarker.createFromOptions(fs, opts("GPU")); }
+    catch{ landmarker = await PoseLandmarker.createFromOptions(fs, opts("CPU")); }
+    S.demo = false; S.dbg.model = true; $('msg').textContent = ''; loop();
+  }catch(err){
+    $('msg').textContent = 'Caméra ou modèle indisponible : ' + err.message;
+    $('intro').style.display = 'flex';
+  }
+}
+function loop(){
+  const cam = $('cam');
+  if(landmarker && !S.demo && cam.readyState>=2 && cam.currentTime!==lastT){
+    lastT = cam.currentTime;
+    const lm = landmarker.detectForVideo(cam, performance.now()).landmarks?.[0];
+    S.dbg.fr++; S.dbg.det = !!lm;
+    if(lm){
+      const vw=cam.videoWidth, vh=cam.videoHeight;
+      const a = armMetrics(lm, IDX[S.side], vw, vh);
+      const o = armMetrics(lm, IDX[S.side==='R'?'L':'R'], vw, vh);
+      S.ok = a.vis>0.25; S.dbg.vis = a.vis;
+      S.abd += (a.abd - S.abd)*0.5; S.elb += (a.elb - S.elb)*0.5; S.restAbd += (o.abd - S.restAbd)*0.5;
+      S.comp = S.mode==='hemi' && o.vis>0.25 && S.restAbd > S.restMax;
+      S.pts = a.pts;
+    } else S.ok = false;
+  }
+  requestAnimationFrame(loop);
+}
+
+// ---------- Joueurs & séances (sauvegarde serveur → data/players.json) ----------
+function beginSession(){
+  S.player = ($('pname').value || 'Anonyme').trim();
+  S.sid = 's_' + Date.now().toString(36); S.t0 = Date.now(); S.log = []; S.started = false; S.readyHold = 0;
+}
+function buildSession(){
+  const reps = S.log.filter(l => l.ev === 'repetition');
+  return {
+    sessionId:S.sid, date:new Date(S.t0).toISOString(), durationSec:Math.round((Date.now()-S.t0)/1000),
+    affectedArm:S.side, mode:S.mode, thresholdDeg:S.thr, elbowMinDeg:S.elbMin, restToleranceDeg:S.restMax,
+    summary:{
+      repsValidated:reps.length,
+      maxAngleDeg:reps.length ? Math.max(...reps.map(r=>r.a)) : 0,
+      meanPeakDeg:reps.length ? Math.round(reps.reduce((s,r)=>s+r.a,0)/reps.length) : 0,
+      compensations:S.log.filter(l=>l.ev==='compensation').length
+    },
+    events:S.log.map(l => ({tSec:+l.t, type:l.ev, angleDeg:l.a, thresholdDeg:l.thr}))
+  };
+}
+async function saveSession(){
+  if(!S.player || !S.sid || !S.started) return;
+  try{ await fetch('/api/session',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({playerName:S.player, session:buildSession()})}); }
+  catch{ $('msg').textContent = 'Serveur injoignable : données non sauvegardées'; }
+}
+const logEv = (ev,a) => { S.log.push({t:((Date.now()-S.t0)/1000).toFixed(1), ev, a:Math.round(a), thr:S.thr}); saveSession(); };
+setInterval(saveSession, 10000);
+addEventListener('beforeunload', () => { if(S.player && S.sid && S.started) navigator.sendBeacon('/api/session',
+  new Blob([JSON.stringify({playerName:S.player, session:buildSession()})],{type:'application/json'})); });
+
+$('json').onclick = async () => {
+  await saveSession();
+  const data = await (await fetch('/api/players')).json();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download = 'players.json'; a.click();
+};
+$('csv').onclick = () => {
+  const rows = ['temps_s,evenement,angle_deg,seuil_deg,bras'].concat(S.log.map(l => [l.t,l.ev,l.a,l.thr,S.side].join(',')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
+  a.download = 'seance_lucioles.csv'; a.click();
+};
+$('start').onclick = () => { beginSession(); startCamera(); };
+$('demo').onclick = () => { beginSession(); S.demo = true; S.ok = true; S.pts = null; $('intro').style.display = 'none'; };
+
+// ---------- Phaser ----------
+const W=960, H=540, FONT='Fredoka, "Trebuchet MS", sans-serif';
+const BRAVO = ['Bravo !','Super !','Génial !','Magique !','Bien joué !'];
+const BANDS = [0xff6b6b,0xffa94d,0xffe066,0x8ce99a,0x74c0fc,0xb197fc];
+
+class Jeu extends Phaser.Scene{
+  create(){
+    const g = this.make.graphics({add:false});
+    g.fillStyle(0xfff59d,.55).fillCircle(20,20,19);
+    g.fillStyle(0xffffff,.95).fillEllipse(10,13,14,20).fillEllipse(30,13,14,20);
+    g.lineStyle(2,0x6ec6ff,1).strokeEllipse(10,13,14,20).strokeEllipse(30,13,14,20);
+    g.fillStyle(0xffc233,1).fillCircle(20,22,10); g.lineStyle(3,0xff8a00,1).strokeCircle(20,22,10);
+    g.fillStyle(0x3b2a7a,1).fillCircle(16.5,20,1.8).fillCircle(23.5,20,1.8);
+    g.lineStyle(2,0x3b2a7a,1).beginPath().arc(20,23,4,0.2,Math.PI-0.2).strokePath();
+    g.generateTexture('fly',40,40); g.destroy();
+
+    // Décor : soleil, nuages, arc-en-ciel, prairie fleurie
+    const d = this.add.graphics().setDepth(1); this.deco = d;
+    [0xff6b6b,0xffa94d,0xffe066,0x8ce99a,0x74c0fc,0xb197fc].forEach((c,i)=>{ d.lineStyle(14,c,.85).beginPath().arc(W/2,470,360-i*14,Math.PI,0).strokePath(); });
+    d.fillStyle(0xffe066,.35).fillCircle(150,100,95).fillStyle(0xffd43b,1).fillCircle(150,100,58);
+    for(let i=0;i<12;i++){ const a=i*Math.PI/6; d.lineStyle(8,0xffd43b,1).lineBetween(150+Math.cos(a)*72,100+Math.sin(a)*72,150+Math.cos(a)*92,100+Math.sin(a)*92); }
+    d.fillStyle(0x3b2a7a,1).fillCircle(133,92,6).fillCircle(167,92,6);
+    d.lineStyle(4,0x3b2a7a,1).beginPath().arc(150,106,18,0.25,Math.PI-0.25).strokePath();
+    d.fillStyle(0xff9aa2,.7).fillCircle(122,108,8).fillCircle(178,108,8);
+    this.clouds = [[420,70,1],[760,120,.8],[620,40,.6]].map(([x,y,s])=>{
+      const c = this.add.graphics({x,y}).setDepth(1).fillStyle(0xffffff,.95);
+      c.fillCircle(0,0,28*s).fillCircle(30*s,-10*s,34*s).fillCircle(64*s,0,28*s).fillRoundedRect(-28*s,0,120*s,28*s,14*s); return c; });
+    this.clouds.forEach((c,i)=>this.tweens.add({targets:c,x:c.x+40,yoyo:true,repeat:-1,duration:6000+i*1500,ease:'Sine.inOut'}));
+    d.fillStyle(0x6fcf6b,1).fillEllipse(240,H+50,900,260).fillEllipse(780,H+60,900,280);
+    d.fillStyle(0x4fb85a,1).fillEllipse(500,H+90,1100,260);
+    for(let i=0;i<26;i++){
+      const x=Phaser.Math.Between(20,W-20), y=Phaser.Math.Between(H-70,H-12), c=Phaser.Utils.Array.GetRandom([0xff6b9d,0xffffff,0xffe066,0xff9f43]);
+      d.fillStyle(0x2f8f46,1).fillRect(x-1,y,3,12); d.fillStyle(c,1).fillCircle(x,y,6); d.fillStyle(0xffd43b,1).fillCircle(x,y,2.5);
+    }
+
+    // Lucioles (grandes, de tailles variées)
+    this.flies = [];
+    for(let i=0;i<14;i++){
+      const sc = Phaser.Math.FloatBetween(2.0,2.8);
+      const s = this.add.image(Phaser.Math.Between(60,W-60),Phaser.Math.Between(300,H-60),'fly').setScale(sc).setDepth(5);
+      this.flies.push({s,sc,vx:0,vy:0,ph:Math.random()*6,take:false});
+    }
+
+    // Lanterne magique (bocal flottant)
+    this.jarGlow = this.add.circle(W/2,92,78,0xfff176,.35).setDepth(3);
+    this.jar = this.add.container(W/2,82).setDepth(6);
+    const j = this.add.graphics();
+    j.fillStyle(0xffffff,.55).fillRoundedRect(-52,-34,104,92,26);
+    j.lineStyle(6,0x3a9be8,1).strokeRoundedRect(-52,-34,104,92,26);
+    j.fillStyle(0xff8a3d,1).fillRoundedRect(-38,-50,76,20,8);
+    j.lineStyle(4,0xff8a3d,1).strokeCircle(0,-62,16);
+    j.fillStyle(0xffffff,.9).fillEllipse(-30,-8,10,40);
+    this.jar.add(j);
+    this.tweens.add({targets:this.jar,y:96,yoyo:true,repeat:-1,duration:1800,ease:'Sine.inOut'});
+
+    this.arm = this.add.graphics().setDepth(16);
+    this.gauge = this.add.graphics().setDepth(8);
+    this.owl = this.add.graphics().setDepth(12);
+    const tx = (x,y,t,sz,c) => this.add.text(x,y,t,{fontFamily:FONT,fontSize:sz+'px',color:c,fontStyle:'bold',stroke:'#1b1464',strokeThickness:6});
+    this.score = tx(24,18,'',36,'#ffe066').setDepth(9);
+    this.info = this.add.text(W/2,H-30,'',{fontFamily:FONT,fontSize:'26px',color:'#3b2a7a',fontStyle:'bold',backgroundColor:'rgba(255,255,255,.88)',padding:{x:22,y:8}}).setOrigin(.5).setDepth(9);
+    this.pop = tx(W/2,230,'',70,'#ff6b3d').setOrigin(.5).setAlpha(0).setDepth(13);
+    this.veil = this.add.rectangle(W/2,H/2,W,H,0x6b6f75,.85).setVisible(false).setDepth(10);
+    this.veilT = this.add.text(W/2,H/2-10,"Léo a besoin de TON bras magique,\npas de l'autre !",
+      {fontFamily:FONT,fontSize:'44px',align:'center',color:'#fff',fontStyle:'bold',stroke:'#333',strokeThickness:6}).setOrigin(.5).setVisible(false).setDepth(11);
+
+    this.wait = this.add.container(0,0).setDepth(15);
+    const wb = this.add.rectangle(W/2,H/2,W,H,0x1b1464,.08);
+    const wt = this.add.text(W/2,H/2-70,"Mets-toi en position !\nBras le long du corps, face à la caméra",
+      {fontFamily:FONT,fontSize:'38px',align:'center',color:'#fff',fontStyle:'bold',stroke:'#1b1464',strokeThickness:6}).setOrigin(.5);
+    this.waitSub = this.add.text(W/2,H/2+10,'',{fontFamily:FONT,fontSize:'26px',align:'center',color:'#ffe066',fontStyle:'bold',stroke:'#1b1464',strokeThickness:5}).setOrigin(.5);
+    this.waitBar = this.add.graphics();
+    this.waitDbg = this.add.text(W/2,H/2+115,'',{fontFamily:FONT,fontSize:'20px',align:'center',color:'#fff',stroke:'#1b1464',strokeThickness:4}).setOrigin(.5);
+    this.wait.add([wb,wt,this.waitSub,this.waitBar,this.waitDbg]);
+    this.hold=0; this.armed=true; this.peakRep=0; this.wasComp=false; this.statT=0; this.happy=0;
+    this.keys = this.input.keyboard.addKeys('UP,DOWN,C,SPACE');
+  }
+  celebrate(){
+    const em = this.add.particles(this.jar.x,this.jar.y,'fly',{speed:{min:120,max:320},lifespan:900,scale:{start:1.2,end:0},emitting:false}).setDepth(14);
+    em.explode(28); this.time.delayedCall(1100,()=>em.destroy());
+    this.pop.setText(Phaser.Utils.Array.GetRandom(BRAVO)).setAlpha(1).setScale(.4);
+    this.tweens.add({targets:this.pop,scale:1,duration:300,ease:'Back.out'});
+    this.tweens.add({targets:this.pop,alpha:0,delay:900,duration:400});
+    this.happy = 1500;
+  }
+  collect(n){
+    this.flies.filter(f=>!f.take).sort((a,b)=>a.s.y-b.s.y).slice(0,n).forEach(f=>{
+      f.take = true;
+      this.tweens.add({targets:f.s,x:this.jar.x,y:this.jar.y,scale:f.sc*.4,duration:600,ease:'Cubic.in',
+        onComplete:()=>{f.s.setPosition(Phaser.Math.Between(60,W-60),H+20).setScale(f.sc);f.take=false;}});
+    });
+  }
+  drawOwl(sad,t){
+    const o=this.owl, x=110, y=H-95, up=Phaser.Math.Clamp(S.abd/180,0,1)*50, bob=Math.sin(t/400)*3;
+    o.clear();
+    o.fillStyle(sad?0x8a8fa6:0x9b7bff,1);
+    o.fillTriangle(x-48,y-48+bob,x-18,y-72+bob,x-12,y-38+bob).fillTriangle(x+48,y-48+bob,x+18,y-72+bob,x+12,y-38+bob);
+    o.fillEllipse(x,y+bob,112,132);
+    o.fillEllipse(x-62,y+10-up+bob,30,70).fillEllipse(x+62,y+10+bob,30,70);      // ailes (une lève avec le bras)
+    o.fillStyle(sad?0xcfd3e3:0xefe6ff,1).fillEllipse(x,y+24+bob,72,80);
+    o.fillStyle(0xffffff,1).fillCircle(x-24,y-20+bob,24).fillCircle(x+24,y-20+bob,24);
+    o.fillStyle(0x2a1a6e,1).fillCircle(x-24,y-(sad?12:20)+bob,11).fillCircle(x+24,y-(sad?12:20)+bob,11);
+    o.fillStyle(0xffffff,1).fillCircle(x-20,y-25+bob,4).fillCircle(x+28,y-25+bob,4);
+    o.fillStyle(0xffa62b,1).fillTriangle(x-9,y-4+bob,x+9,y-4+bob,x,y+14+bob);
+    if(!sad && this.happy>0) o.fillStyle(0xff8fd0,.7).fillCircle(x-46,y+4+bob,9).fillCircle(x+46,y+4+bob,9);
+    if(sad) o.lineStyle(5,0x2a1a6e,1).lineBetween(x-38,y-42+bob,x-12,y-36+bob).lineBetween(x+38,y-42+bob,x+12,y-36+bob);
+  }
+  update(t,dt){
+    const k = dt/1000;
+    if(S.demo){
+      if(this.keys.UP.isDown) S.abd = Math.min(175,S.abd+70*k);
+      if(this.keys.DOWN.isDown) S.abd = Math.max(0,S.abd-70*k);
+      S.elb = 170; S.comp = S.mode==='hemi' && this.keys.C.isDown;
+    }
+    // ----- Phase 1 : attendre que le joueur soit en position de départ -----
+    if(!S.started){
+      const inPos = S.ok && S.abd < 30 && S.elb >= S.elbMin && S.restAbd < Math.max(30,S.restMax);
+      S.readyHold = inPos ? S.readyHold + dt : 0;
+      const need = 1500, pr = Math.min(1,S.readyHold/need);
+      this.wait.setVisible(true);
+      $('cam').style.opacity = .95; this.deco.setAlpha(.15); this.clouds.forEach(c=>c.setAlpha(.15));
+      this.waitSub.setText(!S.ok ? 'Je ne te vois pas… place-toi devant la caméra'
+        : S.abd >= 30 ? 'Baisse ton bras le long du corps'
+        : S.elb < S.elbMin ? 'Tends bien ton coude'
+        : !inPos ? "Baisse aussi l'autre bras"
+        : 'Super ! Ne bouge plus…');
+      this.waitBar.clear().fillStyle(0xffffff,.9).fillRoundedRect(W/2-200,H/2+60,400,26,13)
+        .fillStyle(0x2fbf71,1).fillRoundedRect(W/2-200,H/2+60,Math.max(0,400*pr),26,13);
+      const d = S.dbg;
+      this.waitDbg.setText(S.demo ? 'Mode clavier : ↑ ↓ pour lever le bras  •  Espace = commencer'
+        : 'Modèle : '+(d.model?'✓ chargé':'… chargement')+'   Personne : '+(d.det?'✓':'✗')+'   Visibilité bras : '+d.vis.toFixed(2)+
+          '   Angle : '+Math.round(S.abd)+'°\nEspace = commencer sans attendre');
+      const skip = Phaser.Input.Keyboard.JustDown(this.keys.SPACE);
+      if(S.readyHold >= need || skip){
+        S.started = true; S.t0 = Date.now(); S.log = []; S.reps = 0; S.peak = 0; S.compCount = 0;
+        this.wait.setVisible(false); this.armed = true; this.hold = 0;
+        $('cam').style.opacity = .4; this.deco.setAlpha(1); this.clouds.forEach(c=>c.setAlpha(1));
+        this.pop.setText("C'est parti !").setAlpha(1).setScale(.4);
+        this.tweens.add({targets:this.pop,scale:1,duration:300,ease:'Back.out'});
+        this.tweens.add({targets:this.pop,alpha:0,delay:700,duration:400});
+        saveSession();
+      }
+    } else this.wait.setVisible(false);
+
+    const comp = S.started && S.comp;
+    if(comp && !this.wasComp){ S.compCount++; logEv('compensation', S.abd); }
+    this.wasComp = comp; this.happy = Math.max(0,this.happy-dt);
+    this.veil.setVisible(comp); this.veilT.setVisible(comp);
+
+    // Validation d'une répétition
+    const okPose = S.ok && S.elb >= S.elbMin;
+    if(S.started && !comp && S.ok){
+      if(S.abd < S.thr-15) this.armed = true;
+      if(S.abd >= S.thr && okPose && this.armed){
+        this.hold += dt; this.peakRep = Math.max(this.peakRep,S.abd);
+        if(this.hold >= 400){
+          S.reps++; S.peak = Math.max(S.peak,this.peakRep); logEv('repetition', this.peakRep);
+          this.collect(3); this.celebrate(); this.armed=false; this.hold=0; this.peakRep=0;
+        }
+      } else if(S.abd < S.thr){ this.hold=0; this.peakRep=0; }
+    } else this.hold = 0;
+
+    // Lucioles : dérive + attraction proportionnelle à l'amplitude
+    const pull = (S.started && !comp && S.ok) ? Phaser.Math.Clamp((S.abd-20)/(S.thr-20),0,1) : 0;
+    this.flies.forEach(f=>{
+      if(f.take) return;
+      f.ph += k;
+      f.vx += (Math.sin(f.ph*1.3+f.s.y)*30 - f.vx*.5)*k*3;
+      f.vy += (Math.cos(f.ph)*20 - f.vy*.5)*k*3;
+      f.vx += (this.jar.x-f.s.x)*pull*.4*k; f.vy += (180-f.s.y)*pull*.8*k;
+      f.s.x = Phaser.Math.Clamp(f.s.x+f.vx*k,30,W-30); f.s.y = Phaser.Math.Clamp(f.s.y+f.vy*k,130,H-20);
+      f.s.alpha = .88+.12*Math.sin(f.ph*3);
+    });
+    this.jarGlow.setAlpha(.3+Math.min(.45,S.reps*.04)+pull*.15).setPosition(this.jar.x,this.jar.y+10);
+
+    // Jauge arc-en-ciel + étoile au seuil
+    const gx=W-52, gy=110, gh=330, yy = a => gy+gh-(a/180)*gh, G=this.gauge; G.clear();
+    G.fillStyle(0xffffff,.88).fillRoundedRect(gx-20,gy-12,40,gh+24,18);
+    const lv = Phaser.Math.Clamp(S.abd,0,180);
+    BANDS.forEach((c,i)=>{ const a0=i*30, a1=Math.min(lv,(i+1)*30); if(a1>a0) G.fillStyle(c,1).fillRect(gx-11,yy(a1),22,yy(a0)-yy(a1)); });
+    const star = []; for(let i=0;i<10;i++){ const r=i%2?9:19, an=-Math.PI/2+i*Math.PI/5; star.push({x:gx-38+Math.cos(an)*r, y:yy(S.thr)+Math.sin(an)*r}); }
+    G.fillStyle(lv>=S.thr?0x2fbf71:0xffa62b,1).fillPoints(star,true);
+    G.lineStyle(3,0x3b2a7a,.6).lineBetween(gx-24,yy(S.thr),gx+24,yy(S.thr));
+
+    // Bras suivi (vue miroir)
+    this.arm.clear();
+    if(S.pts && !S.demo){
+      const P = S.pts.map(p=>({x:(1-p.x)*W,y:p.y*H}));
+      this.arm.lineStyle(14,comp?0x999999:0x2fbf71,.5).strokePoints(P);
+      this.arm.lineStyle(7,comp?0xbbbbbb:0xffffff,.9).strokePoints(P);
+      P.forEach(p=>this.arm.fillStyle(0xffe066,1).fillCircle(p.x,p.y,11));
+    }
+    this.drawOwl(comp,t);
+
+    this.score.setText('⭐ '+S.reps);
+    this.info.setText(!S.ok ? 'Place-toi devant la caméra, bras visibles'
+      : S.elb<S.elbMin && S.abd>30 ? 'Tends bien ton coude !'
+      : S.abd>=S.thr ? 'Super ! Tiens un instant…' : 'Lève ton bras magique : '+Math.round(S.abd)+'° / '+S.thr+'°');
+
+    this.statT += dt;
+    if(this.statT>400){ this.statT=0;
+      $('stats').textContent = 'Joueur : '+(S.player||'-')+'\nRépétitions : '+S.reps+'\nAmplitude max : '+Math.round(S.peak)+'°\nCompensations : '+S.compCount+
+        '\nAngle : '+Math.round(S.abd)+'° (coude '+Math.round(S.elb)+'°)\nAutre bras : '+Math.round(S.restAbd)+'°'; }
+  }
+}
+const start = () => new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,transparent:true,
+  scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:Jeu});
+document.fonts.load('700 20px Fredoka').then(start,start);
+</script>
+</body>
+</html>
