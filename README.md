@@ -1,3 +1,30 @@
+# SensAI — Frontend (Next.js)
+
+## Lancer le site
+
+```bash
+npm install
+cp .env.example .env.local   # Windows : Copy-Item .env.example .env.local
+npm run dev
+```
+
+Le site est sur http://localhost:3000. Il a besoin du backend FastAPI démarré sur http://127.0.0.1:8000.
+
+## Parcours connectés au backend
+
+| Page | Rôle | Routes API utilisées |
+|------|------|----------------------|
+| `/register` | Création d’un compte thérapeute | `POST /auth/register`, `POST /auth/login` |
+| `/login` | Connexion (thérapeute → `/therapist`, patient → `/dashboard`) | `POST /auth/login` |
+| `/therapist` | Patients, diagnostic, jeux et réglages, code d’activation, séances | `/patients/`, `/games/`, `/patient-games/…`, `/sessions/…`, `/consultations/…`, `/activation-codes/` |
+| `/activate` | Le patient crée ses identifiants avec le code du thérapeute | `POST /auth/activate` |
+| `/dashboard` | Espace patient : jeux attribués, dernière séance, niveau | `/me/patient`, `/me/games`, `/me/sessions` |
+| `/dashboard/game/le-hibou` | Jeu Le Hibou (caméra ou clavier), séance enregistrée à la fin | `GET /me/games`, `POST /me/sessions` |
+
+Le code d’accès à l’API est dans `lib/api.ts`, la présentation des jeux dans `lib/games.ts`.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

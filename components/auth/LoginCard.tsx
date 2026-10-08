@@ -3,11 +3,33 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { homeFor, login } from "@/lib/api";
 
 export default function LoginCard() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!email.trim() || !password) {
+      setError("Renseignez votre adresse e-mail et votre mot de passe.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const role = await login(email.trim(), password);
+      router.push(homeFor(role));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Connexion impossible.");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="relative w-full max-w-[440px] mx-auto lg:mx-0">
@@ -43,7 +65,14 @@ export default function LoginCard() {
         </p>
 
         {/* Form */}
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-2.5">
+        {error && (
+          <div role="alert" className="mb-2.5 p-2.5 rounded-xl bg-[#FFE4E6] border border-[#FECDD3] text-[#E11D48] text-[11px] font-medium flex items-center gap-1.5">
+            <span className="w-4 h-4 rounded-full bg-[#E11D48] text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">!</span>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-2.5">
           {/* Email */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-0.5" htmlFor="email">
@@ -99,7 +128,7 @@ export default function LoginCard() {
               </button>
             </div>
             <div className="flex justify-end mt-1">
-              <Link href="/forgot-password" className="inline-flex items-center gap-1 text-[11px] text-[#2563EB] font-semibold hover:underline">
+              <Link href="/forgot-password" className="hidden items-center gap-1 text-[11px] text-[#2563EB] font-semibold hover:underline">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -112,9 +141,10 @@ export default function LoginCard() {
           {/* Gradient Submit Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#0EA5E9] hover:opacity-95 text-white font-bold py-2.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-md text-[12.5px] mt-1.5"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#0EA5E9] hover:opacity-95 disabled:opacity-60 text-white font-bold py-2.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-md text-[12.5px] mt-1.5"
           >
-            Se connecter
+            {loading ? "Connexion…" : "Se connecter"}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -147,6 +177,13 @@ export default function LoginCard() {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </Link>
           </div>
+        </div>
+
+        <div className="mt-2.5 text-center text-[11px] text-slate-500 font-medium">
+          Vous êtes thérapeute ?{" "}
+          <Link href="/register" className="text-[#7C3AED] font-bold hover:underline ml-1">
+            Créer un compte
+          </Link>
         </div>
       </div>
     </div>

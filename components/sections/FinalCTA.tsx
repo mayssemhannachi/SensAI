@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { ArrowDown } from "lucide-react";
 
@@ -36,9 +37,9 @@ export default function FinalCTA() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4 relative z-20">
-            <button className="bg-[#FF5A78] hover:bg-[#F43F5E] text-white px-7 py-3 rounded-full text-xs sm:text-sm font-bold transition-all shadow-lg hover:shadow-pink-500/20">
+            <Link href="/login" className="bg-[#FF5A78] hover:bg-[#F43F5E] text-white px-7 py-3 rounded-full text-xs sm:text-sm font-bold transition-all shadow-lg hover:shadow-pink-500/20">
               Commencer l'expérience
-            </button>
+            </Link>
             <button className="bg-transparent hover:bg-white/10 border border-slate-700 text-slate-200 px-6 py-3 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all">
               Découvrir SensAI <ArrowDown size={14} />
             </button>

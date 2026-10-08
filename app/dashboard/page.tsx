@@ -1,90 +1,106 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { 
+import {
   Copy, Eye, Calendar, Gamepad2, BarChart2,
-  ChevronDown, Check
+  ChevronDown, Check, LogOut
 } from "lucide-react";
+import {
+  getMyGames, getMyProfile, getMySessions,
+  type GameSession, type MyProfile, type PatientGame,
+} from "@/lib/api";
+import {
+  activeGames, DIFFICULTY_LEVEL, formatDate, gameMeta, playerLevel, sessionDate, sortByDateDesc, withDefaults,
+} from "@/lib/games";
+import { useRequireAuth } from "@/lib/useAuth";
 
-const exercises = [
-  {
-    title: "Le Hibou",
-    image: "/Assets/dashboard/Magical Owl Valley Adventure.png", // Placeholder image until you add the owl graphic
-    category: "Rééducation cervicale",
-    limb: "Tête / Cou",
-    level: 1,
-    active: true,
-    href: "/dashboard/game/le-hibou",
-  },
-  {
-    title: "Color Touch",
-    image: "/Assets/dashboard/ex-color-touch.png",
-    category: "Jeu de couleur",
-    limb: "Main droite",
-    level: 2,
-    active: true,
-  },
-  {
-    title: "Reaction Speed",
-    image: "/Assets/dashboard/ex-reaction-speed.png",
-    category: "Jeu de rapidité",
-    limb: "Main gauche",
-    level: 3,
-    active: true,
-  },
-  {
-    title: "Sequence Memory",
-    image: "/Assets/dashboard/ex-sequence-memory.png",
-    category: "Jeu de mémoire",
-    limb: "Œil / Vision",
-    level: 2,
-    active: true,
-  },
-  {
-    title: "Tremor Trace",
-    image: "/Assets/dashboard/ex-tremor-trace.png",
-    category: "Jeu de précision",
-    limb: "Main gauche",
-    level: 1,
-    active: true,
-  },
-  {
-    title: "Target Tracking",
-    image: "/Assets/dashboard/ex-target-tracking.png",
-    category: "Jeu de suivi",
-    limb: "Tête / Cou",
-    level: 1,
-    active: true,
-  },
-  {
-    title: "Balance Builder",
-    image: "/Assets/dashboard/ex-balance-builder.png",
-    category: "Jeu d'équilibre",
-    limb: "Jambe gauche",
-    lockedAt: 4,
-    active: false,
-  },
-  {
-    title: "Puzzle Motion",
-    image: "/Assets/dashboard/ex-puzzle-motion.png",
-    category: "Jeu de coordination",
-    limb: "Corps entier",
-    lockedAt: 5,
-    active: false,
-  },
-];
+type ExerciseCard = {
+  key: string;
+  title: string;
+  image: string;
+  category: string;
+  limb: string;
+  level: number;
+  active: boolean;
+  href?: string;
+  soon?: boolean;
+};
 
 export default function DashboardPage() {
+  const { me, error: authError, signOut } = useRequireAuth("patient");
   const [copied, setCopied] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<MyProfile | null>(null);
+  const [games, setGames] = useState<PatientGame[]>([]);
+  const [sessions, setSessions] = useState<GameSession[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!me) return;
+    Promise.all([getMyProfile(), getMyGames(), getMySessions()])
+      .then(([p, g, s]) => {
+        setProfile(p);
+        setGames(g);
+        setSessions(sortByDateDesc(s));
+      })
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Erreur de chargement"));
+  }, [me]);
+
+  const patientCode = profile?.patient_code?.toUpperCase() ?? "";
+  const firstName = profile?.first_name ?? "";
+  const last = sessions[0];
+  const { level, progress, step } = playerLevel(sessions);
+
+  const exercises: ExerciseCard[] = useMemo(
+    () =>
+      activeGames(games).map((g) => {
+        const meta = gameMeta(g.game_slug);
+        const config = withDefaults(g.configuration);
+        return {
+          key: String(g.id),
+          title: g.game_name || "Jeu",
+          image: meta.image,
+          category: meta.category,
+          limb: meta.limb,
+          level: DIFFICULTY_LEVEL[config.difficulty] ?? 1,
+          active: true,
+          href: meta.playable && meta.path ? `${meta.path}?pg=${g.id}` : undefined,
+          soon: !meta.playable,
+        };
+      }),
+    [games],
+  );
+  const firstPlayable = exercises.find((e) => e.href);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText("7F3A-89K2");
+    navigator.clipboard?.writeText(patientCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (authError || loadError) {
+    return (
+      <div className="min-h-screen bg-[#EEF2FA] font-outfit flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 text-center max-w-md">
+          <div className="text-4xl mb-3">😕</div>
+          <h2 className="text-lg font-black text-slate-800">Impossible de charger ton espace</h2>
+          <p className="text-sm text-slate-500 mt-1">{authError || loadError}</p>
+          <button onClick={() => window.location.reload()} className="mt-4 px-5 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-bold">Réessayer</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!me || !profile) {
+    return (
+      <div className="min-h-screen bg-[#EEF2FA] font-outfit flex items-center justify-center">
+        <div className="text-center"><div className="text-5xl animate-bounce">🦉</div><p className="mt-3 font-black text-[#312E81]">Chargement de ton espace…</p></div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -120,7 +136,7 @@ export default function DashboardPage() {
                   Mon code patient
                 </p>
                 <p className="text-[12px] font-extrabold text-slate-800 tracking-widest">
-                  {showCode ? "7F3A-89K2" : "•••• 7F3A"}
+                  {showCode ? patientCode : `•••• ${patientCode.slice(-4)}`}
                 </p>
               </div>
               <div className="flex items-center gap-1 border-l border-slate-100 pl-2 ml-1">
@@ -159,19 +175,28 @@ export default function DashboardPage() {
           </div>
 
           {/* User profile */}
-          <div className="flex items-center gap-2 cursor-pointer group">
+          <div className="relative flex items-center gap-2 cursor-pointer group" onClick={() => setMenuOpen(!menuOpen)}>
             <div
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm relative flex-shrink-0"
             >
               <Image
                 src="/Assets/dashboard/Playful Character Face Sticker Sheet.png"
-                alt="Salma Avatar"
+                alt={`Avatar de ${firstName}`}
                 fill
                 className="object-cover scale-[2.5] origin-top-left"
               />
             </div>
-            <span className="font-bold text-[13px] text-slate-800">Salma</span>
+            <span className="font-bold text-[13px] text-slate-800">{firstName}</span>
             <ChevronDown size={13} className="text-slate-400" />
+            {menuOpen && (
+              <div className="absolute right-0 top-[calc(100%+6px)] bg-white rounded-2xl shadow-lg border border-slate-100 p-2 w-48 z-50">
+                <p className="px-3 py-1 text-[11px] text-slate-400 font-bold truncate">{me.sub}</p>
+                {profile.therapist_name && <p className="px-3 pb-1 text-[11px] text-slate-500 font-bold">Thérapeute : {profile.therapist_name}</p>}
+                <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold text-rose-600 hover:bg-rose-50">
+                  <LogOut size={13} /> Se déconnecter
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -199,28 +224,32 @@ export default function DashboardPage() {
                 ★ Niveau actuel
               </span>
               <div>
-                <h2 className="text-[26px] font-black text-slate-900 leading-tight">Niveau 3</h2>
+                <h2 className="text-[26px] font-black text-slate-900 leading-tight">Niveau {level}</h2>
                 <p className="text-[13px] font-bold text-slate-700">Les super-héros du mouvement</p>
               </div>
               <div>
                 <div className="flex justify-between text-[10.5px] font-bold text-slate-600 mb-1">
                   <span>⭐ Progression vers le niveau suivant</span>
-                  <span className="text-slate-900 font-black">4 / 6</span>
+                  <span className="text-slate-900 font-black">{progress} / {step}</span>
                 </div>
                 <div className="h-3 bg-white/80 rounded-full shadow-inner border border-white overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{
-                      width: "67%",
+                      width: `${Math.round((progress / step) * 100)}%`,
                       background: "linear-gradient(to right, #38bdf8, #818cf8, #6366f1)",
                     }}
                   />
                 </div>
               </div>
-              <button className="mt-1 flex items-center gap-2 text-white text-[12px] font-bold px-5 py-2.5 rounded-full shadow hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all w-fit" style={{ background: "linear-gradient(to right, #7c3aed, #6366f1, #38bdf8)" }}>
-                <Gamepad2 size={14} />
-                Commencer un exercice →
-              </button>
+              {firstPlayable?.href ? (
+                <Link href={firstPlayable.href} className="mt-1 flex items-center gap-2 text-white text-[12px] font-bold px-5 py-2.5 rounded-full shadow hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all w-fit" style={{ background: "linear-gradient(to right, #7c3aed, #6366f1, #38bdf8)" }}>
+                  <Gamepad2 size={14} />
+                  Commencer un exercice →
+                </Link>
+              ) : (
+                <span className="mt-1 text-[11.5px] font-bold text-slate-500">Ton thérapeute n’a pas encore activé de jeu jouable.</span>
+              )}
             </div>
           </div>
 
@@ -252,7 +281,7 @@ export default function DashboardPage() {
             {/* Date */}
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-600 mb-4">
               <Calendar size={12} className="text-slate-400 flex-shrink-0" />
-              28 septembre 2026 &nbsp;•&nbsp; 16:24
+              {last ? formatDate(sessionDate(last), true) : "Pas encore de séance"}
             </div>
 
             {/* Stats */}
@@ -261,14 +290,14 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
                   <Image src="/Assets/dashboard/Glossy Golden Star Sticker.png" width={15} height={15} alt="Star" /> Score
                 </div>
-                <div className="text-[30px] font-black text-slate-900 leading-none">420</div>
-                <div className="text-[10px] text-slate-400 font-bold">/ 500</div>
+                <div className="text-[30px] font-black text-slate-900 leading-none">{last?.metrics?.score != null ? Math.round(Number(last.metrics.score)) : "—"}</div>
+                <div className="text-[10px] text-slate-400 font-bold">/ 100</div>
               </div>
               <div className="bg-[#FAF8FE] border border-purple-50 rounded-2xl p-3 flex flex-col gap-1">
                 <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
                   <Image src="/Assets/dashboard/Glossy Neon Target Burst Icon.png" width={15} height={15} alt="Target" /> Taux de réussite
                 </div>
-                <div className="text-[30px] font-black text-slate-900 leading-none">92%</div>
+                <div className="text-[30px] font-black text-slate-900 leading-none">{last?.metrics?.success_rate != null ? `${Math.round(Number(last.metrics.success_rate))}%` : "—"}</div>
               </div>
             </div>
 
@@ -307,6 +336,12 @@ export default function DashboardPage() {
             </Link>
           </div>
 
+          {exercises.length === 0 && (
+            <div className="text-center py-8 text-[12.5px] font-bold text-slate-500">
+              Aucun exercice pour l’instant : ton thérapeute va bientôt t’en attribuer 🦉
+            </div>
+          )}
+
           {/* Cards row */}
           <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
             {exercises.map((ex, i) => {
@@ -314,7 +349,7 @@ export default function DashboardPage() {
               return (
                 <CardWrapper
                   href={ex.href || "#"}
-                  key={i}
+                  key={ex.key}
                 className={`flex-shrink-0 rounded-2xl border p-3 flex flex-col transition-all group snap-start ${
                   ex.active
                     ? "bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-purple-200 cursor-pointer"
@@ -337,8 +372,8 @@ export default function DashboardPage() {
                     }`}
                   />
                   {ex.active ? (
-                    <span className="absolute top-1.5 left-1.5 bg-[#10B981] text-white text-[8.5px] font-black px-2 py-0.5 rounded-full">
-                      Actif
+                    <span className={`absolute top-1.5 left-1.5 text-white text-[8.5px] font-black px-2 py-0.5 rounded-full ${ex.soon ? "bg-[#94A3B8]" : "bg-[#10B981]"}`}>
+                      {ex.soon ? "Bientôt" : "Actif"}
                     </span>
                   ) : (
                     <span className="absolute top-1.5 left-1.5 bg-[#64748B] text-white text-[8.5px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
@@ -380,7 +415,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-1 border-t border-slate-100 pt-2 text-[10px] font-bold text-slate-400">
-                    <Image src="/Assets/dashboard/Glossy Lavender Padlock Icon.png" width={12} height={12} alt="Lock" className="opacity-70 grayscale" /> Débloqué au niveau {ex.lockedAt}
+                    <Image src="/Assets/dashboard/Glossy Lavender Padlock Icon.png" width={12} height={12} alt="Lock" className="opacity-70 grayscale" /> Verrouillé
                   </div>
                 )}
               </CardWrapper>

@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { activateAccount, ApiError } from "@/lib/api";
 
 export default function ActivationCard() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -12,25 +14,70 @@ export default function ActivationCard() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeAlert, setActiveAlert] = useState<"error" | "expired" | "used" | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActiveAlert(null);
+    setFormError(null);
+    const fullCode = code.join("").trim();
+    if (fullCode.length !== 6) {
+      setFormError("Saisissez les 6 caractères du code d'activation.");
+      return;
+    }
+    if (!email.trim() || !password) {
+      setFormError("Renseignez une adresse e-mail et un mot de passe.");
+      return;
+    }
+    if (password.length < 6) {
+      setFormError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setFormError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await activateAccount(fullCode, email.trim(), password);
+      router.push("/dashboard");
+    } catch (err) {
+      setLoading(false);
+      if (err instanceof ApiError) {
+        if (err.status === 404) return setActiveAlert("error");
+        if (err.status === 410) return setActiveAlert("expired");
+        if (err.status === 409 && err.detail.toLowerCase().includes("email")) {
+          return setFormError("Cette adresse e-mail est déjà utilisée.");
+        }
+        if (err.status === 409) return setActiveAlert("used");
+        if (err.status === 422) return setFormError("Vérifiez l’adresse e-mail saisie.");
+      }
+      setFormError(err instanceof Error ? err.message : "Activation impossible.");
+    }
+  };
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleCodeChange = (index: number, value: string) => {
+  const handleCodeChange = (index: number, raw: string) => {
+    let value = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    // Saisie d'un caractère dans une case déjà remplie : on garde le dernier.
+    if (value.length === 2 && code[index]) value = value.slice(-1);
     if (value.length > 1) {
-      // Handle paste
-      const pasted = value.slice(0, 6).split("");
+      // Collage du code complet
+      const pasted = value.slice(0, 6 - index).split("");
       const newCode = [...code];
       pasted.forEach((char, i) => {
-        newCode[i] = char.toUpperCase();
+        newCode[index + i] = char;
       });
       setCode(newCode);
-      const nextIndex = Math.min(pasted.length, 5);
-      inputRefs.current[nextIndex]?.focus();
+      inputRefs.current[Math.min(index + pasted.length, 5)]?.focus();
       return;
     }
 
     const newCode = [...code];
-    newCode[index] = value.toUpperCase();
+    newCode[index] = value;
     setCode(newCode);
 
     if (value && index < 5) {
@@ -110,6 +157,13 @@ export default function ActivationCard() {
           </div>
         )}
 
+        {formError && (
+          <div role="alert" className="mb-2.5 p-2.5 rounded-xl bg-[#FFE4E6] border border-[#FECDD3] text-[#E11D48] text-[11px] font-medium flex items-center gap-1.5">
+            <span className="w-4 h-4 rounded-full bg-[#E11D48] text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">!</span>
+            <span>{formError}</span>
+          </div>
+        )}
+
         {/* Activation Code Section */}
         <div className="mb-3">
           <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
@@ -121,7 +175,8 @@ export default function ActivationCard() {
                 key={idx}
                 ref={(el) => { inputRefs.current[idx] = el; }}
                 type="text"
-                maxLength={1}
+                maxLength={6}
+                aria-label={`Caractère ${idx + 1} du code`}
                 value={digit}
                 onChange={(e) => handleCodeChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
@@ -141,7 +196,7 @@ export default function ActivationCard() {
         </div>
 
         {/* Credentials Form */}
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-2">
           <label className="block text-[11px] font-bold text-slate-700 -mb-0.5">
             Créer vos identifiants
           </label>
@@ -234,9 +289,10 @@ export default function ActivationCard() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#0EA5E9] hover:opacity-95 text-white font-bold py-2.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-md text-[12.5px] mt-2"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#0EA5E9] hover:opacity-95 disabled:opacity-60 text-white font-bold py-2.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-md text-[12.5px] mt-2"
           >
-            Activer mon compte
+            {loading ? "Activation…" : "Activer mon compte"}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
