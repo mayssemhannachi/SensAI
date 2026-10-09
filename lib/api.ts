@@ -120,6 +120,21 @@ export function homeFor(role: Role | null): string {
   return role === "patient" ? "/dashboard" : "/therapist";
 }
 
+/** Adresse de l'espace thérapeute (dashboard d'analyse) avec la session en cours. */
+export function therapistSpaceUrl(): string {
+  const token = getToken();
+  return token ? `${ANALYTICS_URL}/?token=${encodeURIComponent(token)}` : "/login";
+}
+
+/** Envoie l'utilisateur vers son espace selon son rôle. */
+export function goToSpace(role: Role, push: (path: string) => void) {
+  if (role === "therapist") {
+    window.location.href = therapistSpaceUrl();
+  } else {
+    push("/dashboard");
+  }
+}
+
 // ─── Requêtes ────────────────────────────────────────────────────────────────
 export class ApiError extends Error {
   status: number;

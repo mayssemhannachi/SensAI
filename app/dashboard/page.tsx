@@ -56,7 +56,9 @@ export default function DashboardPage() {
 
   const exercises: ExerciseCard[] = useMemo(
     () =>
-      activeGames(games).map((g) => {
+      activeGames(games)
+        .filter((g) => gameMeta(g.game_slug).playable)
+        .map((g) => {
         const meta = gameMeta(g.game_slug);
         const config = withDefaults(g.configuration);
         return {

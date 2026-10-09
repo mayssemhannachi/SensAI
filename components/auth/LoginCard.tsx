@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { homeFor, login } from "@/lib/api";
+import { goToSpace, login } from "@/lib/api";
 
 export default function LoginCard() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function LoginCard() {
     setLoading(true);
     try {
       const role = await login(email.trim(), password);
-      router.push(homeFor(role));
+      goToSpace(role, router.push);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Connexion impossible.");
       setLoading(false);

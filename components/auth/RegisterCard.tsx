@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { registerTherapist } from "@/lib/api";
+import { goToSpace, registerTherapist } from "@/lib/api";
 
 const inputClass =
   "w-full pl-3 pr-3 py-2 rounded-xl border border-[#E0E7FF] text-[12px] text-slate-700 placeholder-slate-400 bg-[#F0F5FF]/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/30 focus:border-[#8B5CF6] transition-all";
@@ -35,8 +35,8 @@ export default function RegisterCard() {
     }
     setLoading(true);
     try {
-      await registerTherapist(fullName.trim(), email.trim(), password);
-      router.push("/therapist");
+      const role = await registerTherapist(fullName.trim(), email.trim(), password);
+      goToSpace(role, router.push);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Inscription impossible.");
       setLoading(false);
