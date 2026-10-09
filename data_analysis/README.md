@@ -15,12 +15,13 @@ Ce dossier contient la partie **Data Analysis** du projet SensAI / KineKids AI :
 
 ## 1. Installation
 
-Depuis le dossier `data_analysis` :
+Pour la plateforme complète, utiliser `installer.bat` / `demarrer.bat` à la racine du dépôt
+(voir le [README principal](../README.md)). Installation du dashboard seul, depuis la racine :
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
-python -m pip install -r requirements.txt
+python -m pip install -r data_analysis\requirements.txt
 ```
 
 ## 2. Lancer l'espace thérapeute

@@ -22,3 +22,5 @@ Thumbs.db
 
 
 test_db.py
+# Lanceurs générés par scripts/demarrer.py
+.run/

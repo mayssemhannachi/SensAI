@@ -7,7 +7,7 @@ connexion, liste des patients, séances, jeux, création de patient, diagnostic 
 Sur la branche publiée `feature/dashboard-analytics`, aucun fichier du backend n’a été modifié.
 La branche locale `local/back-connecte` propose une implémentation des points 1 à 3 ci-dessous,
 plus les comptes patients (`POST /auth/activate`, routes `/me/*`) et `PUT /patient-games/{id}`
-(voir `LANCER_LE_PROJET.md`). L’équipe backend peut la reprendre ou s’en inspirer. Les points ci-dessous relèvent du backend ; ils sont classés
+(voir le `README.md` à la racine). L’équipe backend peut la reprendre ou s’en inspirer. Les points ci-dessous relèvent du backend ; ils sont classés
 par impact sur le dashboard et contournés côté dashboard en attendant.
 
 ## À traiter en priorité
