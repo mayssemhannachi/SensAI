@@ -48,22 +48,59 @@ def pids_on_port(port: int) -> set[int]:
             out = subprocess.run(["lsof", "-ti", f"tcp:{port}", "-sTCP:LISTEN"],
                                  capture_output=True, text=True).stdout
             pids = {int(x) for x in out.split()}
+            if not pids and shutil.which("fuser"):
+                out = subprocess.run(["fuser", f"{port}/tcp"], capture_output=True, text=True).stdout
+                pids = {int(x) for x in out.split() if x.isdigit()}
     except (OSError, ValueError):
         pass
     pids.discard(0)
     return pids
 
 
+def _parent(pid: int) -> tuple[int, str]:
+    """(PID parent, nom du parent) — pour arrêter aussi « npm run dev » qui relance le serveur."""
+    try:
+        if IS_WINDOWS:
+            out = subprocess.run(
+                ["powershell", "-NoProfile", "-Command",
+                 f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId={pid}';"
+                 "$q=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.ParentProcessId);"
+                 "Write-Output ([string]$p.ParentProcessId+' '+$q.Name)"],
+                capture_output=True, text=True, timeout=15).stdout.split()
+        else:
+            ppid = subprocess.run(["ps", "-o", "ppid=", "-p", str(pid)],
+                                  capture_output=True, text=True).stdout.strip()
+            name = subprocess.run(["ps", "-o", "args=", "-p", ppid],
+                                  capture_output=True, text=True).stdout.strip()
+            out = [ppid, name]
+        return int(out[0]), " ".join(out[1:]).lower()
+    except (OSError, ValueError, IndexError, subprocess.TimeoutExpired):
+        return 0, ""
+
+
+def _kill(pid: int) -> None:
+    if IS_WINDOWS:
+        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+    else:
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            pass
+
+
 def free_port(port: int) -> bool:
     """Arrête l'ancien service qui occupe ``port`` (ancienne version, autre dossier…)."""
     for pid in pids_on_port(port):
-        if IS_WINDOWS:
-            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
-        else:
-            try:
-                os.kill(pid, signal.SIGTERM)
-            except OSError:
-                pass
+        # Remonte les parents node / npm (sinon « next dev » relance aussitôt son serveur).
+        chain, current = [pid], pid
+        for _ in range(3):
+            parent, name = _parent(current)
+            if parent <= 1 or not any(word in name for word in ("node", "npm", "next")):
+                break
+            chain.append(parent)
+            current = parent
+        for target in reversed(chain):
+            _kill(target)
     for _ in range(20):
         if not port_busy(port):
             return True

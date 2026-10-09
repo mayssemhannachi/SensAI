@@ -76,6 +76,8 @@ il ne refait que ce qui manque.
 - **Windows** : double-cliquer sur **`demarrer.bat`**
   → trois fenêtres s'ouvrent (backend, dashboard, site) puis le navigateur s'ouvre sur le site.
   Pour arrêter : fermer les trois fenêtres « SensAI - … ».
+  Si la plateforme n'est pas encore installée, `demarrer.bat` lance d'abord l'installation.
+  Si une ancienne version tourne encore (autre dossier, ancien terminal), elle est arrêtée et remplacée.
 - **Mac / Linux** : `./demarrer.sh` → `Ctrl + C` pour tout arrêter.
 
 On n'ouvre qu'**une seule adresse : http://localhost:3000**. Le site envoie chacun au bon endroit.
