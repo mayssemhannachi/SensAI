@@ -43,9 +43,13 @@ se jouent aussi **au clavier**.
 ## 2. Installation (une seule fois)
 
 ```powershell
+# Dépôt de l'équipe (branche de la plateforme complète)
 git clone -b integration/plateforme-complete https://github.com/mayssemhannachi/SensAI.git
 cd SensAI
 ```
+
+(Depuis une copie du projet publiée sur un autre dépôt : `git clone <adresse du dépôt>`,
+puis entrer dans le dossier cloné.)
 
 Puis :
 
