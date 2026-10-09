@@ -19,6 +19,13 @@ export const GAME_META: Record<string, GameMeta> = {
     playable: true,
     path: "/dashboard/game/le-hibou",
   },
+  "gardien-lucioles": {
+    image: "/Assets/dashboard/Chibi Sky Quest to the Star.png",
+    category: "Abduction de l'épaule",
+    limb: "Épaule / Bras",
+    playable: true,
+    path: "/dashboard/game/gardien-lucioles",
+  },
   "color-touch": { image: "/Assets/dashboard/ex-color-touch.png", category: "Jeu de couleur", limb: "Main droite" },
   "reaction-speed": { image: "/Assets/dashboard/ex-reaction-speed.png", category: "Jeu de rapidité", limb: "Main gauche" },
   "sequence-memory": { image: "/Assets/dashboard/ex-sequence-memory.png", category: "Jeu de mémoire", limb: "Œil / Vision" },
@@ -48,6 +55,21 @@ export const DEFAULT_CONFIG: Required<Pick<GameConfig,
   safety_limit: 35,
   active: true,
 };
+
+export const LUCIOLES_DEFAULTS = {
+  affected_arm: "R" as "R" | "L",
+  mode: "hemi" as "hemi" | "bi",
+  target_angle: 90,
+  elbow_min: 140,
+  rest_tolerance: 35,
+  repetitions: 10,
+  hold_seconds: 1,
+  active: true,
+};
+
+export function luciolesConfig(config?: GameConfig) {
+  return { ...LUCIOLES_DEFAULTS, ...(config || {}) } as typeof LUCIOLES_DEFAULTS;
+}
 
 export function withDefaults(config?: GameConfig) {
   return { ...DEFAULT_CONFIG, ...(config || {}) };

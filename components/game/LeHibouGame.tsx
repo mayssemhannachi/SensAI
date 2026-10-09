@@ -18,13 +18,18 @@ import { Camera, Keyboard } from "lucide-react";
 import { getMyGames, saveMySession, type PatientGame, type SessionMetrics } from "@/lib/api";
 import { DIFFICULTY_LEVEL, SPEED_LABELS, withDefaults } from "@/lib/games";
 import { useRequireAuth } from "@/lib/useAuth";
+import RatingRow from "./RatingRow";
 
 type Phase = "loading" | "intro" | "calibrating" | "playing" | "rating" | "saving" | "done" | "error";
 type Step = "turn" | "hold" | "return";
 type InputMode = "camera" | "keyboard";
 
-const SPEED_LIMIT_DEG_S: Record<string, number> = { lente: 70, moderee: 110, rapide: 170 };
+// Vitesse maximale (°/s, mesurée sur une vitesse lissée — cf. hibou.py de Chahed, vmax 40°/s).
+const SPEED_LIMIT_DEG_S: Record<string, number> = { lente: 45, moderee: 70, rapide: 110 };
 const CENTER_ZONE = 8; // ° : zone considérée comme « au centre »
+const DEFAULT_CAMERA_GAIN = 1.25; // gain du ratio nez / visage (hibou.py)
+const TILT_LIMIT = 15; // ° d'inclinaison de la tête au-delà desquels on parle de compensation
+const COMPENSATION_DELAY = 0.35; // s de confirmation avant d'afficher l'alerte (hibou.py)
 
 type Landmark = { x: number; y: number; z: number };
 type FaceMeshResults = { multiFaceLandmarks?: Landmark[][] };
@@ -43,17 +48,26 @@ declare global {
 }
 
 /** Lacet (°) : positif quand l'enfant tourne la tête vers SA droite. */
-function yawFromLandmarks(points: Landmark[]): number | null {
+function yawFromLandmarks(points: Landmark[], gain = DEFAULT_CAMERA_GAIN): number | null {
   const nose = points[1];
   const left = points[234];
   const right = points[454];
   if (!nose || !left || !right) return null;
   const half = (right.x - left.x) / 2;
   if (Math.abs(half) < 1e-4) return null;
-  const ratio = (nose.x - (left.x + right.x) / 2) / half;
+  const ratio = ((nose.x - (left.x + right.x) / 2) / half) * gain;
   const clamped = Math.max(-1, Math.min(1, ratio));
   // Image caméra non inversée : la droite de l'enfant est à gauche de l'image.
   return (-Math.asin(clamped) * 180) / Math.PI;
+}
+
+/** Inclinaison de la tête (°) : angle de la ligne des yeux. Sert à repérer la compensation
+ *  (l'enfant penche la tête au lieu de la tourner), comme le contrôle des épaules de hibou.py. */
+function rollFromLandmarks(points: Landmark[]): number | null {
+  const a = points[33];
+  const b = points[263];
+  if (!a || !b) return null;
+  return (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
 }
 
 type Tracker = {
@@ -67,6 +81,10 @@ type Tracker = {
   overshoots: number;
   overshooting: boolean;
   fastMoves: number;
+  speed: number;
+  compensations: number;
+  compTimer: number;
+  compensating: boolean;
   lastYaw: number;
   lastDelta: number;
   lastTime: number;
@@ -85,6 +103,10 @@ const newTracker = (): Tracker => ({
   overshoots: 0,
   overshooting: false,
   fastMoves: 0,
+  speed: 0,
+  compensations: 0,
+  compTimer: 0,
+  compensating: false,
   lastYaw: 0,
   lastDelta: 0,
   lastTime: 0,
@@ -103,15 +125,18 @@ export default function LeHibouGame() {
   const [faceVisible, setFaceVisible] = useState(true);
 
   // Valeurs affichées (rafraîchies ~15 fois / s)
-  const [view, setView] = useState({ yaw: 0, rep: 0, step: "turn" as Step, hold: 0, successes: 0, tooFast: false, tooFar: false });
+  const [view, setView] = useState({ yaw: 0, rep: 0, step: "turn" as Step, hold: 0, successes: 0, tooFast: false, tooFar: false, tilted: false });
   const [result, setResult] = useState<{ metrics: SessionMetrics; duration: number } | null>(null);
   const [pain, setPain] = useState<number | null>(null);
   const [effort, setEffort] = useState<number | null>(null);
 
   const yawRef = useRef(0);
   const rawYawRef = useRef<number | null>(null);
+  const rawRollRef = useRef<number | null>(null);
   const baselineRef = useRef(0);
+  const baselineRollRef = useRef(0);
   const calibrationRef = useRef<number[]>([]);
+  const rollCalibrationRef = useRef<number[]>([]);
   const trackerRef = useRef<Tracker>(newTracker());
   const keysRef = useRef({ left: false, right: false });
   const phaseRef = useRef<Phase>("loading");
@@ -186,8 +211,12 @@ export default function LeHibouGame() {
       faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
       faceMesh.onResults((results) => {
         const landmarks = results.multiFaceLandmarks?.[0];
-        const yaw = landmarks ? yawFromLandmarks(landmarks) : null;
+        const c = configRef.current;
+        const gain = Number(c.camera_gain) || DEFAULT_CAMERA_GAIN;
+        const raw = landmarks ? yawFromLandmarks(landmarks, gain) : null;
+        const yaw = raw === null ? null : c.invert_direction ? -raw : raw;
         rawYawRef.current = yaw;
+        rawRollRef.current = landmarks ? rollFromLandmarks(landmarks) : null;
         setFaceVisible(yaw !== null);
       });
       const camera = new window.Camera(videoRef.current, {
@@ -253,7 +282,8 @@ export default function LeHibouGame() {
       hold_seconds_avg: t.holds.length ? Math.round((t.holds.reduce((a, b) => a + b, 0) / t.holds.length) * 10) / 10 : 0,
       smoothness: Math.max(0, Math.min(100, Math.round(100 - jitter * 25))),
       overshoots: t.overshoots,
-      fast_moves: t.fastMoves,
+      compensations: t.compensations,
+      fast_moves: Math.round(t.fastMoves * 10) / 10,
       completed: !stoppedEarly && t.successes >= reps,
       stopped_early: stoppedEarly,
       input_mode: modeRef.current,
@@ -283,7 +313,10 @@ export default function LeHibouGame() {
         const diff = goal - yawRef.current;
         yawRef.current += Math.sign(diff) * Math.min(Math.abs(diff), speed * dt);
       } else if (rawYawRef.current !== null) {
-        if (p === "calibrating") calibrationRef.current.push(rawYawRef.current);
+        if (p === "calibrating") {
+          calibrationRef.current.push(rawYawRef.current);
+          if (rawRollRef.current !== null) rollCalibrationRef.current.push(rawRollRef.current);
+        }
         const target = rawYawRef.current - baselineRef.current;
         yawRef.current += (target - yawRef.current) * 0.5; // lissage léger
       }
@@ -292,6 +325,8 @@ export default function LeHibouGame() {
       if (p === "calibrating" && calibrationRef.current.length >= 25) {
         const sorted = [...calibrationRef.current].sort((a, b) => a - b);
         baselineRef.current = sorted[Math.floor(sorted.length / 2)];
+        const rolls = [...rollCalibrationRef.current].sort((a, b) => a - b);
+        baselineRollRef.current = rolls.length ? rolls[Math.floor(rolls.length / 2)] : 0;
         yawRef.current = 0;
         trackerRef.current = { ...newTracker(), startedAt: performance.now(), lastTime: now };
         setPhase("playing");
@@ -301,6 +336,7 @@ export default function LeHibouGame() {
       const t = trackerRef.current;
       let tooFast = false;
       let tooFar = false;
+      let tilted = false;
       if (p === "playing") {
         const yaw = yawRef.current;
         const direction = t.rep % 2 === 0 ? 1 : -1; // droite puis gauche
@@ -310,18 +346,29 @@ export default function LeHibouGame() {
 
         if (t.lastTime) {
           const velocity = Math.abs(yaw - t.lastYaw) / Math.max(dt, 1e-3);
+          t.speed += (velocity - t.speed) * 0.2; // vitesse lissée (hibou.py)
           // Fluidité : variation brusque de la vitesse (dérivée seconde de l'angle)
           const delta = yaw - t.lastYaw;
           t.jitter.push(Math.min(4, Math.abs(delta - t.lastDelta)));
           t.lastDelta = delta;
           if (t.jitter.length > 600) t.jitter.shift();
-          if (velocity > (SPEED_LIMIT_DEG_S[c.speed] ?? 70) && modeRef.current === "camera") {
+          if (t.speed > (SPEED_LIMIT_DEG_S[c.speed] ?? 45) && modeRef.current === "camera") {
             tooFast = true;
             t.fastMoves += dt;
           }
         }
         t.lastYaw = yaw;
         t.lastTime = now;
+
+        // Compensation : tête penchée plutôt que tournée, confirmée pendant 0,35 s.
+        if (modeRef.current === "camera" && rawRollRef.current !== null) {
+          const deviating = Math.abs(rawRollRef.current - baselineRollRef.current) > TILT_LIMIT;
+          t.compTimer = deviating ? t.compTimer + dt : Math.max(0, t.compTimer - dt * 2.5);
+          const compensating = t.compTimer >= COMPENSATION_DELAY || (t.compensating && t.compTimer > 0.15);
+          if (compensating && !t.compensating) t.compensations += 1;
+          t.compensating = compensating;
+          tilted = compensating;
+        }
 
         tooFar = Math.abs(yaw) > c.safety_limit;
         if (tooFar && !t.overshooting) t.overshoots += 1;
@@ -359,6 +406,7 @@ export default function LeHibouGame() {
           successes: t.successes,
           tooFast,
           tooFar,
+          tilted,
         });
       }
       frame = requestAnimationFrame(loop);
@@ -373,6 +421,7 @@ export default function LeHibouGame() {
     modeRef.current = selected;
     yawRef.current = 0;
     calibrationRef.current = [];
+    rollCalibrationRef.current = [];
     if (selected === "camera") {
       const ok = await startCamera();
       if (!ok) {
@@ -425,6 +474,7 @@ export default function LeHibouGame() {
   const gaugePct = Math.min(1, Math.abs(view.yaw) / Math.max(config.target_angle, 1));
   const instruction =
     view.tooFar ? "Trop loin ! Reviens doucement 🛡️"
+      : view.tilted ? "Garde la tête bien droite, tourne-la seulement 🙂"
       : view.tooFast ? "Plus doucement… 🪶"
         : view.step === "turn" ? `Regarde la souris… tourne doucement à ${direction} !`
           : view.step === "hold" ? "Bravo, reste comme ça…"
@@ -703,29 +753,6 @@ function RepDots({ total, current, done, large }: { total: number; current: numb
           <div key={i} className={`${size} rounded-full bg-slate-100 flex items-center justify-center text-slate-300`}>•</div>
         ),
       )}
-    </div>
-  );
-}
-
-function RatingRow({
-  label, value, onChange, faces, testId,
-}: { label: string; value: number | null; onChange: (v: number) => void; faces: string[]; testId: string }) {
-  return (
-    <div className="mt-4">
-      <p className="text-sm font-black text-slate-700 mb-2">{label}</p>
-      <div className="flex justify-center gap-2">
-        {faces.map((face, i) => (
-          <button
-            key={i}
-            onClick={() => onChange(i)}
-            data-testid={`${testId}-${i}`}
-            className={`w-11 h-11 rounded-2xl text-2xl border-2 transition-all ${value === i ? "border-[#7C3AED] bg-purple-50 scale-110" : "border-slate-100 bg-white"}`}
-            aria-label={`${label} ${i} sur 5`}
-          >
-            {face}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

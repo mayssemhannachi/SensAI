@@ -31,6 +31,14 @@ export type GameConfig = {
   difficulty?: "faible" | "moyenne" | "elevee";
   safety_limit?: number;
   active?: boolean;
+  // Le Hibou : réglages de la caméra
+  camera_gain?: number;
+  invert_direction?: boolean;
+  // Le Gardien des Lucioles (abduction de l'épaule)
+  affected_arm?: "R" | "L";
+  mode?: "hemi" | "bi";
+  elbow_min?: number;
+  rest_tolerance?: number;
   [key: string]: unknown;
 };
 export type PatientGame = {

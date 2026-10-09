@@ -20,6 +20,7 @@ Le site est sur http://localhost:3000. Il a besoin du backend FastAPI démarré 
 | `/activate` | Le patient crée ses identifiants avec le code du thérapeute | `POST /auth/activate` |
 | `/dashboard` | Espace patient : jeux attribués, dernière séance, niveau | `/me/patient`, `/me/games`, `/me/sessions` |
 | `/dashboard/game/le-hibou` | Jeu Le Hibou (caméra ou clavier), séance enregistrée à la fin | `GET /me/games`, `POST /me/sessions` |
+| `/dashboard/game/gardien-lucioles` | Jeu Le Gardien des Lucioles de Maram (`public/games/gardien-lucioles/`, Phaser + MediaPipe Pose), réglages du thérapeute passés au jeu, séance enregistrée à la fin | `GET /me/games`, `POST /me/sessions` |
 
 Le code d’accès à l’API est dans `lib/api.ts`, la présentation des jeux dans `lib/games.ts`.
 
