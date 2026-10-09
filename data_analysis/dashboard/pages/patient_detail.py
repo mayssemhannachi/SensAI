@@ -28,6 +28,7 @@ from dashboard.utils.api_client import ApiError
 from dashboard.utils.data import (
     GAME_SETTINGS_DEFAULTS,
     assign_game,
+    playable_games,
     create_activation_code,
     load_dataset,
     save_patient_diagnosis,
@@ -81,6 +82,7 @@ def _hero(patient: pd.Series, history: pd.DataFrame, status: str, alerts, refere
               <div class="kk-hero-name">{esc(patient['full_name'])}</div>
               <div class="kk-hero-meta">
                 {badge(code, 'brand')}{badge(age)}
+                {(badge('Compte patient activé', 'good', '✓') if patient.get('has_account') else badge('Compte patient non activé', 'warning', '!')) if 'has_account' in patient.index else ''}
                 {badge('Suivi depuis le ' + since, 'neutral') if not history.empty else ''}
                 {badge('Dernière séance : ' + days_ago(history['session_date'].max(), reference).lower(), 'neutral') if not history.empty else badge('Aucune séance pour l’instant', 'neutral')}
               </div>
@@ -182,7 +184,8 @@ def _game_assignment(data, patient) -> None:
                     st.error(str(error))
 
         assigned_ids = set(pd.to_numeric(assigned["game_id"], errors="coerce").dropna().astype(int))
-        available = data.games[~data.games["id"].isin(assigned_ids)]
+        available = playable_games(data.games)
+        available = available[~available["id"].isin(assigned_ids)]
         if not available.empty:
             st.markdown("**Assigner un nouveau jeu**")
             game_id = st.selectbox(
@@ -268,12 +271,52 @@ def show_patient_detail():
     # --------------------------------------------------------
     # INSIGHTS
     # --------------------------------------------------------
-    section("KineKids Intelligence", "Lecture automatique de l’historique — à confronter au jugement clinique.")
+    section("SensAI Intelligence", "Lecture automatique de l’historique — à confronter au jugement clinique.")
     insights = analytics.patient_insights(history, reference)
-    columns = st.columns(len(insights), gap="small")
-    for column, insight in zip(columns, insights):
-        with column:
-            render_html(insight_card(insight))
+    per_row = 3 if len(insights) > 4 else max(len(insights), 1)
+    for start in range(0, len(insights), per_row):
+        columns = st.columns(per_row, gap="small")
+        for column, insight in zip(columns, insights[start:start + per_row]):
+            with column:
+                render_html(insight_card(insight))
+
+    # --------------------------------------------------------
+    # AMPLITUDE & AUTO-ÉVALUATION (Le Hibou)
+    # --------------------------------------------------------
+    rotation = history.dropna(subset=["rotation_left", "rotation_right"], how="all")
+    if not rotation.empty:
+        last_rot = rotation.iloc[-1]
+        first_rot = rotation.iloc[0]
+        left, right = last_rot["rotation_left"], last_rot["rotation_right"]
+        target = last_rot["target_angle"]
+        sym = analytics.symmetry(left, right)
+        section("Amplitude cervicale & symétrie",
+                "Rotation maximale atteinte à chaque séance du Hibou, comparée à l’angle cible prescrit.")
+        target_text = f"objectif {fmt_number(target)}°" if pd.notna(target) else "objectif n.c."
+        kpi_row([
+            kpi_card("Rotation gauche", fmt_number(left), "←", "tone-violet", unit="°", foot=target_text,
+                     delta_html=delta_chip(analytics.delta(left, first_rot["rotation_left"]), "°", 0)),
+            kpi_card("Rotation droite", fmt_number(right), "→", "tone-blue", unit="°", foot=target_text,
+                     delta_html=delta_chip(analytics.delta(right, first_rot["rotation_right"]), "°", 0)),
+            kpi_card("Symétrie", fmt_number(sym), "⇄", "tone-green", unit=" %",
+                     foot="symétrique" if sym >= 80 else "asymétrie à surveiller"),
+            kpi_card("Maintien moyen", fmt_number(last_rot["hold_seconds_avg"], 1), "⏱", "tone-orange", unit=" s",
+                     foot=f"fluidité {fmt_number(last_rot['smoothness'])}/100"
+                     if pd.notna(last_rot["smoothness"]) else "dernière séance"),
+        ])
+        st.write("")
+        left_col, right_col = st.columns([1.5, 1], gap="medium")
+        with left_col:
+            with card("amplitude"):
+                card_title("Évolution de l’amplitude", "Degrés atteints à gauche et à droite, et angle cible.")
+                st.plotly_chart(charts.amplitude_chart(history), config=charts.CHART_CONFIG, key="patient_amplitude")
+        with right_col:
+            with card("pain"):
+                card_title("Douleur & effort", "Auto-évaluation de l’enfant après chaque séance (0 à 5).")
+                if history[["pain_level", "effort"]].notna().any().any():
+                    st.plotly_chart(charts.pain_effort_chart(history), config=charts.CHART_CONFIG, key="patient_pain")
+                else:
+                    st.info("Pas encore d’auto-évaluation.")
 
     # --------------------------------------------------------
     # ÉVOLUTION
@@ -352,6 +395,19 @@ def show_patient_detail():
         "Durée (min)": table["duration_min"],
         "Progression": table["progression"],
     })
+    extra = {
+        "Rot. gauche (°)": "rotation_left",
+        "Rot. droite (°)": "rotation_right",
+        "Douleur (/5)": "pain_level",
+        "Effort (/5)": "effort",
+    }
+    for label, column in extra.items():
+        if table[column].notna().any():
+            display[label] = table[column].to_numpy()
+    if display["Exercice"].nunique(dropna=True) <= 1:
+        display = display.drop(columns="Exercice")
+    if display["Progression"].isna().all() or "Rot. gauche (°)" in display.columns:
+        display = display.drop(columns="Progression")
     st.dataframe(
         display,
         hide_index=True,
@@ -365,12 +421,16 @@ def show_patient_detail():
             "Répétitions": st.column_config.NumberColumn(format="%d"),
             "Durée (min)": st.column_config.NumberColumn(format="%.1f"),
             "Progression": st.column_config.NumberColumn(format="%+.1f %%"),
+            "Rot. gauche (°)": st.column_config.NumberColumn(format="%d"),
+            "Rot. droite (°)": st.column_config.NumberColumn(format="%d"),
+            "Douleur (/5)": st.column_config.NumberColumn(format="%d"),
+            "Effort (/5)": st.column_config.NumberColumn(format="%d"),
         },
     )
     st.download_button(
         "⤓ Exporter l’historique (CSV)",
         display.to_csv(index=False).encode("utf-8-sig"),
-        file_name=f"kinekids_{patient['patient_code'] or patient['id']}_seances.csv",
+        file_name=f"sensai_{patient['patient_code'] or patient['id']}_seances.csv",
         mime="text/csv",
     )
     note("la « progression » est la variation du score par rapport à la séance précédente "

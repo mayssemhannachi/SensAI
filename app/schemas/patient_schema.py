@@ -25,6 +25,8 @@ class PatientResponse(BaseModel):
     patient_code: str
     therapist_id: int
     created_at: datetime
+    # Renseigné quand le patient a activé son compte avec le code du thérapeute.
+    user_id: int | None = None
 
 
 class PatientDeleteResponse(BaseModel):

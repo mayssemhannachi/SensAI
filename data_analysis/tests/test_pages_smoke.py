@@ -69,8 +69,8 @@ def test_demo_add_patient_flow():
     at.button[0].click()
     at.run()
     assert not at.exception
-    created, warning = at.session_state["last_created_patient"]
-    assert created["first_name"] == "Lina" and warning is None
+    created = at.session_state["last_created_patient"]
+    assert created["patient"]["first_name"] == "Lina" and created["warnings"] == []
 
 
 def test_full_app_demo_mode():

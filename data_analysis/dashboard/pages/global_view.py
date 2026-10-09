@@ -131,10 +131,17 @@ def show_global_view():
     colors = charts.game_colors(sessions_all["game_name"])
     with left:
         with card("games"):
-            card_title("Réussite moyenne par jeu", "Survolez une barre pour le détail.")
-            summary = analytics.game_summary(current)
-            st.plotly_chart(charts.game_comparison_chart(summary, colors), config=charts.CHART_CONFIG,
-                            key="overview_games")
+            has_rotation = current[["rotation_left", "rotation_right"]].notna().any().any()
+            if current["game_name"].nunique() <= 1 and has_rotation:
+                card_title("Amplitude cervicale moyenne",
+                           "Rotation moyenne atteinte par semaine (tous patients), et angle cible moyen.")
+                st.plotly_chart(charts.weekly_amplitude_chart(current), config=charts.CHART_CONFIG,
+                                key="overview_amplitude")
+            else:
+                card_title("Réussite moyenne par jeu", "Survolez une barre pour le détail.")
+                summary = analytics.game_summary(current)
+                st.plotly_chart(charts.game_comparison_chart(summary, colors), config=charts.CHART_CONFIG,
+                                key="overview_games")
             if st.button("Voir l’analyse par jeu →", key="overview_to_games"):
                 navigation.go("games")
     with right:
@@ -190,8 +197,15 @@ def show_global_view():
         "Score": recent["score"],
         "Réussite": recent["success_rate"],
         "Progression": recent["progression"],
+        "Rot. G (°)": recent["rotation_left"],
+        "Rot. D (°)": recent["rotation_right"],
+        "Douleur (/5)": recent["pain_level"],
         "Durée": recent["duration_min"],
     })
+    optional = ["Rot. G (°)", "Rot. D (°)", "Douleur (/5)"]
+    table = table.drop(columns=[c for c in optional if table[c].isna().all()])
+    if any(c in table.columns for c in optional):
+        table = table.drop(columns=["Progression"])
     st.dataframe(
         table,
         hide_index=True,
@@ -203,5 +217,8 @@ def show_global_view():
             "Réussite": st.column_config.ProgressColumn(format="%.0f %%", min_value=0, max_value=100),
             "Progression": st.column_config.NumberColumn(format="%+.1f %%"),
             "Durée": st.column_config.NumberColumn("Durée (min)", format="%.1f"),
+            "Rot. G (°)": st.column_config.NumberColumn(format="%d"),
+            "Rot. D (°)": st.column_config.NumberColumn(format="%d"),
+            "Douleur (/5)": st.column_config.NumberColumn(format="%d"),
         },
     )

@@ -3,7 +3,7 @@
 Deux sources interchangeables, qui produisent EXACTEMENT le même format :
 
 * ``demo`` : données synthétiques (CSV du dossier ``data/``), aucune dépendance ;
-* ``api``  : backend FastAPI KineKids AI (jeton Bearer obtenu à la connexion).
+* ``api``  : backend FastAPI SensAI (jeton Bearer obtenu à la connexion).
 
 Les pages ne manipulent que le format normalisé décrit ci-dessous, elles ne
 savent pas d'où viennent les données.
@@ -39,17 +39,20 @@ PROCESSED_DIR = DATA_DIR / "processed"
 
 PATIENT_COLUMNS = [
     "id", "first_name", "last_name", "full_name", "age", "patient_code",
-    "therapist_id", "created_at", "diagnosis",
+    "therapist_id", "created_at", "diagnosis", "has_account",
 ]
 
 SESSION_COLUMNS = [
     "session_id", "patient_id", "patient_game_id", "game_id", "game_name",
     "body_part", "exercise_name", "level", "session_date", "duration_min",
     "score", "success_rate", "repetitions", "progression",
+    # Mesures du jeu Le Hibou (rotation cervicale) et auto-évaluation
+    "rotation_left", "rotation_right", "hold_seconds_avg", "smoothness",
+    "pain_level", "effort", "target_angle", "completed",
     "first_name", "last_name", "patient_name",
 ]
 
-GAME_COLUMNS = ["id", "name", "body_part", "description"]
+GAME_COLUMNS = ["id", "name", "slug", "body_part", "description"]
 
 PATIENT_GAME_COLUMNS = ["patient_game_id", "patient_id", "game_id", "game_name", "configuration"]
 
@@ -67,7 +70,12 @@ GAME_SETTINGS_DEFAULTS = {
 NUMERIC_SESSION_COLUMNS = [
     "session_id", "patient_id", "patient_game_id", "game_id", "level",
     "duration_min", "score", "success_rate", "repetitions", "progression",
+    "rotation_left", "rotation_right", "hold_seconds_avg", "smoothness",
+    "pain_level", "effort", "target_angle",
 ]
+
+# Jeux réellement jouables dans l'espace patient du site (les autres arriveront plus tard).
+PLAYABLE_GAME_SLUGS = {"le-hibou"}
 
 API_CACHE_TTL = 120  # secondes
 
@@ -144,6 +152,8 @@ def normalize_patients(df: pd.DataFrame) -> pd.DataFrame:
     df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
     df["diagnosis"] = df["diagnosis"].astype("object").where(df["diagnosis"].notna(), "")
     df["diagnosis"] = df["diagnosis"].astype(str).str.strip()
+    user_ids = df["user_id"] if "user_id" in df.columns else pd.Series(pd.NA, index=df.index)
+    df["has_account"] = pd.to_numeric(user_ids, errors="coerce").notna()
     return df[PATIENT_COLUMNS].sort_values(["last_name", "first_name"]).reset_index(drop=True)
 
 
@@ -234,6 +244,14 @@ def api_session_to_row(session: dict, patient_id: int, patient_game_id: int,
         "success_rate": _metric(metrics, "success_rate", "successRate", "accuracy"),
         "repetitions": _metric(metrics, "repetitions", "reps"),
         "progression": _metric(metrics, "progression"),
+        "rotation_left": _metric(metrics, "rotation_left"),
+        "rotation_right": _metric(metrics, "rotation_right"),
+        "hold_seconds_avg": _metric(metrics, "hold_seconds_avg"),
+        "smoothness": _metric(metrics, "smoothness"),
+        "pain_level": _metric(metrics, "pain_level"),
+        "effort": _metric(metrics, "effort"),
+        "target_angle": _metric(metrics, "target_angle"),
+        "completed": metrics.get("completed"),
     }
 
 
@@ -563,3 +581,10 @@ def create_activation_code(patient_id: int) -> dict:
     if not state.api_mode_enabled():
         raise ValueError("Les codes d’activation sont disponibles en mode Backend.")
     return api_post("/activation-codes/", _require_token(), {"patient_id": int(patient_id)})
+
+
+def playable_games(games: pd.DataFrame) -> pd.DataFrame:
+    """Jeux du catalogue disponibles pour les patients aujourd'hui."""
+    if games.empty or "slug" not in games.columns:
+        return games
+    return games[games["slug"].isin(PLAYABLE_GAME_SLUGS)]

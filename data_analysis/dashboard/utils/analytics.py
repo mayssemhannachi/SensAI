@@ -16,10 +16,15 @@ import pandas as pd
 # ==========================================================
 
 LOW_SUCCESS = 40.0          # % de réussite en dessous duquel on alerte
+HIGH_PAIN = 4               # douleur déclarée (0-5) à partir de laquelle on alerte
 INACTIVE_DAYS = 14          # jours sans séance avant alerte d'assiduité
 TREND_WINDOW = 5            # nombre de séances pour la tendance récente
 TREND_SIGNIFICANT = 1.0     # points de score par séance (pente)
 MIN_SESSIONS_FOR_TREND = 3
+
+SCORE_DROP = 10.0           # baisse du score moyen (3 dernières vs 5 précédentes)
+AMPLITUDE_DROP = 3.0        # baisse de l'amplitude moyenne (°)
+AMPLITUDE_GAIN = 2.0        # gain d'amplitude moyenne (°) considéré comme une progression
 
 STATUS_ORDER = ["À surveiller", "En progression", "Stable", "Nouveau"]
 
@@ -121,6 +126,24 @@ def score_slope(scores: pd.Series) -> float | None:
     return float(slope)
 
 
+def recent_change(values: pd.Series, recent: int = 3, previous: int = 5) -> float | None:
+    """Moyenne des ``recent`` dernières valeurs moins celle des ``previous`` d'avant."""
+    data = pd.to_numeric(values, errors="coerce").dropna()
+    if len(data) < recent + 2:
+        return None
+    last = data.iloc[-recent:].mean()
+    before = data.iloc[-(recent + previous):-recent].mean()
+    return float(last - before)
+
+
+def amplitude_series(history: pd.DataFrame) -> pd.Series:
+    """Amplitude moyenne gauche/droite par séance (Le Hibou), vide sinon."""
+    if not {"rotation_left", "rotation_right"} <= set(history.columns):
+        return pd.Series(dtype=float)
+    rot = history[["rotation_left", "rotation_right"]].apply(pd.to_numeric, errors="coerce")
+    return rot.mean(axis=1, skipna=False).dropna()
+
+
 def weekly_trend(sessions: pd.DataFrame) -> pd.DataFrame:
     """Moyennes hebdomadaires (semaines commençant le lundi)."""
     if sessions.empty:
@@ -166,6 +189,13 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
         return alerts
     latest = history.iloc[-1]
 
+    pain = latest.get("pain_level")
+    if pain is not None and pd.notna(pain) and pain >= HIGH_PAIN:
+        alerts.append(Alert(
+            "Douleur élevée", "critical",
+            f"Douleur déclarée {fr(pain, 0)}/5 à la dernière séance : vérifier l’amplitude et la limite.",
+        ))
+
     success = latest.get("success_rate")
     if pd.notna(success) and success < LOW_SUCCESS:
         alerts.append(Alert(
@@ -173,11 +203,18 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
             f"{fr(success, 0)} % de réussite à la dernière séance (seuil {fr(LOW_SUCCESS, 0)} %).",
         ))
 
-    slope = score_slope(history["score"].tail(TREND_WINDOW))
-    if slope is not None and slope <= -TREND_SIGNIFICANT:
+    score_drop = recent_change(history["score"])
+    if score_drop is not None and score_drop <= -SCORE_DROP:
         alerts.append(Alert(
             "Score en baisse", "warning",
-            f"{fr(slope, 1, True)} pt de score par séance (5 dernières séances).",
+            f"Score moyen des 3 dernières séances {fr(score_drop, 0, True)} pts par rapport aux précédentes.",
+        ))
+
+    amplitude_drop = recent_change(amplitude_series(history))
+    if amplitude_drop is not None and amplitude_drop <= -AMPLITUDE_DROP:
+        alerts.append(Alert(
+            "Amplitude en baisse", "warning",
+            f"Rotation moyenne {fr(amplitude_drop, 0, True)}° sur les 3 dernières séances.",
         ))
 
     last_date = latest.get("session_date")
@@ -197,7 +234,10 @@ def patient_status(history: pd.DataFrame, alerts: list[Alert]) -> str:
     if any(a.level in {"critical", "warning"} for a in alerts):
         return "À surveiller"
     slope = score_slope(history["score"].tail(TREND_WINDOW))
-    if slope is not None and slope >= TREND_SIGNIFICANT:
+    amplitude_gain = recent_change(amplitude_series(history))
+    if (slope is not None and slope >= TREND_SIGNIFICANT) or (
+        amplitude_gain is not None and amplitude_gain >= AMPLITUDE_GAIN
+    ):
         return "En progression"
     return "Stable"
 
@@ -228,6 +268,7 @@ def patient_overview(patients: pd.DataFrame, sessions: pd.DataFrame,
             "trend": score_slope(recent["score"]) if not recent.empty else None,
             "scores": history["score"].dropna().tail(12).tolist(),
             "status": patient_status(history, alerts),
+            "has_account": bool(getattr(patient, "has_account", False)),
             "alerts": alerts,
         })
     overview = pd.DataFrame(rows)
@@ -284,7 +325,7 @@ def level_summary(sessions: pd.DataFrame) -> pd.DataFrame:
 
 
 # ==========================================================
-# INSIGHTS PATIENT (« KineKids Intelligence »)
+# INSIGHTS PATIENT (« SensAI Intelligence »)
 # ==========================================================
 
 @dataclass
@@ -341,6 +382,28 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
             tone, "◎",
         ))
 
+    # 2 bis. Amplitude de rotation (Le Hibou)
+    if {"rotation_left", "rotation_right"} <= set(history.columns):
+        rot = history.dropna(subset=["rotation_left", "rotation_right"])
+        if not rot.empty:
+            last_rot = rot.iloc[-1]
+            left, right = float(last_rot["rotation_left"]), float(last_rot["rotation_right"])
+            target = last_rot.get("target_angle")
+            sym = symmetry(left, right)
+            goal = f" (objectif {fr(target, 0)}°)" if target is not None and pd.notna(target) else ""
+            reached = target is not None and pd.notna(target) and min(left, right) >= target
+            gain = ""
+            if len(rot) >= 2:
+                first_rot = rot.iloc[0]
+                change = (left + right) / 2 - (float(first_rot["rotation_left"]) + float(first_rot["rotation_right"])) / 2
+                gain = f" Amplitude moyenne {fr(change, 0, True)}° depuis le début."
+            insights.append(Insight(
+                "Amplitude cervicale",
+                f"Gauche {fr(left, 0)}° · droite {fr(right, 0)}°{goal}, symétrie {fr(sym, 0)} %.{gain}",
+                "positive" if reached and sym >= 80 else "warning" if sym < 70 else "neutral",
+                "↔",
+            ))
+
     # 3. Meilleur / plus difficile jeu
     games = history.groupby("game_name")["success_rate"].mean().dropna()
     if len(games) >= 2:
@@ -349,13 +412,6 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
             "Points forts et axes de travail",
             f"Meilleure réussite sur « {best} » ({fr(games[best], 0)} %), "
             f"plus difficile sur « {hardest} » ({fr(games[hardest], 0)} %).",
-            "neutral", "◆",
-        ))
-    elif len(games) == 1:
-        insights.append(Insight(
-            "Un seul jeu pratiqué",
-            f"Toutes les séances portent sur « {games.index[0]} ». "
-            "Varier les jeux élargit l’évaluation motrice.",
             "neutral", "◆",
         ))
 
@@ -378,6 +434,13 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
             "positive" if per_week >= 2 else "neutral", "◷",
         ))
     return insights
+
+
+def symmetry(left: float, right: float) -> float:
+    """Indice de symétrie gauche/droite en % (100 = parfaitement symétrique)."""
+    if not left or not right or pd.isna(left) or pd.isna(right):
+        return 0.0
+    return min(left, right) / max(left, right) * 100
 
 
 def first_vs_last(history: pd.DataFrame) -> pd.DataFrame:

@@ -7,6 +7,7 @@ import pandas as pd
 from dashboard.components.ui import (
     alert_badges,
     avatar,
+    badge,
     days_ago,
     esc,
     fmt_number,
@@ -30,7 +31,7 @@ def patient_card_html(row: pd.Series, reference: pd.Timestamp) -> str:
         <div class="kk-pcard-meta">{code} · {age}</div>
       </div>
     </div>
-    <div class="kk-alerts" style="margin-top:10px">{status_badge(row['status'])}{alert_badges(row['alerts'])}</div>
+    <div class="kk-alerts" style="margin-top:10px">{status_badge(row['status'])}{alert_badges(row['alerts'])}{'' if row.get('has_account', True) else badge('Compte non activé', 'neutral')}</div>
     <div class="kk-pcard-stats">
       <div class="kk-stat"><div class="kk-stat-label">Score</div>
         <div class="kk-stat-value">{fmt_number(row['last_score'])}</div></div>

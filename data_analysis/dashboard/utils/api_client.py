@@ -1,4 +1,4 @@
-"""Client HTTP minimal pour le backend FastAPI KineKids AI.
+"""Client HTTP minimal pour le backend FastAPI SensAI.
 
 Le dashboard ne parle JAMAIS directement à PostgreSQL : toutes les données
 « réelles » passent par l'API. Ce module ne dépend pas de Streamlit pour rester
@@ -47,10 +47,19 @@ def api_base_url() -> str:
     return os.getenv("KINEKIDS_API_URL", DEFAULT_API_URL).strip().rstrip("/")
 
 
+def site_url() -> str:
+    """Adresse du site SensAI (Next.js) : connexion, inscription, espace patient."""
+    return os.getenv("KINEKIDS_SITE_URL", "http://localhost:3000").strip().rstrip("/")
+
+
 def default_data_source() -> str:
-    """Source par défaut lue dans l'environnement : ``demo`` ou ``api``."""
-    value = os.getenv("KINEKIDS_DATA_SOURCE", "demo").strip().lower()
-    return "api" if value in {"api", "backend"} else "demo"
+    """Source des données : le backend (``api``) par défaut.
+
+    ``KINEKIDS_DATA_SOURCE=demo`` active un mode hors-ligne sur les CSV synthétiques
+    (utile pour développer sans backend) ; il n'est pas proposé dans l'interface.
+    """
+    value = os.getenv("KINEKIDS_DATA_SOURCE", "api").strip().lower()
+    return "demo" if value in {"demo", "csv"} else "api"
 
 
 _ERROR_MESSAGES = {

@@ -12,7 +12,7 @@ PAGES = {
     "patients": ("Patients", "◉", "patients"),
     "patient": ("Fiche patient", "◇", "fiche-patient"),
     "games": ("Jeux", "▲", "jeux"),
-    "add_patient": ("Ajouter un patient", "＋", "ajouter-patient"),
+    "add_patient": ("Nouveau patient", "＋", "nouveau-patient"),
 }
 
 _REGISTRY: dict[str, st.Page] = {}

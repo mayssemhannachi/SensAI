@@ -1,4 +1,4 @@
-"""Design system KineKids : couleurs, typographie et CSS global."""
+"""Design system SensAI (aligné sur le site Next.js) : couleurs, typographie, CSS."""
 
 from __future__ import annotations
 
@@ -9,47 +9,53 @@ import streamlit as st
 # ============================================================
 
 COLORS = {
-    # Surfaces & texte
-    "background": "#F6F7FB",
+    # Surfaces & texte (mêmes valeurs que le site : slate + fond #EEF2FA)
+    "background": "#EEF2FA",
     "surface": "#FFFFFF",
-    "surface_soft": "#F8F9FC",
-    "text": "#1E2638",
-    "text_secondary": "#475467",
-    "muted": "#667085",
-    "border": "#E6E8F0",
-    "grid": "#EEF0F5",
-    # Marque
-    "primary": "#5B5BD6",
-    "primary_dark": "#4343B8",
-    "primary_soft": "#EEEEFC",
+    "surface_soft": "#F8FAFC",
+    "text": "#1E293B",
+    "text_secondary": "#475569",
+    "muted": "#64748B",
+    "border": "#E2E8F0",
+    "grid": "#EEF2F7",
+    # Marque SensAI
+    "primary": "#7C3AED",
+    "primary_dark": "#6D28D9",
+    "primary_soft": "#EDE9FE",
+    "pink": "#FF6B8B",
+    "sky": "#0EA5E9",
     # Statuts (réservés : jamais utilisés comme couleur de série)
-    "good": "#0E8A4F",
-    "good_bg": "#E7F6EE",
-    "warning": "#B76E00",
-    "warning_bg": "#FFF4E0",
-    "critical": "#C93A3A",
-    "critical_bg": "#FDECEC",
-    "info": "#3A63B8",
-    "info_bg": "#ECF2FD",
-    "neutral": "#5D6679",
-    "neutral_bg": "#F0F2F6",
+    "good": "#047857",
+    "good_bg": "#ECFDF5",
+    "warning": "#B45309",
+    "warning_bg": "#FFFBEB",
+    "critical": "#BE123C",
+    "critical_bg": "#FFF1F2",
+    "info": "#4338CA",
+    "info_bg": "#EEF2FF",
+    "neutral": "#475569",
+    "neutral_bg": "#F1F5F9",
 }
 
-# Palette catégorielle (ordre fixe, validée daltonisme pour les 3 premiers
-# créneaux) — une couleur suit toujours la même entité (ex. le même jeu).
-SERIES = ["#2A78D6", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4", "#008300", "#4A3AA7", "#E34948"]
+# Palette catégorielle aux couleurs SensAI (ordre fixe, validée daltonisme :
+# violet, cyan, rose, ambre) — une couleur suit toujours la même entité.
+SERIES = ["#7C3AED", "#06B6D4", "#EC4899", "#F59E0B", "#10B981", "#6366F1", "#F97316", "#64748B"]
 
 # Mesures : couleur stable pour une même métrique dans tous les graphiques.
 METRIC_COLORS = {
-    "score": "#2A78D6",
-    "success_rate": "#1BAF7A",
+    "score": "#7C3AED",
+    "success_rate": "#06B6D4",
+    "rotation_left": "#7C3AED",
+    "rotation_right": "#06B6D4",
+    "pain_level": "#EC4899",
+    "effort": "#F59E0B",
 }
 
-# Rampe séquentielle (bleu, clair → foncé) pour les heatmaps.
-SEQUENTIAL = ["#CDE2FB", "#9EC5F4", "#6DA7EC", "#3987E5", "#256ABF", "#184F95", "#0D366B"]
+# Rampe séquentielle (violet SensAI, clair → foncé) pour les heatmaps.
+SEQUENTIAL = ["#EDE9FE", "#DDD6FE", "#C4B5FD", "#A78BFA", "#8B5CF6", "#7C3AED", "#5B21B6"]
 
-FONT_BODY = "DM Sans"
-FONT_TITLE = "Nunito"
+FONT_BODY = "Outfit"
+FONT_TITLE = "Outfit"
 
 
 def get_colors() -> dict:
@@ -61,7 +67,7 @@ def get_colors() -> dict:
 # ============================================================
 
 _CSS = """
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Nunito:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&display=swap');
 
 :root {
   --kk-bg: %(background)s;
@@ -74,23 +80,25 @@ _CSS = """
   --kk-primary: %(primary)s;
   --kk-primary-dark: %(primary_dark)s;
   --kk-primary-soft: %(primary_soft)s;
+  --kk-pink: %(pink)s;
+  --kk-sky: %(sky)s;
   --kk-good: %(good)s;       --kk-good-bg: %(good_bg)s;
   --kk-warning: %(warning)s; --kk-warning-bg: %(warning_bg)s;
   --kk-critical: %(critical)s; --kk-critical-bg: %(critical_bg)s;
   --kk-info: %(info)s;       --kk-info-bg: %(info_bg)s;
   --kk-neutral: %(neutral)s; --kk-neutral-bg: %(neutral_bg)s;
-  --kk-radius: 18px;
-  --kk-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 6px 18px rgba(16, 24, 40, .05);
+  --kk-radius: 24px;
+  --kk-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 8px 24px rgba(124, 58, 237, .06);
 }
 
 html, body, [class*="css"], .stApp, .stMarkdown, button, input, textarea, select {
-  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 .stApp { background: var(--kk-bg); color: var(--kk-text); }
 .block-container { padding-top: 1.6rem !important; padding-bottom: 4rem !important; max-width: 1380px; }
 [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
 header[data-testid="stHeader"] { background: transparent; }
-h1, h2, h3, h4 { font-family: "Nunito", "DM Sans", sans-serif; color: var(--kk-text); }
+h1, h2, h3, h4 { font-family: "Outfit", "Nunito", sans-serif; color: var(--kk-text); }
 
 /* ---------- Sidebar ---------- */
 section[data-testid="stSidebar"] { background: #FFFFFF; border-right: 1px solid var(--kk-border); }
@@ -98,11 +106,11 @@ section[data-testid="stSidebar"] .block-container { padding-top: 1rem !important
 section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: .45rem; }
 .kk-brand { display: flex; align-items: center; gap: 12px; padding: 4px 4px 18px; }
 .kk-brand-logo {
-  width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center;
-  background: linear-gradient(135deg, #5B5BD6 0%%, #8E7CF0 55%%, #4FB7A0 100%%);
-  color: #fff; font: 900 20px "Nunito", sans-serif; box-shadow: 0 6px 14px rgba(91, 91, 214, .28);
+  width: 46px; height: 46px; display: grid; place-items: center; flex-shrink: 0;
 }
-.kk-brand-name { font: 900 18px "Nunito", sans-serif; color: var(--kk-text); line-height: 1.1; }
+.kk-brand-logo img { width: 46px; height: 46px; object-fit: contain; }
+.kk-word-a { color: var(--kk-pink); } .kk-word-i { color: var(--kk-primary); }
+.kk-brand-name { font: 900 18px "Outfit", sans-serif; color: var(--kk-text); line-height: 1.1; }
 .kk-brand-sub { font-size: 11.5px; color: var(--kk-muted); margin-top: 2px; }
 .kk-side-label {
   font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
@@ -125,10 +133,11 @@ section[data-testid="stSidebar"] .stButton > button:hover {
   background: var(--kk-surface-soft) !important; color: var(--kk-text) !important;
 }
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-  background: var(--kk-primary-soft) !important; color: var(--kk-primary-dark) !important;
-  border-color: #D9D9F7 !important;
+  background: var(--kk-primary) !important; color: #FFFFFF !important;
+  border-color: var(--kk-primary) !important; box-shadow: 0 6px 14px rgba(124, 58, 237, .25) !important;
 }
-.kk-conn {
+section[data-testid="stSidebar"] .stButton > button { border-radius: 16px !important; }
+.kk-conn { margin-bottom: 8px;
   display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--kk-text-2);
   background: var(--kk-surface-soft); border: 1px solid var(--kk-border); border-radius: 12px; padding: 9px 11px;
 }
@@ -140,8 +149,8 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .kk-side-foot { font-size: 10.5px; color: var(--kk-muted); text-align: center; margin-top: 18px; }
 
 /* ---------- Boutons ---------- */
-.stButton > button, .stDownloadButton > button, .stFormSubmitButton > button {
-  border-radius: 11px !important; font-weight: 600 !important; font-size: 13px !important;
+.stButton > button, .stDownloadButton > button, .stFormSubmitButton > button, .stLinkButton > a {
+  border-radius: 999px !important; font-weight: 600 !important; font-size: 13px !important;
   transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
 .stButton > button[kind="secondary"], .stDownloadButton > button {
@@ -189,16 +198,16 @@ div[class*="st-key-card"] {
 /* ---------- En-tête de page ---------- */
 .kk-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin: 4px 0 22px; flex-wrap: wrap; }
 .kk-kicker { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--kk-primary); }
-.kk-title { font: 900 30px/1.15 "Nunito", sans-serif; color: var(--kk-text); margin-top: 4px; }
+.kk-title { font: 900 30px/1.15 "Outfit", sans-serif; color: var(--kk-text); margin-top: 4px; }
 .kk-subtitle { font-size: 14px; color: var(--kk-muted); margin-top: 6px; max-width: 680px; }
 .kk-meta { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--kk-text-2);
   background: #FFFFFF; border: 1px solid var(--kk-border); border-radius: 999px; padding: 7px 13px; white-space: nowrap; }
 
 /* ---------- Sections ---------- */
 .kk-section { margin: 30px 0 12px; }
-.kk-section-title { font: 800 19px "Nunito", sans-serif; color: var(--kk-text); }
+.kk-section-title { font: 800 19px "Outfit", sans-serif; color: var(--kk-text); }
 .kk-section-sub { font-size: 13px; color: var(--kk-muted); margin-top: 2px; }
-.kk-card-title { font: 800 15.5px "Nunito", sans-serif; color: var(--kk-text); }
+.kk-card-title { font: 800 15.5px "Outfit", sans-serif; color: var(--kk-text); }
 .kk-card-sub { font-size: 12.5px; color: var(--kk-muted); margin: 2px 0 4px; }
 
 /* ---------- KPI ---------- */
@@ -209,7 +218,7 @@ div[class*="st-key-card"] {
 .kk-kpi-top { display: flex; align-items: center; gap: 10px; }
 .kk-kpi-icon { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-size: 16px; font-weight: 800; }
 .kk-kpi-label { font-size: 12.5px; font-weight: 600; color: var(--kk-text-2); }
-.kk-kpi-value { font: 900 30px/1 "Nunito", sans-serif; color: var(--kk-text); margin-top: 14px; letter-spacing: -.01em; }
+.kk-kpi-value { font: 900 30px/1 "Outfit", sans-serif; color: var(--kk-text); margin-top: 14px; letter-spacing: -.01em; }
 .kk-kpi-value small { font-size: 16px; font-weight: 800; color: var(--kk-muted); margin-left: 2px; }
 .kk-kpi-foot { display: flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 11.5px; color: var(--kk-muted); flex-wrap: wrap; }
 .kk-delta { font-weight: 700; border-radius: 999px; padding: 2px 8px; font-size: 11px; }
@@ -234,18 +243,18 @@ div[class*="st-key-card"] {
 
 /* ---------- Avatar ---------- */
 .kk-avatar { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; flex-shrink: 0;
-  font: 900 15px "Nunito", sans-serif; }
+  font: 900 15px "Outfit", sans-serif; }
 .kk-avatar.lg { width: 66px; height: 66px; border-radius: 20px; font-size: 22px; }
 
 /* ---------- Carte patient ---------- */
 .kk-pcard-head { display: flex; align-items: center; gap: 12px; }
-.kk-pcard-name { font: 800 16px "Nunito", sans-serif; color: var(--kk-text); line-height: 1.2; }
+.kk-pcard-name { font: 800 16px "Outfit", sans-serif; color: var(--kk-text); line-height: 1.2; }
 .kk-pcard-meta { font-size: 11.5px; color: var(--kk-muted); margin-top: 2px; }
 .kk-pcard-head .kk-badge { margin-left: auto; }
 .kk-pcard-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 8px; }
 .kk-stat { background: var(--kk-surface-soft); border: 1px solid #EEF0F5; border-radius: 12px; padding: 8px 10px; }
 .kk-stat-label { font-size: 10.5px; font-weight: 700; color: var(--kk-muted); text-transform: uppercase; letter-spacing: .04em; }
-.kk-stat-value { font: 900 18px "Nunito", sans-serif; color: var(--kk-text); margin-top: 1px; }
+.kk-stat-value { font: 900 18px "Outfit", sans-serif; color: var(--kk-text); margin-top: 1px; }
 .kk-stat-value.pos { color: var(--kk-good); } .kk-stat-value.neg { color: var(--kk-critical); }
 .kk-pcard-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px;
   font-size: 11.5px; color: var(--kk-muted); padding-top: 8px; border-top: 1px solid #EEF0F5; margin-bottom: 6px; }
@@ -259,17 +268,17 @@ div[class*="st-key-card"] {
 /* ---------- Insights ---------- */
 .kk-insight { border-radius: 16px; padding: 16px; height: 100%%; min-height: 128px; border: 1px solid var(--kk-border); background: #FFFFFF; }
 .kk-insight-icon { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font-weight: 900; font-size: 15px; }
-.kk-insight-title { font: 800 14.5px "Nunito", sans-serif; color: var(--kk-text); margin-top: 10px; }
+.kk-insight-title { font: 800 14.5px "Outfit", sans-serif; color: var(--kk-text); margin-top: 10px; }
 .kk-insight-text { font-size: 12.5px; color: var(--kk-text-2); margin-top: 4px; line-height: 1.5; }
 .kk-insight.positive .kk-insight-icon { background: var(--kk-good-bg); color: var(--kk-good); }
 .kk-insight.warning .kk-insight-icon { background: var(--kk-warning-bg); color: var(--kk-warning); }
 .kk-insight.neutral .kk-insight-icon { background: var(--kk-info-bg); color: var(--kk-info); }
 
 /* ---------- Fiche patient ---------- */
-.kk-hero { background: linear-gradient(120deg, #FFFFFF 0%%, #F6F5FF 60%%, #EEF8F5 100%%);
+.kk-hero { background: linear-gradient(120deg, #FFFFFF 0%%, #F5F3FF 60%%, #ECFEFF 100%%);
   border: 1px solid var(--kk-border); border-radius: 22px; box-shadow: var(--kk-shadow); padding: 22px 24px; margin-bottom: 18px; }
 .kk-hero-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.kk-hero-name { font: 900 28px/1.1 "Nunito", sans-serif; color: var(--kk-text); }
+.kk-hero-name { font: 900 28px/1.1 "Outfit", sans-serif; color: var(--kk-text); }
 .kk-hero-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .kk-hero-dx { margin-top: 14px; font-size: 13px; color: var(--kk-text-2); }
 .kk-hero-dx b { color: var(--kk-text); }
@@ -277,7 +286,7 @@ div[class*="st-key-card"] {
 /* ---------- Divers ---------- */
 .kk-empty { text-align: center; padding: 44px 20px; background: #FFFFFF; border: 1px dashed #D5D9E3; border-radius: var(--kk-radius); }
 .kk-empty-icon { font-size: 30px; }
-.kk-empty-title { font: 800 18px "Nunito", sans-serif; color: var(--kk-text); margin-top: 6px; }
+.kk-empty-title { font: 800 18px "Outfit", sans-serif; color: var(--kk-text); margin-top: 6px; }
 .kk-empty-text { font-size: 13px; color: var(--kk-muted); margin-top: 4px; }
 .kk-note { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--kk-text-2);
   background: var(--kk-info-bg); border-radius: 12px; padding: 10px 12px; margin-top: 10px; }
@@ -297,3 +306,33 @@ button[data-baseweb="tab"] p { font-weight: 600 !important; font-size: 13.5px !i
 
 def apply_theme() -> None:
     st.html(f"<style>{_CSS % COLORS}</style>")
+
+
+# ============================================================
+# LOGO
+# ============================================================
+
+_ASSETS = __import__("pathlib").Path(__file__).resolve().parents[1] / "assets"
+
+
+def _mascot_data_uri() -> str:
+    import base64
+
+    path = _ASSETS / "sensai-mascot.png"
+    if not path.exists():
+        return ""
+    return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode()
+
+
+MASCOT_URI = _mascot_data_uri()
+
+
+def logo_html(subtitle: str = "Espace thérapeute") -> str:
+    """Logo SensAI identique au site : mascotte + « Sens » / « A » rose / « I » violet."""
+    image = f'<img src="{MASCOT_URI}" alt="SensAI"/>' if MASCOT_URI else "✦"
+    sub = f'<div class="kk-brand-sub">{subtitle}</div>' if subtitle else ""
+    return (
+        f'<div class="kk-brand"><div class="kk-brand-logo">{image}</div><div>'
+        f'<div class="kk-brand-name">Sens<span class="kk-word-a">A</span><span class="kk-word-i">I</span></div>'
+        f"{sub}</div></div>"
+    )

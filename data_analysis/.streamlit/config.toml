@@ -1,11 +1,11 @@
 [theme]
 base = "light"
-primaryColor = "#5B5BD6"
-backgroundColor = "#F6F7FB"
+primaryColor = "#7C3AED"
+backgroundColor = "#EEF2FA"
 secondaryBackgroundColor = "#FFFFFF"
-textColor = "#1E2638"
+textColor = "#1E293B"
 font = "sans serif"
-borderColor = "#D9DDE7"
+borderColor = "#E2E8F0"
 showWidgetBorder = true
 baseRadius = "0.7rem"
 

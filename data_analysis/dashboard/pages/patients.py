@@ -113,6 +113,6 @@ def show_patients():
     st.download_button(
         "⤓ Exporter la liste (CSV)",
         export.to_csv(index=False).encode("utf-8-sig"),
-        file_name="kinekids_patients.csv",
+        file_name="sensai_patients.csv",
         mime="text/csv",
     )

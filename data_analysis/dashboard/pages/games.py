@@ -31,7 +31,7 @@ def show_games():
     page_header(
         "Activité thérapeutique",
         "Analyse par jeu",
-        "Comparez les jeux KineKids : réussite, difficulté par niveau et patients concernés.",
+        "Comparez les jeux SensAI : réussite, difficulté par niveau et patients concernés.",
         meta=f"{sessions_all['game_name'].nunique()} jeu(x) joué(s) · {len(data.games)} au catalogue",
     )
 
@@ -140,6 +140,6 @@ def show_games():
     unused = set(data.games["name"].dropna()) - set(sessions_all["game_name"])
     if unused:
         render_html(
-            "<div class='kk-note'><b>ⓘ</b><div>Jeux du catalogue sans séance : "
+            "<div class='kk-note'><b>ⓘ</b><div>Jeux à venir dans SensAI (pas encore de séance) : "
             + ", ".join(esc(name) for name in sorted(unused)) + ".</div></div>"
         )

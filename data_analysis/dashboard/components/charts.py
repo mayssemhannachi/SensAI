@@ -31,13 +31,13 @@ def _layout(fig: go.Figure, height: int = 320, legend: bool = True) -> go.Figure
         margin=dict(l=8, r=12, t=10, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="DM Sans, sans-serif", color=COLORS["text_secondary"], size=12),
+        font=dict(family="Nunito, sans-serif", color=COLORS["text_secondary"], size=12),
         separators=", ",
         showlegend=legend,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
                     title_text="", font=dict(size=12), bgcolor="rgba(0,0,0,0)"),
         hoverlabel=dict(bgcolor="#FFFFFF", bordercolor=COLORS["border"],
-                        font=dict(family="DM Sans, sans-serif", size=12, color=COLORS["text"])),
+                        font=dict(family="Nunito, sans-serif", size=12, color=COLORS["text"])),
         bargap=0.35,
     )
     fig.update_xaxes(showgrid=False, linecolor=COLORS["border"], ticks="",
@@ -203,6 +203,83 @@ def game_weekly_chart(sessions: pd.DataFrame, colors: dict, metric: str = "succe
             hovertemplate=f"<b>{game}</b> : %{{y:.1f}} %<extra></extra>",
         ))
     fig.update_yaxes(range=[0, 100], ticksuffix=" %")
+    fig.update_xaxes(tickformat="%d/%m", hoverformat="Semaine du %d/%m/%Y")
+    fig.update_layout(hovermode="x unified")
+    return _layout(fig, height=330)
+
+
+# ============================================================
+# LE HIBOU — AMPLITUDE & AUTO-ÉVALUATION
+# ============================================================
+
+def amplitude_chart(history: pd.DataFrame) -> go.Figure:
+    """Rotation gauche / droite par séance, avec l'angle cible du thérapeute."""
+    data = history.dropna(subset=["session_date"]).sort_values("session_date")
+    data = data[data["rotation_left"].notna() | data["rotation_right"].notna()]
+    fig = go.Figure()
+    for column, label in [("rotation_left", "Rotation gauche"), ("rotation_right", "Rotation droite")]:
+        color = METRIC_COLORS[column]
+        fig.add_trace(go.Scatter(
+            x=data["session_date"], y=data[column], name=label, mode="lines+markers",
+            line=dict(color=color, width=2.5),
+            marker=dict(size=8, color="#FFFFFF", line=dict(color=color, width=2)),
+            hovertemplate=f"<b>%{{x|%d/%m/%Y}}</b><br>{label} : %{{y:.0f}}°<extra></extra>",
+        ))
+    if data["target_angle"].notna().any():
+        fig.add_trace(go.Scatter(
+            x=data["session_date"], y=data["target_angle"], name="Angle cible",
+            mode="lines", line=dict(color=COLORS["muted"], width=1.5, dash="dash", shape="hv"),
+            hovertemplate="Angle cible : %{y:.0f}°<extra></extra>",
+        ))
+    fig.update_yaxes(ticksuffix="°", rangemode="tozero")
+    fig.update_xaxes(tickformat="%d/%m")
+    fig.update_layout(hovermode="x unified")
+    return _layout(fig, height=330)
+
+
+def pain_effort_chart(history: pd.DataFrame) -> go.Figure:
+    """Douleur et effort déclarés par l'enfant après chaque séance (0-5)."""
+    data = history.dropna(subset=["session_date"]).sort_values("session_date")
+    data = data[data["pain_level"].notna() | data["effort"].notna()].tail(15)
+    labels = data["session_date"].dt.strftime("%d/%m")
+    fig = go.Figure()
+    for column, label in [("pain_level", "Douleur"), ("effort", "Effort perçu")]:
+        fig.add_trace(go.Bar(
+            x=labels, y=data[column], name=label,
+            marker=dict(color=METRIC_COLORS[column], cornerradius=3),
+            hovertemplate=f"<b>%{{x}}</b><br>{label} : %{{y:.0f}}/5<extra></extra>",
+        ))
+    fig.add_hline(y=4, line=dict(color=COLORS["critical"], width=1, dash="dot"),
+                  annotation_text="seuil d’alerte douleur", annotation_position="top left",
+                  annotation_font=dict(size=10, color=COLORS["critical"]))
+    fig.update_yaxes(range=[0, 5.4], dtick=1)
+    fig.update_layout(barmode="group", bargap=0.3, bargroupgap=0.08)
+    return _layout(fig, height=300)
+
+
+def weekly_amplitude_chart(sessions: pd.DataFrame) -> go.Figure:
+    """Rotation gauche / droite moyenne par semaine, avec l'angle cible moyen."""
+    data = sessions.dropna(subset=["session_date"]).copy()
+    data["week"] = data["session_date"].dt.to_period("W-SUN").dt.start_time
+    weekly = data.groupby("week").agg(
+        rotation_left=("rotation_left", "mean"), rotation_right=("rotation_right", "mean"),
+        target_angle=("target_angle", "mean"), sessions=("patient_id", "size"),
+    ).reset_index()
+    fig = go.Figure()
+    for column, label in [("rotation_left", "Rotation gauche"), ("rotation_right", "Rotation droite")]:
+        color = METRIC_COLORS[column]
+        fig.add_trace(go.Scatter(
+            x=weekly["week"], y=weekly[column], name=label, mode="lines+markers",
+            line=dict(color=color, width=2.5),
+            marker=dict(size=8, color="#FFFFFF", line=dict(color=color, width=2)),
+            hovertemplate=f"{label} : %{{y:.1f}}°<extra></extra>",
+        ))
+    fig.add_trace(go.Scatter(
+        x=weekly["week"], y=weekly["target_angle"], name="Angle cible moyen", mode="lines",
+        line=dict(color=COLORS["muted"], width=1.5, dash="dash"),
+        hovertemplate="Angle cible moyen : %{y:.1f}°<extra></extra>",
+    ))
+    fig.update_yaxes(ticksuffix="°", rangemode="tozero")
     fig.update_xaxes(tickformat="%d/%m", hoverformat="Semaine du %d/%m/%Y")
     fig.update_layout(hovermode="x unified")
     return _layout(fig, height=330)

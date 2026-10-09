@@ -1,3 +1,3 @@
 """
-KineKids AI Dashboard package.
+SensAI — espace thérapeute (dashboard d’analyse).
 """
