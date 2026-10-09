@@ -223,6 +223,7 @@ cd data_analysis; python scripts/seed_backend.py --register
 | Une fenêtre « SensAI - … » affiche une erreur | Lire le message, puis la fermer et relancer `demarrer.bat`. Un port déjà utilisé signifie que le service tourne déjà. |
 | La caméra ne démarre pas | Autoriser la caméra dans le navigateur, vérifier la connexion Internet, fermer les autres applications qui utilisent la webcam. Sinon, jouer au clavier. |
 | Le hibou tourne dans le mauvais sens | Dashboard → fiche du patient → Jeux et réglages → activer « Inverser le sens de rotation ». |
+| Le site ne répond pas mais il faut accéder au dashboard | Connexion directe de secours : http://localhost:8501/?direct=1 |
 | Après une mise à jour (`git pull`) | Relancer `installer.bat` : il applique les nouvelles migrations et dépendances. |
 | Repartir d'une base vide | Supprimer la base `sensai_db` (pgAdmin), puis relancer `installer.bat`. |
 
