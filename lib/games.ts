@@ -26,13 +26,13 @@ export const GAME_META: Record<string, GameMeta> = {
     playable: true,
     path: "/dashboard/game/gardien-lucioles",
   },
-  "color-touch": { image: "/Assets/dashboard/ex-color-touch.png", category: "Jeu de couleur", limb: "Main droite" },
-  "reaction-speed": { image: "/Assets/dashboard/ex-reaction-speed.png", category: "Jeu de rapidité", limb: "Main gauche" },
-  "sequence-memory": { image: "/Assets/dashboard/ex-sequence-memory.png", category: "Jeu de mémoire", limb: "Œil / Vision" },
-  "tremor-trace": { image: "/Assets/dashboard/ex-tremor-trace.png", category: "Jeu de précision", limb: "Main gauche" },
-  "target-tracking": { image: "/Assets/dashboard/ex-target-tracking.png", category: "Jeu de suivi", limb: "Tête / Cou" },
-  "balance-builder": { image: "/Assets/dashboard/ex-balance-builder.png", category: "Jeu d'équilibre", limb: "Jambe" },
-  "puzzle-motion": { image: "/Assets/dashboard/ex-puzzle-motion.png", category: "Jeu de coordination", limb: "Corps entier" },
+  "color-touch": { image: "/Assets/dashboard/Girl Activates a Magical Portal.png", category: "Jeu de couleur", limb: "Main droite" },
+  "reaction-speed": { image: "/Assets/dashboard/Kawaii Cosmic Ring Adventure.png", category: "Jeu de rapidité", limb: "Main gauche" },
+  "sequence-memory": { image: "/Assets/dashboard/Magical Shape Quest with Friends.png", category: "Jeu de mémoire", limb: "Œil / Vision" },
+  "tremor-trace": { image: "/Assets/dashboard/Chibi Sky Quest to the Star.png", category: "Jeu de précision", limb: "Main gauche" },
+  "target-tracking": { image: "/Assets/dashboard/Whimsical Starry Meadow Archery.png", category: "Jeu de suivi", limb: "Tête / Cou" },
+  "balance-builder": { image: "/Assets/dashboard/Balancing Star in a Whimsical Meadow.png", category: "Jeu d'équilibre", limb: "Jambe" },
+  "puzzle-motion": { image: "/Assets/dashboard/Kawaii Puzzle Play in Dreamy Park.png", category: "Jeu de coordination", limb: "Corps entier" },
 };
 
 const FALLBACK_META: GameMeta = {

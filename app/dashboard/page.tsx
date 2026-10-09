@@ -306,7 +306,7 @@ export default function DashboardPage() {
             {/* Cheering mascot */}
             <div className="absolute bottom-2 right-2 w-14 h-14">
               <Image
-                src="/Assets/dashboard/mascot-cheering.png"
+                src="/Assets/dashboard/Cheering Chibi Mascot with Confetti.png"
                 alt="Cheering mascot"
                 fill
                 className="object-contain"

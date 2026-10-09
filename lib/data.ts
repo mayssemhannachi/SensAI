@@ -114,13 +114,13 @@ export const PATIENTS: Record<string, Patient> = {
       {
         title: "Color Touch",
         category: "Précision",
-        image: "/Assets/dashboard/ex-color-touch.png",
+        image: "/Assets/dashboard/Girl Activates a Magical Portal.png",
         status: "Actif",
       },
       {
         title: "Tremor Trace",
         category: "Contrôle du mouvement",
-        image: "/Assets/dashboard/ex-tremor-trace.png",
+        image: "/Assets/dashboard/Chibi Sky Quest to the Star.png",
         status: "Actif",
       },
     ],
