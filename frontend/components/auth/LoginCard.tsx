@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,18 @@ export default function LoginCard() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // Message après une déconnexion (site ou espace thérapeute)
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    const messages: Record<string, string> = {
+      logout: "Vous êtes déconnecté(e). À bientôt !",
+      expired: "Votre session a expiré. Reconnectez-vous.",
+    };
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (reason && messages[reason]) setNotice(messages[reason]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +77,12 @@ export default function LoginCard() {
         </p>
 
         {/* Form */}
+        {notice && !error && (
+          <div role="status" className="mb-2.5 p-2.5 rounded-xl bg-[#EDE9FE] border border-[#DDD6FE] text-[#6D28D9] text-[11px] font-medium">
+            {notice}
+          </div>
+        )}
+
         {error && (
           <div role="alert" className="mb-2.5 p-2.5 rounded-xl bg-[#FFE4E6] border border-[#FECDD3] text-[#E11D48] text-[11px] font-medium flex items-center gap-1.5">
             <span className="w-4 h-4 rounded-full bg-[#E11D48] text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">!</span>

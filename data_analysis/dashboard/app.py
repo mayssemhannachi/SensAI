@@ -92,11 +92,10 @@ def consume_site_token() -> None:
         state.set_data_source("api")
         state.sign_in(token, user)
     elif user:
-        st.session_state[state.NOTICE_KEY] = (
-            "Ce compte est un compte patient : son espace se trouve sur le site SensAI."
-        )
+        # Compte patient : son espace est sur le site.
+        st.session_state[state.REDIRECT_KEY] = "/dashboard"
     else:
-        st.session_state[state.NOTICE_KEY] = "Le lien de connexion a expiré. Reconnectez-vous."
+        st.session_state[state.REDIRECT_KEY] = "/logout?reason=expired"
     st.rerun()
 
 
@@ -150,7 +149,7 @@ def render_sidebar(current_key: str | None, authenticated: bool) -> None:
                 if state.api_mode_enabled() and st.button(
                     "Déconnexion", key="backend_logout", width="stretch"
                 ):
-                    state.sign_out()
+                    state.sign_out(site_path="/logout?reason=logout")
                     st.rerun()
             st.link_button("↗ Plateforme SensAI", api_client.site_url(), width="stretch")
 
@@ -199,6 +198,7 @@ try:
     current.run()
 except ApiError as error:
     if error.status_code == 401:
-        state.sign_out(notice="Votre session a expiré. Reconnectez-vous.")
+        state.sign_out(notice="Votre session a expiré. Reconnectez-vous.",
+                       site_path="/logout?reason=expired")
         st.rerun()
     render_api_error(error)

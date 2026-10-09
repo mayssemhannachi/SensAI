@@ -44,7 +44,7 @@ export function useRequireAuth(role: Role) {
 
   const signOut = () => {
     logout();
-    router.replace("/login");
+    router.replace("/login?reason=logout");
   };
 
   return { me, error, signOut };

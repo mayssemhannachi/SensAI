@@ -86,4 +86,13 @@ def test_full_app_backend_mode_shows_login(monkeypatch):
     at.session_state["data_source"] = "api"
     at.run()
     assert not at.exception, at.exception
-    assert any("Se connecter" in b.label for b in at.button) or at.get("form_submit_button")
+    # Sans session : renvoi vers la connexion unique du site SensAI
+    assert "Redirection vers SensAI" in " ".join(m.value for m in at.markdown)
+
+    # Connexion directe de secours (?direct=1)
+    at = AppTest.from_file("../dashboard/app.py", default_timeout=30)
+    at.session_state["data_source"] = "api"
+    at.query_params["direct"] = "1"
+    at.run()
+    assert not at.exception, at.exception
+    assert any("Connexion directe" in e.label for e in at.expander)

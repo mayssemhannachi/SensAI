@@ -1,3 +1,5 @@
+import json
+
 import streamlit as st
 
 from dashboard.components.ui import esc, render_html
@@ -6,12 +8,35 @@ from dashboard.utils.api_client import ApiError
 from dashboard.utils.theme import MASCOT_URI
 
 
-def show_login():
-    """Page affichée sans session : on renvoie vers la connexion du site SensAI.
+def _redirect(url: str) -> None:
+    """Redirige le navigateur vers ``url`` (page du site SensAI)."""
+    st.html(f"<script>window.location.replace({json.dumps(url)});</script>",
+            unsafe_allow_javascript=True)
 
-    Une connexion directe reste possible (utile si le site n'est pas lancé).
+
+def show_login():
+    """Visiteur non connecté : il est renvoyé vers la connexion unique du site SensAI.
+
+    Connexion directe de secours (si le site n'est pas lancé) : http://localhost:8501/?direct=1
     """
     site = api_client.site_url()
+    target = st.session_state.pop(state.REDIRECT_KEY, "/login")
+    if st.query_params.get("direct") != "1":
+        st.session_state.pop(state.NOTICE_KEY, None)
+        url = f"{site}{target}"
+        _redirect(url)
+        _, center, _ = st.columns([1, 1.25, 1])
+        with center:
+            render_html(
+                f"""
+                <div class="kk-login-head kk-fade" style="margin-top:14vh">
+                  <img src="{MASCOT_URI}" alt="SensAI" style="width:72px;height:72px;object-fit:contain"/>
+                  <div class="kk-subtitle" style="margin:10px auto 0">Redirection vers SensAI…</div>
+                </div>
+                """
+            )
+            st.link_button("Continuer vers SensAI", url, type="primary", width="stretch")
+        return
     _, center, _ = st.columns([1, 1.25, 1])
     with center:
         render_html(

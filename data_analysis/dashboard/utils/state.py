@@ -50,7 +50,14 @@ def sign_in(token: str, user: dict | None = None) -> None:
     st.cache_data.clear()
 
 
-def sign_out(notice: str | None = None) -> None:
+# Page du site SensAI vers laquelle renvoyer un visiteur non connecté
+# (« /login » par défaut ; « /logout?reason=… » après une déconnexion).
+REDIRECT_KEY = "site_redirect"
+
+
+def sign_out(notice: str | None = None, site_path: str | None = None) -> None:
+    if site_path:
+        st.session_state[REDIRECT_KEY] = site_path
     st.session_state.pop(TOKEN_KEY, None)
     st.session_state.pop(USER_KEY, None)
     st.session_state.pop(PATIENT_KEY, None)
