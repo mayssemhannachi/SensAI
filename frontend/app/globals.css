@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-outfit: var(--font-outfit), sans-serif;
+  --font-nunito: var(--font-nunito), sans-serif;
+  --font-caveat: var(--font-caveat), cursive;
+  
+  --color-brand-purple: #7C3AED;
+  --color-brand-purple-light: #A78BFA;
+  --color-brand-purple-dark: #5B21B6;
+  --color-brand-purple-50: #F6F3FF;
+  
+  --color-brand-pink: #EC4899;
+  --color-brand-pink-50: #FFF1F5;
+  
+  --color-brand-coral: #FF6B8B;
+  
+  --color-brand-blue: #3B82F6;
+  --color-brand-blue-50: #EFF6FF;
+  
+  --color-brand-cyan: #06B6D4;
+  --color-brand-cyan-50: #ECFEFF;
+  
+  --color-brand-teal: #14B8A6;
+  --color-brand-teal-50: #E6FAF8;
+  
+  --color-brand-amber: #F59E0B;
+  --color-brand-amber-50: #FFFBEB;
+  
+  --color-brand-peach-50: #FFF5EE;
+  
+  --color-brand-dark: #0B1120;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 5s ease-in-out infinite;
+}
+
+.font-handwriting {
+  font-family: var(--font-caveat), cursive;
+}
+
+/* Playful rainbow letters for "aventure." */
+.letter-a1 { color: #EC4899; }
+.letter-v  { color: #8B5CF6; }
+.letter-e1 { color: #3B82F6; }
+.letter-n  { color: #06B6D4; }
+.letter-t  { color: #10B981; }
+.letter-u  { color: #F59E0B; }
+.letter-r  { color: #F97316; }
+.letter-e2 { color: #8B5CF6; }
+.letter-dot { color: #EC4899; }
