@@ -105,3 +105,18 @@ def test_demo_dataset_is_consistent():
 def test_age_from_birth_date():
     ages = data.age_from_birth_date(pd.Series(["2018-10-09", "2018-10-08"]), pd.Timestamp("2026-10-08"))
     assert ages.tolist() == [7, 8]
+
+
+def test_lucioles_session_and_settings():
+    row = data.api_session_to_row(
+        {"id": 9, "duration_sec": 240, "created_at": "2026-10-01T10:00:00",
+         "metrics": {"score": 80, "abduction_max": 112, "abduction_mean_peak": 98,
+                     "compensations": 2, "affected_arm": "L", "target_angle": 90}},
+        patient_id=1, patient_game_id=3,
+        game={"id": 9, "name": "Le Gardien des Lucioles", "slug": "gardien-lucioles"},
+    )
+    assert row["abduction_max"] == 112 and row["compensations"] == 2
+    assert row["affected_arm"] == "L" and row["game_slug"] == "gardien-lucioles"
+    assert data.settings_defaults("gardien-lucioles")["target_angle"] == 90
+    assert data.settings_defaults("le-hibou")["target_angle"] == 30
+    assert "gardien-lucioles" in data.PLAYABLE_GAME_SLUGS

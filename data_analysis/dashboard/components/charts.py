@@ -237,6 +237,42 @@ def amplitude_chart(history: pd.DataFrame) -> go.Figure:
     return _layout(fig, height=330)
 
 
+def abduction_chart(history: pd.DataFrame) -> go.Figure:
+    """Abduction de l'épaule par séance (max et pic moyen), avec le seuil prescrit."""
+    data = history.dropna(subset=["session_date", "abduction_max"]).sort_values("session_date")
+    fig = go.Figure()
+    for column, label in [("abduction_max", "Abduction max"), ("abduction_mean_peak", "Pic moyen")]:
+        color = METRIC_COLORS[column]
+        fig.add_trace(go.Scatter(
+            x=data["session_date"], y=data[column], name=label, mode="lines+markers",
+            line=dict(color=color, width=2.5),
+            marker=dict(size=8, color="#FFFFFF", line=dict(color=color, width=2)),
+            hovertemplate=f"<b>%{{x|%d/%m/%Y}}</b><br>{label} : %{{y:.0f}}°<extra></extra>",
+        ))
+    if data["target_angle"].notna().any():
+        fig.add_trace(go.Scatter(
+            x=data["session_date"], y=data["target_angle"], name="Seuil prescrit",
+            mode="lines", line=dict(color=COLORS["muted"], width=1.5, dash="dash", shape="hv"),
+            hovertemplate="Seuil : %{y:.0f}°<extra></extra>",
+        ))
+    fig.update_yaxes(ticksuffix="°", rangemode="tozero")
+    fig.update_xaxes(tickformat="%d/%m")
+    fig.update_layout(hovermode="x unified")
+    return _layout(fig, height=330)
+
+
+def compensation_chart(history: pd.DataFrame) -> go.Figure:
+    """Nombre de compensations (autre bras levé) par séance."""
+    data = history.dropna(subset=["session_date", "abduction_max"]).sort_values("session_date").tail(15)
+    fig = go.Figure(go.Bar(
+        x=data["session_date"].dt.strftime("%d/%m"), y=data["compensations"].fillna(0),
+        name="Compensations", marker=dict(color=METRIC_COLORS["compensations"], cornerradius=3),
+        hovertemplate="<b>%{x}</b><br>Compensations : %{y:.0f}<extra></extra>",
+    ))
+    fig.update_yaxes(rangemode="tozero", dtick=1)
+    return _layout(fig, height=330, legend=False)
+
+
 def pain_effort_chart(history: pd.DataFrame) -> go.Figure:
     """Douleur et effort déclarés par l'enfant après chaque séance (0-5)."""
     data = history.dropna(subset=["session_date"]).sort_values("session_date")

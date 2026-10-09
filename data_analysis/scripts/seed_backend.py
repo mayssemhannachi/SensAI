@@ -1,9 +1,10 @@
 """Crée un compte de démonstration SensAI complet, via l'API (jamais en base directe).
 
-Résultat : un thérapeute avec une douzaine de patients suivis sur plusieurs semaines
-au jeu « Le Hibou » (rotation cervicale), avec des profils variés (en progression,
-stable, douleur élevée, inactif…), leurs diagnostics, leurs réglages et un compte
-patient déjà activé pour montrer l'espace enfant.
+Résultat : un thérapeute avec une quinzaine de patients suivis sur plusieurs semaines
+au jeu « Le Hibou » (rotation cervicale) ou au « Gardien des Lucioles » (abduction de
+l'épaule), avec des profils variés (en progression, stable, douleur élevée, inactif,
+compensations…), leurs diagnostics, leurs réglages et un compte patient déjà activé
+pour montrer l'espace enfant.
 
 Exemple (depuis le dossier ``data_analysis``, backend démarré) :
 
@@ -44,6 +45,20 @@ PATIENTS = [
     ("Zied", "Gharbi", 14, "Rééducation après entorse cervicale", "progress"),
     ("Amira", "Jebali", 7, "Torticolis post-traumatique", "new"),
 ]
+
+# Patients suivis au Gardien des Lucioles : prénom, nom, âge, diagnostic, profil, bras
+LUCIOLES_PATIENTS = [
+    ("Youssef", "Ayari", 9, "Hémiplégie droite (paralysie cérébrale)", "abd_progress", "R"),
+    ("Mariem", "Saidi", 11, "Raideur de l'épaule après fracture de l'humérus", "abd_stable", "L"),
+    ("Ilyes", "Ferchichi", 8, "Paralysie obstétricale du plexus brachial", "abd_comp", "R"),
+]
+
+LUCIOLES_PROFILES = {
+    #               départ°, gain°/séance, séances/sem, compensations moy.
+    "abd_progress": (62, 2.4, 3, 2.2),
+    "abd_stable":   (98, 0.2, 3, 0.4),
+    "abd_comp":     (58, 1.0, 3, 3.6),
+}
 
 PROFILES = {
     #            départ°, gain°/séance, séances/sem, asymétrie, douleur
@@ -141,6 +156,57 @@ def simulate_sessions(profile: str, weeks: int, rng: random.Random, now: datetim
     return sessions
 
 
+def simulate_lucioles(profile: str, arm: str, weeks: int, rng: random.Random, now: datetime):
+    """Séances simulées du Gardien des Lucioles (abduction de l'épaule)."""
+    start, gain, per_week, comp_base = LUCIOLES_PROFILES[profile]
+    end = now - timedelta(hours=26)
+    first_day = end - timedelta(weeks=weeks)
+    total = max(3, weeks * per_week + rng.randint(-2, 1))
+    sessions = []
+    for k in range(total):
+        played = first_day + (end - first_day) * (k / max(total - 1, 1))
+        played = played.replace(hour=rng.choice([10, 14, 16, 17, 18]), minute=rng.choice([0, 15, 30, 45]))
+        level = start + gain * k + rng.gauss(0, 3)
+        threshold = int(clamp(5 * ((level - 4) // 5), 40, 150))
+        target_reps = 10
+        peaks = [clamp(level + rng.gauss(0, 6), 20, 175) for _ in range(target_reps)]
+        valid = [p for p in peaks if p >= threshold]
+        success = len(valid) / target_reps * 100
+        mean_peak = round(sum(valid) / len(valid)) if valid else 0
+        decay = 0.6 if profile == "abd_progress" else 1.0
+        comps = max(0, round(comp_base * (decay ** (k / 6)) + rng.gauss(0, 0.9)))
+        score = clamp(round(success * 0.7 + min(1, mean_peak / threshold) * 30 - comps * 2), 0, 100)
+        difficulty = "faible" if threshold <= 70 else "moyenne" if threshold <= 110 else "elevee"
+        sessions.append({
+            "played_at": played,
+            "duration_sec": int(rng.randint(180, 420)),
+            "metrics": {
+                "score": score,
+                "success_rate": round(success, 1),
+                "repetitions": len(valid),
+                "repetitions_target": target_reps,
+                "level_number": DIFFICULTY_LEVEL[difficulty],
+                "exercise_name": "Abduction de l'épaule",
+                "played_at": played.isoformat(),
+                "abduction_max": round(max(peaks)),
+                "abduction_mean_peak": mean_peak,
+                "compensations": comps,
+                "affected_arm": arm,
+                "mode": "hemi",
+                "target_angle": threshold,
+                "elbow_min": 140,
+                "rest_tolerance": 35,
+                "completed": len(valid) >= target_reps or rng.random() < 0.6,
+                "pain_level": clamp(round(1 + rng.gauss(0, 0.8)), 0, 5),
+                "effort": clamp(round(2 + (threshold - 80) / 30 + rng.gauss(0, 0.8)), 0, 5),
+                "input_mode": "camera",
+            },
+            "target": threshold,
+            "difficulty": difficulty,
+        })
+    return sessions
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--api-url", default="http://127.0.0.1:8000")
@@ -180,6 +246,7 @@ def main() -> int:
         print("✗ Le jeu « Le Hibou » est absent du catalogue : lancez `python -m alembic upgrade head`.")
         return 1
 
+    lucioles = games.get("gardien-lucioles")
     existing = {(p["first_name"].lower(), p["last_name"].lower()) for p in api.call("GET", "/patients/")}
     now = datetime.now()
     created_patients = created_sessions = 0
@@ -228,6 +295,54 @@ def main() -> int:
                 print(f"    ✓ compte patient activé : {args.patient_email} / {args.patient_password}")
             except RuntimeError as error:
                 print(f"    ! compte patient non créé ({error}) — code d’activation : {code}")
+
+    # Patients suivis au Gardien des Lucioles
+    if not lucioles:
+        print("! Le Gardien des Lucioles est absent du catalogue : lancez `python -m alembic upgrade head`.")
+    for first, last, age, diagnosis, profile, arm in (LUCIOLES_PATIENTS if lucioles else []):
+        if (first.lower(), last.lower()) in existing:
+            print(f"  = {first} {last} existe déjà, ignoré")
+            continue
+        patient = api.call("POST", "/patients/", {"first_name": first, "last_name": last, "age": age})
+        created_patients += 1
+        history = simulate_lucioles(profile, arm, args.weeks, rng, now)
+        api.call("POST", "/consultations/", {
+            "patient_id": patient["id"],
+            "consultation_date": (history[0]["played_at"] - timedelta(days=3)).date().isoformat(),
+            "diagnosis": diagnosis,
+        })
+        last_session = history[-1]
+        config = {
+            "affected_arm": arm, "mode": "hemi", "target_angle": last_session["target"],
+            "elbow_min": 140, "rest_tolerance": 35, "repetitions": 10, "hold_seconds": 1,
+            "difficulty": last_session["difficulty"], "active": True,
+        }
+        association = api.call("POST", "/patient-games/", {
+            "patient_id": patient["id"], "game_id": lucioles["id"], "configuration": config,
+        })
+        for session in history:
+            api.call("POST", "/sessions/", {
+                "patient_game_id": association["id"],
+                "duration_sec": session["duration_sec"],
+                "metrics": session["metrics"],
+            })
+            created_sessions += 1
+        print(f"  + {first} {last} ({profile}, Lucioles) · {len(history)} séance(s)")
+
+    # Salma joue aussi au Gardien des Lucioles (espace enfant avec deux jeux)
+    if lucioles:
+        salma = next((p for p in api.call("GET", "/patients/")
+                      if (p["first_name"], p["last_name"]) == ("Salma", "Ben Ali")), None)
+        if salma:
+            assigned = {pg["game_id"] for pg in api.call("GET", f"/patient-games/patient/{salma['id']}")}
+            if lucioles["id"] not in assigned:
+                api.call("POST", "/patient-games/", {
+                    "patient_id": salma["id"], "game_id": lucioles["id"],
+                    "configuration": {"affected_arm": "R", "mode": "bi", "target_angle": 80,
+                                      "elbow_min": 140, "rest_tolerance": 35, "repetitions": 8,
+                                      "hold_seconds": 1, "difficulty": "moyenne", "active": True},
+                })
+                print("  + Gardien des Lucioles ajouté à Salma Ben Ali")
 
     print(f"✓ Terminé : {created_patients} patient(s), {created_sessions} séance(s).")
     print(f"  Thérapeute : {args.email} / {args.password}")

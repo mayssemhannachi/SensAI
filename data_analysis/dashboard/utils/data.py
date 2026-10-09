@@ -49,14 +49,17 @@ SESSION_COLUMNS = [
     # Mesures du jeu Le Hibou (rotation cervicale) et auto-évaluation
     "rotation_left", "rotation_right", "hold_seconds_avg", "smoothness",
     "pain_level", "effort", "target_angle", "completed",
-    "first_name", "last_name", "patient_name",
+    # Mesures du jeu Le Gardien des Lucioles (abduction de l'épaule)
+    "abduction_max", "abduction_mean_peak", "compensations", "affected_arm",
+    "game_slug", "first_name", "last_name", "patient_name",
 ]
 
 GAME_COLUMNS = ["id", "name", "slug", "body_part", "description"]
 
-PATIENT_GAME_COLUMNS = ["patient_game_id", "patient_id", "game_id", "game_name", "configuration"]
+PATIENT_GAME_COLUMNS = ["patient_game_id", "patient_id", "game_id", "game_name", "game_slug", "configuration"]
 
 # Réglages d'un jeu assigné (même vocabulaire que le frontend et les jeux).
+# Le Hibou (rotation cervicale) :
 GAME_SETTINGS_DEFAULTS = {
     "target_angle": 30,      # degrés
     "hold_seconds": 3,       # secondes de maintien
@@ -64,6 +67,8 @@ GAME_SETTINGS_DEFAULTS = {
     "speed": "lente",        # lente | moderee | rapide
     "difficulty": "moyenne", # faible | moyenne | elevee
     "safety_limit": 35,      # degrés à ne pas dépasser
+    "camera_gain": 1.25,     # gain de l'angle mesuré par la caméra (hibou.py de Chahed)
+    "invert_direction": False,
     "active": True,
 }
 
@@ -72,10 +77,33 @@ NUMERIC_SESSION_COLUMNS = [
     "duration_min", "score", "success_rate", "repetitions", "progression",
     "rotation_left", "rotation_right", "hold_seconds_avg", "smoothness",
     "pain_level", "effort", "target_angle",
+    "abduction_max", "abduction_mean_peak", "compensations",
 ]
 
+# Le Gardien des Lucioles (abduction de l'épaule, jeu de Maram) :
+LUCIOLES_SETTINGS_DEFAULTS = {
+    "affected_arm": "R",     # R | L : bras à entraîner
+    "mode": "hemi",          # hemi : l'autre bras doit rester au repos | bi : pas de contrôle
+    "target_angle": 90,      # seuil d'abduction à atteindre (°)
+    "elbow_min": 140,        # extension minimale du coude (°)
+    "rest_tolerance": 35,    # élévation tolérée de l'autre bras (°)
+    "repetitions": 10,       # lucioles à ramener dans la lanterne
+    "hold_seconds": 1,       # maintien au-dessus du seuil (s)
+    "active": True,
+}
+
+SETTINGS_DEFAULTS_BY_SLUG = {
+    "le-hibou": GAME_SETTINGS_DEFAULTS,
+    "gardien-lucioles": LUCIOLES_SETTINGS_DEFAULTS,
+}
+
 # Jeux réellement jouables dans l'espace patient du site (les autres arriveront plus tard).
-PLAYABLE_GAME_SLUGS = {"le-hibou"}
+PLAYABLE_GAME_SLUGS = {"le-hibou", "gardien-lucioles"}
+
+
+def settings_defaults(slug: str | None) -> dict:
+    """Réglages par défaut d'un jeu selon son slug."""
+    return dict(SETTINGS_DEFAULTS_BY_SLUG.get(slug or "", GAME_SETTINGS_DEFAULTS))
 
 API_CACHE_TTL = 120  # secondes
 
@@ -252,6 +280,11 @@ def api_session_to_row(session: dict, patient_id: int, patient_game_id: int,
         "effort": _metric(metrics, "effort"),
         "target_angle": _metric(metrics, "target_angle"),
         "completed": metrics.get("completed"),
+        "abduction_max": _metric(metrics, "abduction_max"),
+        "abduction_mean_peak": _metric(metrics, "abduction_mean_peak"),
+        "compensations": _metric(metrics, "compensations"),
+        "affected_arm": _metric(metrics, "affected_arm"),
+        "game_slug": game.get("slug"),
     }
 
 
@@ -335,7 +368,7 @@ def load_demo_dataset() -> Dataset:
     patient_games = (
         sessions[["patient_id", "game_id", "game_name"]]
         .drop_duplicates()
-        .assign(patient_game_id=pd.NA, configuration=None)[PATIENT_GAME_COLUMNS]
+        .assign(patient_game_id=pd.NA, game_slug=pd.NA, configuration=None)[PATIENT_GAME_COLUMNS]
     )
     return Dataset(
         source="demo",
@@ -391,6 +424,7 @@ def fetch_api_payload(token: str) -> dict:
             "patient_id": pg["patient_id"],
             "game_id": pg["game_id"],
             "game_name": game.get("name") or f"Jeu {pg['game_id']}",
+            "game_slug": game.get("slug"),
             "configuration": pg.get("configuration") or {},
         })
         for session in sessions:
@@ -560,10 +594,17 @@ def assign_game(patient_id: int, game_id: int, configuration: dict | None = None
         "/patient-games/",
         _require_token(),
         {"patient_id": int(patient_id), "game_id": int(game_id),
-         "configuration": configuration if configuration is not None else dict(GAME_SETTINGS_DEFAULTS)},
+         "configuration": configuration if configuration is not None else _defaults_for_game(game_id)},
     )
     refresh_data()
     return result
+
+
+def _defaults_for_game(game_id: int) -> dict:
+    games = load_dataset().games
+    match = games[games["id"] == int(game_id)] if not games.empty else games
+    slug = match.iloc[0]["slug"] if not match.empty and "slug" in match.columns else None
+    return settings_defaults(slug)
 
 
 def update_game_settings(patient_game_id: int, configuration: dict) -> dict:

@@ -1,11 +1,11 @@
 import streamlit as st
 
 from dashboard import navigation
+from dashboard.components import game_settings
 from dashboard.components.ui import badge, esc, note, page_header, render_html
 from dashboard.utils import api_client, state
 from dashboard.utils.api_client import ApiError, ApiPartialSuccessError
 from dashboard.utils.data import (
-    GAME_SETTINGS_DEFAULTS,
     assign_game,
     create_activation_code,
     load_dataset,
@@ -14,8 +14,6 @@ from dashboard.utils.data import (
 )
 
 CREATED_KEY = "last_created_patient"
-SPEEDS = {"lente": "Lente", "moderee": "Modérée", "rapide": "Rapide"}
-DIFFICULTIES = {"faible": "Faible", "moyenne": "Moyenne", "elevee": "Élevée"}
 
 
 def _created_banner() -> None:
@@ -29,10 +27,16 @@ def _created_banner() -> None:
 
     game_line = ""
     if game:
+        if "affected_arm" in config:
+            details = (f"bras {'droit' if config.get('affected_arm') == 'R' else 'gauche'} · "
+                       f"seuil {config.get('target_angle')}° · coude ≥ {config.get('elbow_min')}° · "
+                       f"{config.get('repetitions')} lucioles")
+        else:
+            details = (f"angle {config.get('target_angle')}° · maintien {config.get('hold_seconds')} s · "
+                       f"{config.get('repetitions')} répétitions · limite {config.get('safety_limit')}°")
         game_line = (
             f"<div class='kk-card-sub' style='margin-top:6px'>Jeu prescrit : <b>{esc(game)}</b> · "
-            f"angle {config.get('target_angle')}° · maintien {config.get('hold_seconds')} s · "
-            f"{config.get('repetitions')} répétitions · limite {config.get('safety_limit')}°</div>"
+            f"{esc(details)}</div>"
         )
     code_block = ""
     if code:
@@ -69,6 +73,8 @@ def _created_banner() -> None:
     with col_new:
         if st.button("Créer un autre patient", width="stretch"):
             st.session_state.pop(CREATED_KEY, None)
+            for key in [k for k in st.session_state if str(k).startswith(("np_", "new_"))]:
+                st.session_state.pop(key, None)
             st.rerun()
 
 
@@ -88,53 +94,43 @@ def show_add_patient():
 
     center, side = st.columns([1, 0.42], gap="large")
     with center:
-        with st.form("add_patient_form", clear_on_submit=False):
+        with st.container(border=True):
             render_html('<div class="kk-card-title">1 · Identité</div>')
             col1, col2, col3 = st.columns([1.2, 1.2, 0.7])
             with col1:
-                first_name = st.text_input("Prénom *", placeholder="Ex. : Salma", max_chars=100)
+                first_name = st.text_input("Prénom *", placeholder="Ex. : Salma", max_chars=100, key="np_first")
             with col2:
-                last_name = st.text_input("Nom *", placeholder="Ex. : Ben Ali", max_chars=100)
+                last_name = st.text_input("Nom *", placeholder="Ex. : Ben Ali", max_chars=100, key="np_last")
             with col3:
-                age = st.number_input("Âge *", min_value=1, max_value=18, value=8, step=1)
+                age = st.number_input("Âge *", min_value=1, max_value=18, value=8, step=1, key="np_age")
 
             render_html('<div class="kk-card-title" style="margin-top:10px">2 · Informations cliniques</div>')
             diagnosis = st.text_area(
                 "Diagnostic",
-                placeholder="Ex. : torticolis post-traumatique, raideur cervicale…",
+                placeholder="Ex. : torticolis post-traumatique, hémiplégie, raideur de l’épaule…",
                 height=80,
+                key="np_dx",
             )
 
             game_id = None
             config = None
+            slug = None
             if backend:
                 render_html('<div class="kk-card-title" style="margin-top:10px">3 · Jeu prescrit et réglages</div>')
                 if games is None or games.empty:
                     st.caption("Aucun jeu disponible pour le moment.")
                 else:
-                    game_id = st.selectbox(
-                        "Jeu", games["id"].tolist(),
-                        format_func=lambda gid: games.set_index("id").loc[gid, "name"],
+                    by_id = games.set_index("id")
+                    game_id = st.segmented_control(
+                        "Jeu", games["id"].tolist(), default=games["id"].iloc[0],
+                        format_func=lambda gid: by_id.loc[gid, "name"], key="new_patient_game",
                     )
-                    d = GAME_SETTINGS_DEFAULTS
-                    g1, g2, g3 = st.columns(3)
-                    with g1:
-                        target = st.number_input("Angle cible (°)", 5, 90, d["target_angle"], step=5,
-                                                 help="Rotation du cou à atteindre de chaque côté.")
-                        safety = st.number_input("Limite de sécurité (°)", 5, 120, d["safety_limit"], step=5,
-                                                 help="Au-delà, le jeu demande à l’enfant de revenir doucement.")
-                    with g2:
-                        hold = st.number_input("Maintien (s)", 1, 15, d["hold_seconds"])
-                        reps = st.number_input("Répétitions", 1, 30, d["repetitions"])
-                    with g3:
-                        speed = st.selectbox("Vitesse", list(SPEEDS), format_func=SPEEDS.get)
-                        difficulty = st.selectbox("Difficulté", list(DIFFICULTIES), index=1,
-                                                  format_func=DIFFICULTIES.get)
-                    config = {**d, "target_angle": int(target), "safety_limit": int(safety),
-                              "hold_seconds": int(hold), "repetitions": int(reps),
-                              "speed": speed, "difficulty": difficulty, "active": True}
+                    if game_id is not None:
+                        slug = by_id.loc[game_id, "slug"]
+                        st.caption(game_settings.GAME_HINTS.get(slug, ""))
+                        config = {**game_settings.settings_fields(slug, None, f"new_{slug}"), "active": True}
 
-            submitted = st.form_submit_button(
+            submitted = st.button(
                 "Créer le patient et générer son code" if backend else "Créer le profil",
                 type="primary", width="stretch",
             )
@@ -164,6 +160,8 @@ def show_add_patient():
         errors.append("Le prénom est obligatoire.")
     if not last_name.strip():
         errors.append("Le nom est obligatoire.")
+    if config is not None and (problem := game_settings.validate(slug, config)):
+        errors.append(problem)
     if errors:
         for error in errors:
             st.error(error)

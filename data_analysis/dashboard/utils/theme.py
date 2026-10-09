@@ -49,6 +49,9 @@ METRIC_COLORS = {
     "rotation_right": "#06B6D4",
     "pain_level": "#EC4899",
     "effort": "#F59E0B",
+    "abduction_max": "#7C3AED",
+    "abduction_mean_peak": "#06B6D4",
+    "compensations": "#F59E0B",
 }
 
 # Rampe séquentielle (violet SensAI, clair → foncé) pour les heatmaps.

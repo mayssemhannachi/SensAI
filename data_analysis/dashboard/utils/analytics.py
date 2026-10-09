@@ -25,6 +25,9 @@ MIN_SESSIONS_FOR_TREND = 3
 SCORE_DROP = 10.0           # baisse du score moyen (3 dernières vs 5 précédentes)
 AMPLITUDE_DROP = 3.0        # baisse de l'amplitude moyenne (°)
 AMPLITUDE_GAIN = 2.0        # gain d'amplitude moyenne (°) considéré comme une progression
+ABDUCTION_DROP = 5.0        # baisse du pic d'abduction moyen (°) — Gardien des Lucioles
+ABDUCTION_GAIN = 5.0        # gain du pic d'abduction moyen (°) considéré comme une progression
+COMPENSATION_HIGH = 3.0     # compensations par séance (moyenne des 3 dernières) à surveiller
 
 STATUS_ORDER = ["À surveiller", "En progression", "Stable", "Nouveau"]
 
@@ -182,6 +185,13 @@ class Alert:
     detail: str
 
 
+def abduction_series(history: pd.DataFrame) -> pd.Series:
+    """Pic d'abduction moyen par séance (Gardien des Lucioles), vide sinon."""
+    if "abduction_mean_peak" not in history.columns:
+        return pd.Series(dtype=float)
+    return pd.to_numeric(history["abduction_mean_peak"], errors="coerce").dropna()
+
+
 def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert]:
     """Signaux d'attention pour un patient (historique trié par date)."""
     alerts: list[Alert] = []
@@ -217,6 +227,21 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
             f"Rotation moyenne {fr(amplitude_drop, 0, True)}° sur les 3 dernières séances.",
         ))
 
+    abduction_drop = recent_change(abduction_series(history))
+    if abduction_drop is not None and abduction_drop <= -ABDUCTION_DROP:
+        alerts.append(Alert(
+            "Abduction en baisse", "warning",
+            f"Pic d’abduction moyen {fr(abduction_drop, 0, True)}° sur les 3 dernières séances.",
+        ))
+
+    if "compensations" in history.columns:
+        comp = pd.to_numeric(history["compensations"], errors="coerce").dropna().tail(3)
+        if len(comp) >= 2 and comp.mean() >= COMPENSATION_HIGH:
+            alerts.append(Alert(
+                "Compensations", "warning",
+                f"{fr(comp.mean(), 1)} compensations par séance en moyenne (autre bras levé ou tête penchée).",
+            ))
+
     last_date = latest.get("session_date")
     if pd.notna(last_date):
         idle = (reference.normalize() - pd.Timestamp(last_date).normalize()).days
@@ -235,9 +260,10 @@ def patient_status(history: pd.DataFrame, alerts: list[Alert]) -> str:
         return "À surveiller"
     slope = score_slope(history["score"].tail(TREND_WINDOW))
     amplitude_gain = recent_change(amplitude_series(history))
+    abduction_gain = recent_change(abduction_series(history))
     if (slope is not None and slope >= TREND_SIGNIFICANT) or (
         amplitude_gain is not None and amplitude_gain >= AMPLITUDE_GAIN
-    ):
+    ) or (abduction_gain is not None and abduction_gain >= ABDUCTION_GAIN):
         return "En progression"
     return "Stable"
 
@@ -402,6 +428,28 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
                 f"Gauche {fr(left, 0)}° · droite {fr(right, 0)}°{goal}, symétrie {fr(sym, 0)} %.{gain}",
                 "positive" if reached and sym >= 80 else "warning" if sym < 70 else "neutral",
                 "↔",
+            ))
+
+    # 2 ter. Abduction de l'épaule (Gardien des Lucioles)
+    if "abduction_max" in history.columns:
+        abd = history.dropna(subset=["abduction_max"])
+        if not abd.empty:
+            last_abd = abd.iloc[-1]
+            peak, best = last_abd.get("abduction_mean_peak"), float(last_abd["abduction_max"])
+            threshold = last_abd.get("target_angle")
+            goal = f" (seuil {fr(threshold, 0)}°)" if threshold is not None and pd.notna(threshold) else ""
+            reached = threshold is not None and pd.notna(threshold) and pd.notna(peak) and peak >= threshold
+            gain = ""
+            if len(abd) >= 2 and pd.notna(peak) and pd.notna(abd.iloc[0].get("abduction_mean_peak")):
+                change = float(peak) - float(abd.iloc[0]["abduction_mean_peak"])
+                gain = f" Pic moyen {fr(change, 0, True)}° depuis le début."
+            comp = last_abd.get("compensations")
+            comp_text = f", {fr(comp, 0)} compensation(s)" if comp is not None and pd.notna(comp) else ""
+            insights.append(Insight(
+                "Abduction de l’épaule",
+                f"Bras levé jusqu’à {fr(best, 0)}°{goal}{comp_text}.{gain}",
+                "positive" if reached and not (pd.notna(comp) and comp >= COMPENSATION_HIGH) else "neutral",
+                "↑",
             ))
 
     # 3. Meilleur / plus difficile jeu

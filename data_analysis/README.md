@@ -50,8 +50,8 @@ python scripts/seed_backend.py --register
 ```
 
 Crée via l'API un thérapeute **demo@sensai.tn / demo1234**, 12 patients suivis au jeu Le Hibou
-pendant ~8 semaines (profils variés : progression, douleur élevée, asymétrie, inactif…) et un compte
-enfant **salma.parent@sensai.tn / demo1234**.
+et 3 au Gardien des Lucioles pendant ~8 semaines (profils variés : progression, douleur élevée,
+asymétrie, compensations, inactif…) et un compte enfant **salma.parent@sensai.tn / demo1234**.
 
 ## 4. Pages
 
@@ -69,8 +69,10 @@ enfant **salma.parent@sensai.tn / demo1234**.
 - **Réussite faible** : dernière séance < 40 % de réussite.
 - **Score en baisse** : score moyen des 3 dernières séances ≥ 10 points sous celui des 5 précédentes.
 - **Amplitude en baisse** : rotation moyenne des 3 dernières séances ≥ 3° sous celle des 5 précédentes.
+- **Abduction en baisse** (Lucioles) : pic d’abduction moyen des 3 dernières séances ≥ 5° sous celui des 5 précédentes.
+- **Compensations** : ≥ 3 compensations par séance en moyenne sur les 3 dernières (autre bras levé, ou tête penchée au Hibou).
 - **Inactif** : aucune séance depuis plus de 14 jours.
-- **Statut** : *À surveiller* (une alerte ci-dessus), *En progression* (score en hausse ou amplitude +2°), *Stable*, *Nouveau* (aucune séance).
+- **Statut** : *À surveiller* (une alerte ci-dessus), *En progression* (score en hausse, rotation +2° ou abduction +5°), *Stable*, *Nouveau* (aucune séance).
 - **Progression** : variation du score (%) par rapport à la séance précédente du même exercice ; calculée par le dashboard si le jeu ne l’envoie pas.
 
 Ce sont des indicateurs d’aide à la décision, pas des critères diagnostiques.
@@ -91,13 +93,29 @@ Ce sont des indicateurs d’aide à la décision, pas des critères diagnostique
 
 Alias acceptés : `reps`, `level`, `successRate`, `accuracy`, `name_exercise`, `session_date`.
 
+Mesures propres à chaque jeu (analysées dans la fiche patient) :
+
+| Jeu | Clés |
+|-----|------|
+| Le Hibou (`le-hibou`) | `rotation_left`, `rotation_right`, `hold_seconds_avg`, `smoothness`, `target_angle`, `compensations` |
+| Le Gardien des Lucioles (`gardien-lucioles`) | `abduction_max`, `abduction_mean_peak`, `compensations`, `affected_arm`, `target_angle` (seuil) |
+| Tous | `pain_level`, `effort` (auto-évaluation 0–5), `completed` |
+
+### Ajouter un nouveau jeu
+
+1. Backend : migration Alembic qui insère le jeu (nom, slug) dans `games`.
+2. Site : page `app/dashboard/game/<slug>/`, entrée `GAME_META` (`playable: true`) dans `lib/games.ts` ;
+   le jeu lit ses réglages via `GET /me/games` et envoie la séance via `POST /me/sessions`.
+3. Dashboard : slug dans `PLAYABLE_GAME_SLUGS`, réglages par défaut dans `SETTINGS_DEFAULTS_BY_SLUG`
+   (`utils/data.py`), champs dans `components/game_settings.py`, section d’analyse dans `pages/patient_detail.py`.
+
 ## 6. Tests
 
 ```powershell
 python -m pytest -q
 ```
 
-32 tests : calculs d’analyse, normalisation des données API, contrat d’écriture vers l’API, rendu de chaque page et de chaque fiche patient en mode démo, écran de connexion.
+35 tests : calculs d’analyse, normalisation des données API, contrat d’écriture vers l’API, rendu de chaque page et de chaque fiche patient en mode démo, écran de connexion.
 
 ## 7. Structure
 
@@ -106,7 +124,7 @@ dashboard/
 ├── app.py                 # point d’entrée : thème, menu, source de données, connexion, routage
 ├── navigation.py          # pages et navigation
 ├── pages/                 # global_view, patients, patient_detail, games, add_patient, login
-├── components/            # ui (cartes, badges, KPI), charts (Plotly), patient_table
+├── components/            # ui (cartes, badges, KPI), charts (Plotly), patient_table, game_settings
 └── utils/
     ├── api_client.py      # client HTTP du backend + messages d’erreur
     ├── data.py            # sources Démo / Backend → même format normalisé

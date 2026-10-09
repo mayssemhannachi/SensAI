@@ -67,3 +67,21 @@ def test_insights_are_generated():
     assert 3 <= len(insights) <= 4
     import re
     assert not any(re.search(r"\d\.\d", i.text) for i in insights)  # format FR (virgule)
+
+
+def test_shoulder_abduction_signals():
+    """Gardien des Lucioles : progression d'abduction, baisse et compensations."""
+    history = _history([60] * 8)
+    history["abduction_mean_peak"] = [70, 72, 74, 76, 78, 84, 86, 88]
+    history["abduction_max"] = history["abduction_mean_peak"] + 5
+    history["compensations"] = [1, 1, 0, 1, 0, 0, 1, 0]
+    history["target_angle"] = 80
+    reference = history["session_date"].max()
+    assert a.patient_alerts(history, reference) == []
+    assert a.patient_status(history, []) == "En progression"
+    assert any(i.title == "Abduction de l’épaule" for i in a.patient_insights(history, reference))
+
+    history["abduction_mean_peak"] = [90, 90, 90, 90, 90, 80, 80, 80]
+    history["compensations"] = [0, 0, 0, 0, 0, 4, 3, 5]
+    labels = {x.label for x in a.patient_alerts(history, reference)}
+    assert labels == {"Abduction en baisse", "Compensations"}

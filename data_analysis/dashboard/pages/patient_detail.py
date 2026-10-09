@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from dashboard import navigation
-from dashboard.components import charts
+from dashboard.components import charts, game_settings
 from dashboard.components.ui import (
     alert_badges,
     avatar,
@@ -26,7 +26,6 @@ from dashboard.components.ui import (
 from dashboard.utils import analytics, state
 from dashboard.utils.api_client import ApiError
 from dashboard.utils.data import (
-    GAME_SETTINGS_DEFAULTS,
     assign_game,
     playable_games,
     create_activation_code,
@@ -128,35 +127,18 @@ def _diagnosis_editor(data, patient) -> None:
                 st.error(f"Le backend a refusé l’enregistrement : {error}")
 
 
-SPEEDS = {"lente": "Lente", "moderee": "Modérée", "rapide": "Rapide"}
-DIFFICULTIES = {"faible": "Faible", "moyenne": "Moyenne", "elevee": "Élevée"}
-
-
-def _settings_form(key: str, current: dict) -> dict | None:
+def _settings_form(key: str, slug: str | None, current: dict) -> dict | None:
     """Formulaire des réglages d'un jeu ; renvoie la configuration si validé."""
-    config = {**GAME_SETTINGS_DEFAULTS, **(current or {})}
     with st.form(key):
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            target = st.number_input("Angle cible (°)", 5, 90, int(config["target_angle"]), step=5)
-            safety = st.number_input("Limite de sécurité (°)", 5, 120, int(config["safety_limit"]), step=5)
-        with c2:
-            hold = st.number_input("Maintien (s)", 1, 15, int(config["hold_seconds"]))
-            reps = st.number_input("Répétitions", 1, 30, int(config["repetitions"]))
-        with c3:
-            speed = st.selectbox("Vitesse", list(SPEEDS), format_func=SPEEDS.get,
-                                 index=list(SPEEDS).index(config["speed"]) if config["speed"] in SPEEDS else 0)
-            difficulty = st.selectbox("Difficulté", list(DIFFICULTIES), format_func=DIFFICULTIES.get,
-                                      index=list(DIFFICULTIES).index(config["difficulty"])
-                                      if config["difficulty"] in DIFFICULTIES else 1)
-        active = st.toggle("Jeu visible pour le patient", value=bool(config.get("active", True)))
+        config = game_settings.settings_fields(slug, current, key)
+        active = st.toggle("Jeu visible pour le patient", value=bool((current or {}).get("active", True)),
+                           key=f"{key}_active")
         if st.form_submit_button("Enregistrer les réglages", type="primary"):
-            if safety < target:
-                st.error("La limite de sécurité doit être supérieure ou égale à l’angle cible.")
+            problem = game_settings.validate(slug, config)
+            if problem:
+                st.error(problem)
                 return None
-            return {**config, "target_angle": int(target), "safety_limit": int(safety),
-                    "hold_seconds": int(hold), "repetitions": int(reps), "speed": speed,
-                    "difficulty": difficulty, "active": bool(active)}
+            return {**config, "active": bool(active)}
     return None
 
 
@@ -172,7 +154,7 @@ def _game_assignment(data, patient) -> None:
             config = row.configuration if isinstance(row.configuration, dict) else {}
             state_label = "visible" if config.get("active", True) else "masqué"
             st.markdown(f"**{row.game_name}** · {state_label}")
-            updated = _settings_form(f"settings_{row.patient_game_id}", config)
+            updated = _settings_form(f"settings_{row.patient_game_id}", getattr(row, "game_slug", None), config)
             if updated is not None:
                 try:
                     update_game_settings(row.patient_game_id, updated)
@@ -192,7 +174,9 @@ def _game_assignment(data, patient) -> None:
                 "Jeu", available["id"].tolist(), key=f"new_game_{patient['id']}",
                 format_func=lambda gid: data.games.set_index("id").loc[gid, "name"],
             )
-            config = _settings_form(f"assign_game_{patient['id']}", GAME_SETTINGS_DEFAULTS)
+            slug = data.games.set_index("id").loc[game_id, "slug"]
+            st.caption(game_settings.GAME_HINTS.get(slug, ""))
+            config = _settings_form(f"assign_game_{patient['id']}_{slug}", slug, None)
             if config is not None:
                 try:
                     assign_game(patient["id"], game_id, config)
@@ -319,6 +303,50 @@ def show_patient_detail():
                     st.info("Pas encore d’auto-évaluation.")
 
     # --------------------------------------------------------
+    # ABDUCTION DE L'ÉPAULE (Le Gardien des Lucioles)
+    # --------------------------------------------------------
+    abduction = history.dropna(subset=["abduction_max"])
+    if not abduction.empty:
+        last_abd, first_abd = abduction.iloc[-1], abduction.iloc[0]
+        threshold = last_abd["target_angle"]
+        arm = {"R": "bras droit", "L": "bras gauche"}.get(last_abd["affected_arm"], "bras entraîné")
+        recent_comp = abduction.tail(3)["compensations"].mean()
+        section("Abduction de l’épaule",
+                f"Élévation latérale du {arm} à chaque séance du Gardien des Lucioles, "
+                "comparée au seuil prescrit.")
+        kpi_row([
+            kpi_card("Abduction max", fmt_number(last_abd["abduction_max"]), "↑", "tone-violet", unit="°",
+                     foot=f"seuil {fmt_number(threshold)}°" if pd.notna(threshold) else "dernière séance",
+                     delta_html=delta_chip(analytics.delta(last_abd["abduction_max"], first_abd["abduction_max"]), "°", 0)),
+            kpi_card("Pic moyen", fmt_number(last_abd["abduction_mean_peak"]), "◠", "tone-blue", unit="°",
+                     foot="moyenne des répétitions validées",
+                     delta_html=delta_chip(analytics.delta(last_abd["abduction_mean_peak"],
+                                                           first_abd["abduction_mean_peak"]), "°", 0)),
+            kpi_card("Compensations", fmt_number(recent_comp, 1), "⚠", "tone-orange",
+                     foot="moyenne des 3 dernières séances"
+                     if pd.notna(recent_comp) else "non mesuré"),
+            kpi_card("Lucioles", fmt_number(last_abd["repetitions"]), "✨", "tone-green",
+                     foot="ramenées à la dernière séance"),
+        ])
+        st.write("")
+        abd_col, comp_col = st.columns([1.5, 1], gap="medium")
+        with abd_col:
+            with card("abduction"):
+                card_title("Évolution de l’abduction", "Amplitude maximale et pic moyen, avec le seuil prescrit.")
+                st.plotly_chart(charts.abduction_chart(abduction), config=charts.CHART_CONFIG,
+                                key="patient_abduction")
+        with comp_col:
+            with card("compensations"):
+                card_title("Compensations", "Fois où l’autre bras s’est levé pendant la séance.")
+                st.plotly_chart(charts.compensation_chart(abduction), config=charts.CHART_CONFIG,
+                                key="patient_compensations")
+        if rotation.empty and history[["pain_level", "effort"]].notna().any().any():
+            with card("pain-lucioles"):
+                card_title("Douleur & effort", "Auto-évaluation de l’enfant après chaque séance (0 à 5).")
+                st.plotly_chart(charts.pain_effort_chart(history), config=charts.CHART_CONFIG,
+                                key="patient_pain_lucioles")
+
+    # --------------------------------------------------------
     # ÉVOLUTION
     # --------------------------------------------------------
     section("Évolution des performances", "Chaque point est une séance, coloré par jeu.")
@@ -398,6 +426,8 @@ def show_patient_detail():
     extra = {
         "Rot. gauche (°)": "rotation_left",
         "Rot. droite (°)": "rotation_right",
+        "Abduction max (°)": "abduction_max",
+        "Compensations": "compensations",
         "Douleur (/5)": "pain_level",
         "Effort (/5)": "effort",
     }
@@ -406,7 +436,7 @@ def show_patient_detail():
             display[label] = table[column].to_numpy()
     if display["Exercice"].nunique(dropna=True) <= 1:
         display = display.drop(columns="Exercice")
-    if display["Progression"].isna().all() or "Rot. gauche (°)" in display.columns:
+    if display["Progression"].isna().all() or {"Rot. gauche (°)", "Abduction max (°)"} & set(display.columns):
         display = display.drop(columns="Progression")
     st.dataframe(
         display,
@@ -423,6 +453,8 @@ def show_patient_detail():
             "Progression": st.column_config.NumberColumn(format="%+.1f %%"),
             "Rot. gauche (°)": st.column_config.NumberColumn(format="%d"),
             "Rot. droite (°)": st.column_config.NumberColumn(format="%d"),
+            "Abduction max (°)": st.column_config.NumberColumn(format="%d"),
+            "Compensations": st.column_config.NumberColumn(format="%d"),
             "Douleur (/5)": st.column_config.NumberColumn(format="%d"),
             "Effort (/5)": st.column_config.NumberColumn(format="%d"),
         },
