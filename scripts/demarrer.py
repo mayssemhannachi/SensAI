@@ -32,6 +32,45 @@ def port_busy(port: int) -> bool:
         return sock.connect_ex(("127.0.0.1", port)) == 0
 
 
+def pids_on_port(port: int) -> set[int]:
+    """Processus qui écoutent sur ``port`` (Windows : netstat ; Mac/Linux : lsof)."""
+    pids: set[int] = set()
+    try:
+        if IS_WINDOWS:
+            out = subprocess.run(["netstat", "-ano", "-p", "tcp"], capture_output=True, text=True).stdout
+            for line in out.splitlines():
+                parts = line.split()
+                # Socket en écoute : adresse distante nulle (indépendant de la langue de Windows)
+                if (len(parts) >= 5 and parts[1].endswith(f":{port}")
+                        and parts[2] in {"0.0.0.0:0", "[::]:0", "*:*"}):
+                    pids.add(int(parts[4]))
+        else:
+            out = subprocess.run(["lsof", "-ti", f"tcp:{port}", "-sTCP:LISTEN"],
+                                 capture_output=True, text=True).stdout
+            pids = {int(x) for x in out.split()}
+    except (OSError, ValueError):
+        pass
+    pids.discard(0)
+    return pids
+
+
+def free_port(port: int) -> bool:
+    """Arrête l'ancien service qui occupe ``port`` (ancienne version, autre dossier…)."""
+    for pid in pids_on_port(port):
+        if IS_WINDOWS:
+            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+        else:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                pass
+    for _ in range(20):
+        if not port_busy(port):
+            return True
+        time.sleep(0.5)
+    return False
+
+
 def wait_for(url: str, seconds: int) -> bool:
     deadline = time.time() + seconds
     while time.time() < deadline:
@@ -78,14 +117,21 @@ def start_windows(service: dict) -> None:
 
 def main() -> int:
     if not VENV_PY.exists() or not (ROOT / "frontend" / "node_modules").exists() or not (ROOT / ".env").exists():
-        print("La plateforme n'est pas encore installée : lancez d'abord installer.bat (ou ./installer.sh).")
-        return 1
+        print("Première utilisation : installation de la plateforme …\n")
+        result = subprocess.run([sys.executable, str(ROOT / "scripts" / "installer.py")], cwd=ROOT)
+        if result.returncode != 0:
+            print("L'installation n'a pas abouti : corrigez l'erreur ci-dessus puis relancez demarrer.")
+            return 1
+        print()
 
     children: list[subprocess.Popen] = []
     for service in services():
         if port_busy(service["port"]):
-            print(f"  = {service['name']} : déjà lancé (port {service['port']})")
-            continue
+            # Peut être une ancienne version (autre dossier) : on la remplace par celle-ci.
+            print(f"  ~ {service['name']} : un ancien service occupe le port {service['port']}, arrêt …")
+            if not free_port(service["port"]):
+                print(f"  ! Impossible de libérer le port {service['port']} : fermez l'application qui l'utilise.")
+                continue
         print(f"  > {service['name']} : démarrage (port {service['port']})")
         if IS_WINDOWS:
             start_windows(service)
