@@ -51,6 +51,12 @@ export default function DashboardPage() {
 
   const patientCode = profile?.patient_code?.toUpperCase() ?? "";
   const firstName = profile?.first_name ?? "";
+  const avatarSrc =
+    me?.sub === "ergo.patient@sensai.tn"
+      ? "/Assets/dashboard/Cute%20Freckled%20Girl%20Head%20with%20Pink%20Hair%20Tie.png"
+      : firstName.toLowerCase() === "salma"
+        ? "/Assets/dashboard/Joyful%20Girl%20with%20Curly%20Puff%20Buns.png"
+        : "/Assets/dashboard/Playful%20Character%20Face%20Sticker%20Sheet.png";
   const last = sessions[0];
   const { level, progress, step } = playerLevel(sessions);
 
@@ -182,11 +188,7 @@ export default function DashboardPage() {
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm relative flex-shrink-0"
             >
               <Image
-                src={
-                  firstName.toLowerCase() === "salma"
-                    ? "/Assets/dashboard/Joyful Girl with Curly Puff Buns.png"
-                    : "/Assets/dashboard/Playful Character Face Sticker Sheet.png"
-                }
+                src={avatarSrc}
                 alt={`Avatar de ${firstName}`}
                 fill
                 className="object-cover"

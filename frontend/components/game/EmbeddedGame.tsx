@@ -135,37 +135,44 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
   const badge = spec.badge?.(config);
 
   return (
-    <div className="min-h-screen bg-[#F3F5FA] font-outfit p-4 flex flex-col gap-4 h-screen">
+    <div className={`min-h-screen bg-[#F3F5FA] font-outfit p-4 flex flex-col h-screen ${spec.slug === "danse-lucioles" ? "gap-3 bg-[#e9e9ff]" : "gap-4"}`}>
       {/* ── EN-TÊTE ── */}
-      <header className="flex items-center justify-between bg-white/80 backdrop-blur-md px-4 py-2.5 rounded-[2rem] shadow-sm border border-white/50 gap-4">
-        <div className="flex items-center gap-6 min-w-0">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <Image src="/assets_flat/sensai-mascot.png" alt="SensAI" width={36} height={36} className="w-9 h-9 object-contain" priority />
+      <header className={`flex items-center justify-between bg-white/80 backdrop-blur-md px-4 py-2.5 rounded-[2rem] shadow-sm border border-white/50 gap-4 ${spec.slug === "danse-lucioles" ? "mx-[5vw] gap-2 px-5 py-2 max-md:flex-wrap" : ""}`}>
+        <div className={`flex items-center min-w-0 ${spec.slug === "danse-lucioles" ? "gap-4" : "gap-6"}`}>
+          <Link href="/dashboard" className={`flex items-center ${spec.slug === "danse-lucioles" ? "gap-2" : "gap-2.5"}`}>
+            <Image
+              src="/assets_flat/sensai-mascot.png"
+              alt="SensAI"
+              width={spec.slug === "danse-lucioles" ? 40 : 36}
+              height={spec.slug === "danse-lucioles" ? 40 : 36}
+              className={`${spec.slug === "danse-lucioles" ? "w-10 h-10" : "w-9 h-9"} object-contain`}
+              priority
+            />
             <span className="text-xl font-black tracking-tight text-slate-900">
               Sens<span className="text-[#FF6B8B]">A</span><span className="text-[#7C3AED]">I</span>
             </span>
           </Link>
           <div className="w-px h-8 bg-slate-200" />
-          <div className="flex items-center gap-3 min-w-0">
-            <Image src={spec.image} width={40} height={40} alt="" className="w-10 h-10 object-cover rounded-2xl" />
+          <div className={`flex items-center min-w-0 ${spec.slug === "danse-lucioles" ? "gap-2" : "gap-3"}`}>
+            <Image src={spec.image} width={40} height={40} alt="" className={`${spec.slug === "danse-lucioles" ? "w-9 h-9" : "w-10 h-10"} object-cover rounded-2xl`} />
             <div className="flex flex-col min-w-0">
               <h2 className="text-sm font-black text-slate-800 leading-tight truncate">{spec.title}</h2>
               <span className="text-[10px] font-bold text-slate-400">{spec.subtitle(config)}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          <span className="px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-100 text-[11px] font-extrabold text-indigo-600">
+        <div className={`flex items-center justify-end ${spec.slug === "danse-lucioles" ? "gap-1.5 flex-nowrap max-md:flex-wrap" : "gap-2 flex-wrap"}`}>
+          <span className={`px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-100 text-[11px] font-extrabold text-indigo-600 ${spec.slug === "danse-lucioles" ? "hidden" : ""}`}>
             ✨ <span data-testid="lucioles-progress">{progress} / {target}</span> {spec.unit}
           </span>
           {badge && (
-            <span className="px-3 py-1.5 bg-amber-50 rounded-full border border-amber-100 text-[11px] font-extrabold text-amber-700">
+            <span className={`px-3 py-1.5 bg-amber-50 rounded-full border border-amber-100 text-[11px] font-extrabold text-amber-700 ${spec.slug === "danse-lucioles" ? "hidden" : ""}`}>
               {badge}
             </span>
           )}
           <button
             onClick={stop}
-            className="px-4 py-2 bg-fuchsia-50 hover:bg-fuchsia-100 rounded-full border-2 border-fuchsia-100 text-fuchsia-600 text-xs font-black"
+            className={`${spec.slug === "danse-lucioles" ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs"} bg-fuchsia-50 hover:bg-fuchsia-100 rounded-full border-2 border-fuchsia-100 text-fuchsia-600 font-black whitespace-nowrap`}
           >
             ♥ J&apos;ai mal / Stop
           </button>
@@ -173,7 +180,7 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
       </header>
 
       {/* ── JEU ── */}
-      <main className="flex-1 min-h-0 rounded-[2rem] overflow-hidden relative shadow-sm border border-white bg-[#8fd8ff]">
+      <main className={`flex-1 min-h-0 rounded-[2rem] overflow-hidden relative shadow-sm border border-white ${spec.slug === "danse-lucioles" ? "mx-[5vw] bg-[#e9e9ff]" : "bg-[#8fd8ff]"}`}>
         {assignment && (
           <iframe
             key={round}
