@@ -36,8 +36,9 @@ export type GameConfig = {
   invert_direction?: boolean;
   shoulder_threshold?: number;
   // Le Gardien des Lucioles (abduction de l'épaule)
-  affected_arm?: "R" | "L";
+  affected_arm?: "R" | "L" | "BI";
   mode?: "hemi" | "bi";
+  direction?: "side" | "front" | "mid" | "any";
   elbow_min?: number;
   rest_tolerance?: number;
   [key: string]: unknown;

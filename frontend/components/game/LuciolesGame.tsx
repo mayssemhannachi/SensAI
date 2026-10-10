@@ -118,14 +118,15 @@ export default function LuciolesGame() {
 
   const params = new URLSearchParams({
     side: config.affected_arm,
-    mode: config.mode,
+    dir: config.direction,
     thr: String(config.target_angle),
     elb: String(config.elbow_min),
     rest: String(config.rest_tolerance),
     reps: String(config.repetitions),
     hold: String(config.hold_seconds),
   });
-  const armLabel = config.affected_arm === "L" ? "gauche" : "droit";
+  const armLabel = config.affected_arm === "BI" ? "les deux bras" : config.affected_arm === "L" ? "bras gauche" : "bras droit";
+  const exercise = ({ side: "Abduction de l’épaule", front: "Flexion de l’épaule", mid: "Flexion-adduction de l’épaule", any: "Élévation du bras" } as Record<string, string>)[config.direction] ?? "Élévation du bras";
 
   return (
     <div className="min-h-screen bg-[#F3F5FA] font-outfit p-4 flex flex-col gap-4 h-screen">
@@ -143,7 +144,7 @@ export default function LuciolesGame() {
             <Image src="/Assets/dashboard/Chibi Sky Quest to the Star.png" width={40} height={40} alt="" className="w-10 h-10 object-cover rounded-2xl" />
             <div className="flex flex-col min-w-0">
               <h2 className="text-sm font-black text-slate-800 leading-tight truncate">Le Gardien des Lucioles</h2>
-              <span className="text-[10px] font-bold text-slate-400">Exercice d’abduction de l’épaule · bras {armLabel}</span>
+              <span className="text-[10px] font-bold text-slate-400">{exercise} · {armLabel}</span>
             </div>
           </div>
         </div>

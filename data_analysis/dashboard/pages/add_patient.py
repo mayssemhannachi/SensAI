@@ -28,7 +28,8 @@ def _created_banner() -> None:
     game_line = ""
     if game:
         if "affected_arm" in config:
-            details = (f"bras {'droit' if config.get('affected_arm') == 'R' else 'gauche'} · "
+            arm = {"R": "bras droit", "L": "bras gauche", "BI": "deux bras"}.get(config.get("affected_arm"), "bras")
+            details = (f"{arm} · "
                        f"seuil {config.get('target_angle')}° · coude ≥ {config.get('elbow_min')}° · "
                        f"{config.get('repetitions')} lucioles")
         else:

@@ -83,8 +83,9 @@ NUMERIC_SESSION_COLUMNS = [
 
 # Le Gardien des Lucioles (abduction de l'épaule, jeu de Maram) :
 LUCIOLES_SETTINGS_DEFAULTS = {
-    "affected_arm": "R",     # R | L : bras à entraîner
-    "mode": "hemi",          # hemi : l'autre bras doit rester au repos | bi : pas de contrôle
+    "affected_arm": "R",     # R | L | BI (les deux bras montent ensemble)
+    "mode": "hemi",          # hemi : un bras, l'autre au repos | bi : les deux bras
+    "direction": "side",     # side (abduction) | front (flexion) | mid | any — jeu de Maram
     "target_angle": 90,      # seuil d'abduction à atteindre (°)
     "elbow_min": 140,        # extension minimale du coude (°)
     "rest_tolerance": 35,    # élévation tolérée de l'autre bras (°)

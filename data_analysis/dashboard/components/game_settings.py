@@ -13,15 +13,18 @@ from dashboard.utils.data import settings_defaults
 
 SPEEDS = {"lente": "Lente", "moderee": "Modérée", "rapide": "Rapide"}
 DIFFICULTIES = {"faible": "Faible", "moyenne": "Moyenne", "elevee": "Élevée"}
-ARMS = {"R": "Bras droit", "L": "Bras gauche"}
-MODES = {
-    "hemi": "Hémiplégie : l’autre bras reste au repos",
-    "bi": "Bilatéral : sans contrôle de l’autre bras",
+ARMS = {"R": "Bras droit", "L": "Bras gauche", "BI": "Les deux bras"}
+DIRECTIONS = {
+    "side": "Sur le côté (abduction)",
+    "front": "Devant (flexion)",
+    "mid": "Devant, vers le milieu",
+    "any": "Peu importe",
 }
 
 GAME_HINTS = {
     "le-hibou": "Rotation cervicale : l’enfant tourne la tête à droite puis à gauche et maintient la position.",
-    "gardien-lucioles": "Abduction de l’épaule : l’enfant lève le bras, coude tendu, au-dessus du seuil prescrit.",
+    "gardien-lucioles": "Élévation du bras (épaule) : l’enfant lève le bras, coude tendu, dans la direction "
+                        "et jusqu’à la hauteur prescrites.",
 }
 
 
@@ -84,27 +87,30 @@ def _hibou_fields(config: dict, key: str) -> dict:
 
 
 def _lucioles_fields(config: dict, key: str) -> dict:
+    """Mêmes choix que l'écran d'accueil du jeu de Maram (bras, direction, lucioles, hauteur)."""
     c1, c2, c3 = st.columns(3)
     with c1:
         arm = st.selectbox("Bras à entraîner", list(ARMS), format_func=ARMS.get,
-                           index=_index(ARMS, config.get("affected_arm")), key=f"{key}_arm")
-        threshold = st.number_input("Seuil d’abduction (°)", 30, 170, int(config["target_angle"]), step=5,
-                                    help="Élévation latérale du bras à atteindre pour attirer les lucioles.",
-                                    key=f"{key}_thr")
+                           index=_index(ARMS, config.get("affected_arm")), key=f"{key}_arm",
+                           help="Un bras : l’autre doit rester au repos (sinon compensation). "
+                                "Les deux bras : ils doivent monter ensemble.")
+        direction = st.selectbox("Comment lever le bras", list(DIRECTIONS), format_func=DIRECTIONS.get,
+                                 index=_index(DIRECTIONS, config.get("direction"), 0), key=f"{key}_dir")
     with c2:
+        threshold = st.number_input("Hauteur du bras (°)", 30, 170, int(config["target_angle"]), step=5,
+                                    help="Élévation à atteindre pour attirer les lucioles (60 facile, 90 moyen, 120 haut).",
+                                    key=f"{key}_thr")
+        reps = st.number_input("Lucioles à ramener", 1, 50, int(config["repetitions"]), key=f"{key}_reps")
+    with c3:
         elbow = st.number_input("Extension min. du coude (°)", 90, 180, int(config["elbow_min"]), step=5,
                                 help="En dessous, le mouvement n’est pas compté (bras plié).",
                                 key=f"{key}_elbow")
         rest = st.number_input("Tolérance bras au repos (°)", 10, 60, int(config["rest_tolerance"]), step=5,
-                               help="Mode hémiplégie : si l’autre bras monte au-delà, c’est une compensation.",
+                               help="Un seul bras : si l’autre bras monte au-delà, c’est une compensation.",
                                key=f"{key}_rest")
-    with c3:
-        reps = st.number_input("Lucioles à ramener", 1, 50, int(config["repetitions"]), key=f"{key}_reps")
-        hold = st.number_input("Maintien (s)", 0.5, 10.0, float(config["hold_seconds"]), step=0.5,
-                               key=f"{key}_hold")
-    mode = st.radio("Mode", list(MODES), format_func=MODES.get, horizontal=True,
-                    index=_index(MODES, config.get("mode")), key=f"{key}_mode")
+    hold = st.number_input("Maintien (s)", 0.5, 10.0, float(config["hold_seconds"]), step=0.5, key=f"{key}_hold")
     level = 1 if threshold <= 70 else 2 if threshold <= 110 else 3
-    return {**config, "affected_arm": arm, "mode": mode, "target_angle": int(threshold),
-            "elbow_min": int(elbow), "rest_tolerance": int(rest), "repetitions": int(reps),
-            "hold_seconds": float(hold), "difficulty": ["faible", "moyenne", "elevee"][level - 1]}
+    return {**config, "affected_arm": arm, "mode": "bi" if arm == "BI" else "hemi", "direction": direction,
+            "target_angle": int(threshold), "elbow_min": int(elbow), "rest_tolerance": int(rest),
+            "repetitions": int(reps), "hold_seconds": float(hold),
+            "difficulty": ["faible", "moyenne", "elevee"][level - 1]}

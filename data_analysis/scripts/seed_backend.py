@@ -193,6 +193,7 @@ def simulate_lucioles(profile: str, arm: str, weeks: int, rng: random.Random, no
                 "compensations": comps,
                 "affected_arm": arm,
                 "mode": "hemi",
+                "direction": "side",
                 "target_angle": threshold,
                 "elbow_min": 140,
                 "rest_tolerance": 35,
@@ -313,7 +314,7 @@ def main() -> int:
         })
         last_session = history[-1]
         config = {
-            "affected_arm": arm, "mode": "hemi", "target_angle": last_session["target"],
+            "affected_arm": arm, "mode": "hemi", "direction": "side", "target_angle": last_session["target"],
             "elbow_min": 140, "rest_tolerance": 35, "repetitions": 10, "hold_seconds": 1,
             "difficulty": last_session["difficulty"], "active": True,
         }
@@ -338,7 +339,7 @@ def main() -> int:
             if lucioles["id"] not in assigned:
                 api.call("POST", "/patient-games/", {
                     "patient_id": salma["id"], "game_id": lucioles["id"],
-                    "configuration": {"affected_arm": "R", "mode": "bi", "target_angle": 80,
+                    "configuration": {"affected_arm": "R", "mode": "hemi", "direction": "side", "target_angle": 80,
                                       "elbow_min": 140, "rest_tolerance": 35, "repetitions": 8,
                                       "hold_seconds": 1, "difficulty": "moyenne", "active": True},
                 })

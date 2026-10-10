@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <!--
-  Le Gardien des Lucioles — jeu d'abduction de l'épaule.
+  Le Gardien des Lucioles — jeu d'élévation du bras (abduction / flexion de l'épaule).
   Conception et jeu original : Maram (branche maram-game).
-  Intégration SensAI : les réglages viennent du thérapeute (paramètres d'URL
-  passés par la page /dashboard/game/gardien-lucioles) et la séance est renvoyée
-  à cette page par postMessage, qui l'enregistre dans le backend.
+  Intégration SensAI : les réglages viennent du thérapeute (paramètres d'URL passés par
+  la page /dashboard/game/gardien-lucioles) et la séance est renvoyée à cette page par
+  postMessage, qui l'enregistre dans le backend. Le reste du jeu est celui de Maram.
 -->
 <html lang="fr">
 <head>
@@ -13,22 +13,22 @@
 <title>Le Gardien des Lucioles</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--jaune:#ffe066;--menthe:#7dffcf;--rose:#ff8fd0;--nuit:#1b1464;--texte:#3b2a7a}
+:root{--texte:#3b2a7a}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:#8fd8ff;color:var(--texte);font:18px/1.35 Fredoka,"Trebuchet MS",sans-serif;overflow:hidden}
 body{display:flex;align-items:center;justify-content:center}
 #stage{position:relative;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;overflow:hidden;
   background:linear-gradient(180deg,#4fc3ff 0%,#a5e4ff 55%,#e3f8ff 100%)}
-#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;transform:scaleX(-1);opacity:.3}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;transform:scaleX(-1);opacity:1;filter:brightness(1.12) contrast(1.12) saturate(1.1)}
 #game{position:absolute;inset:0}
 #game canvas{width:100%!important;height:100%!important}
 
 #intro{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2)}
-.card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:clamp(18px,3vw,36px) clamp(24px,5vw,60px);
+.card{display:flex;flex-direction:column;align-items:center;gap:9px;padding:clamp(14px,2.2vw,28px) clamp(22px,4vw,50px);
   border-radius:40px;background:rgba(255,255,255,.93);border:6px solid #ffb938;
-  box-shadow:0 10px 0 #e89a1a,0 18px 40px rgba(0,80,160,.35);text-align:center;max-width:92%}
+  box-shadow:0 10px 0 #e89a1a,0 18px 40px rgba(0,80,160,.35);text-align:center;max-width:92%;max-height:96%;overflow:auto}
 .card h1{margin:0;font-size:clamp(28px,5vw,58px);line-height:1.05;color:#ff6b3d;text-shadow:0 4px 0 #b8381a}
-.card .owl{font-size:clamp(40px,7vw,80px);animation:bob 2.4s ease-in-out infinite}
+.card .owl{font-size:clamp(34px,5vw,60px);animation:bob 2.4s ease-in-out infinite}
 .card p{margin:0;font-size:clamp(15px,2vw,22px);color:#5b4a9e}
 @keyframes bob{50%{transform:translateY(-10px) rotate(-4deg)}}
 @media (prefers-reduced-motion:reduce){.owl{animation:none}}
@@ -38,8 +38,15 @@ input,select,button{font:inherit}
 .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #c77d00}
 .btn.alt{color:#06382d;background:linear-gradient(180deg,#b6ffe6,#4fd8a8);box-shadow:0 6px 0 #1f9c75,0 10px 20px rgba(0,0,0,.35)}
 .btn:focus-visible{outline:4px solid #3b2a7a;outline-offset:3px}
-
-#msg{position:absolute;bottom:64px;left:0;right:0;text-align:center;color:#d9480f;z-index:25;pointer-events:none;font-weight:600}
+.kine{font-size:14px;color:#8a7fc7}
+.grp{display:flex;flex-direction:column;align-items:center;gap:4px}
+.lbl{font-weight:600;font-size:clamp(13px,1.6vw,17px);color:#5b4a9e}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.chip{cursor:pointer;border:3px solid #cfc8f3;background:#fff;color:#3b2a7a;border-radius:999px;padding:6px 16px;font-weight:700;font-size:clamp(13px,1.7vw,18px)}
+.chip.on{background:#ffe066;border-color:#ffb938;box-shadow:0 3px 0 #c77d00}
+.chip:focus-visible{outline:4px solid #3b2a7a;outline-offset:2px}
+#end{position:absolute;inset:0;z-index:22;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.25)}
+#msg{position:absolute;bottom:64px;left:0;right:0;text-align:center;color:#d9480f;z-index:25;pointer-events:none;font-weight:600;text-shadow:0 0 6px #fff}
 </style>
 </head>
 <body>
@@ -50,13 +57,17 @@ input,select,button{font:inherit}
   <div id="intro"><div class="card">
     <div class="owl">🦉</div>
     <h1>Le Gardien<br>des Lucioles</h1>
-    <p>Lève ton bras magique pour attirer les lucioles dans la lanterne de Léo !</p>
+    <p>Lève ton bras pour attirer les lucioles dans la lanterne de Léo !</p>
     <p id="goal" style="font-weight:700;color:#7c3aed"></p>
     <button id="start" class="btn">📷 Jouer avec la caméra</button>
     <button id="demo" class="btn alt">⌨️ Essayer au clavier</button>
   </div></div>
 
   <div id="msg"></div>
+
+  <div id="end"><div class="card">
+    <div class="owl">🏆</div><h1>Bravo !</h1><p id="endTxt"></p>
+  </div></div>
 </div>
 
 <script src="vendor/phaser.min.js"></script><!-- Phaser 3.80.1 (MIT), embarqué pour fonctionner sans CDN -->
@@ -66,29 +77,17 @@ const MP_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 
 const $ = id => document.getElementById(id);
 const IDX = {R:{s:12,e:14,w:16,h:24}, L:{s:11,e:13,w:15,h:23}};
-
-// ---------- Réglages prescrits par le thérapeute (paramètres d'URL) ----------
-const Q = new URLSearchParams(location.search);
-const num = (k, def, lo, hi) => { const v = parseFloat(Q.get(k)); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : def; };
-const S = {
-  side: Q.get('side') === 'L' ? 'L' : 'R',
-  mode: Q.get('mode') === 'bi' ? 'bi' : 'hemi',
-  thr: num('thr', 90, 30, 170), elbMin: num('elb', 140, 90, 180), restMax: num('rest', 35, 10, 60),
-  target: Math.round(num('reps', 10, 1, 50)), holdMs: num('hold', 0.4, 0.2, 10) * 1000,
+// Direction demandée = angle de la main autour de l'axe vertical du corps, dans le plan horizontal X-Z :
+// 0° = sur le côté (axe X), 90° = devant (axe Z), 135° = devant en diagonale vers le milieu du corps
+const TARGET = {any:null, side:0, front:90, mid:135}, AZ_TOL = 45;
+const S = {side:'R', mode:'hemi', thr:90, elbMin:140, restMax:35, player:'', sid:'',
   ok:false, demo:false, abd:0, elb:180, restAbd:0, comp:false, pts:null,
-  reps:0, peak:0, compCount:0, log:[], t0:Date.now(), started:false, readyHold:0, finished:false};
-$('goal').textContent = `Objectif : ${S.target} lucioles avec le bras ${S.side === 'R' ? 'droit' : 'gauche'}, jusqu'à ${S.thr}°`;
+  reps:0, peak:0, compCount:0, log:[], t0:Date.now(), started:false, readyHold:0, target:10, dir:'any', dev:0, psi:0,
+  ax:0, ay:0, az:0, done:false, tEnd:0, abdMax:0, arms:[]};
 
 S.dbg = {model:false, det:false, vis:0, fr:0};
 addEventListener('error', e => { $('msg').textContent = 'Erreur : ' + e.message; });
 addEventListener('unhandledrejection', e => { $('msg').textContent = 'Erreur : ' + (e.reason?.message || e.reason); });
-
-// ---------- Dialogue avec la page SensAI (parent) ----------
-const toParent = msg => { if (parent !== window) parent.postMessage({source:'gardien-lucioles', ...msg}, location.origin); };
-addEventListener('message', e => {
-  if (e.origin !== location.origin || e.data?.source !== 'sensai') return;
-  if (e.data.type === 'stop') finishSession(true);
-});
 
 // ---------- Géométrie ----------
 const ang = (a,b,c) => {
@@ -96,7 +95,36 @@ const ang = (a,b,c) => {
   const d=v1[0]*v2[0]+v1[1]*v2[1], n=Math.hypot(...v1)*Math.hypot(...v2)||1;
   return Math.acos(Math.max(-1,Math.min(1,d/n)))*180/Math.PI;
 };
-function armMetrics(lm, ix, vw, vh){
+// Les 3 axes du corps sont construits SANS les hanches (souvent hors de l'image) :
+//   X (côté)  = ligne des épaules, orientée vers l'extérieur (côté du bras suivi)
+//   Y (haut)  = verticale du monde (le modèle est aligné sur la gravité), rendue orthogonale à X
+//   Z (devant)= perpendiculaire à X et Y, orientée vers la caméra (le joueur lui fait face)
+// On projette ensuite le vecteur épaule→poignet sur ces 3 axes : ax, ay, az (entre -1 et +1).
+//   ax > 0 : main vers l'extérieur   ay > 0 : main vers le haut   az > 0 : main devant
+function armMetrics3D(wl, lm, ix){
+  const sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y,z:a.z-b.z});
+  const dot=(u,v)=>u.x*v.x+u.y*v.y+u.z*v.z, len=u=>Math.hypot(u.x,u.y,u.z)||1, sc=(u,k)=>({x:u.x*k,y:u.y*k,z:u.z*k});
+  const unit=u=>sc(u,1/len(u)), cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
+  const sh=wl[ix.s], el=wl[ix.e], wr=wl[ix.w], shO=wl[ix.s===12?11:12];
+  const a=sub(el,sh);
+  // Axe X : de l'épaule opposée vers l'épaule suivie (= vers l'extérieur)
+  const X=unit(sub(sh,shO));
+  // Axe Y : « haut » (y du modèle pointe vers le bas) rendu orthogonal à X
+  const up={x:0,y:-1,z:0};
+  const Y=unit(sub(up,sc(X,dot(up,X))));
+  // Axe Z : perpendiculaire aux deux, signe choisi pour pointer vers la caméra (z du modèle négatif = proche)
+  let Z=unit(cross(X,Y)); if(dot(Z,{x:0,y:0,z:-1})<0) Z=sc(Z,-1);
+  // Direction de la main (épaule → poignet) décomposée sur X, Y, Z
+  const aw=sub(wr,sh), n=len(aw), ax=dot(aw,X)/n, ay=dot(aw,Y)/n, az=dot(aw,Z)/n;
+  const hor=Math.hypot(ax,az);                                     // part horizontale du bras
+  const psi=Math.atan2(az,ax)*180/Math.PI, tg=TARGET[S.dir];       // 0° = X (côté), 90° = Z (devant)
+  const dev=(tg!=null && hor>0.35) ? Math.abs(((psi-tg+540)%360)-180) : 0;   // bras quasi vertical : direction ignorée
+  const a3=(p,q)=>Math.acos(Math.max(-1,Math.min(1,dot(p,q)/(len(p)*len(q)))))*180/Math.PI;
+  return {abd:a3(a,sc(Y,-1)), elb:a3(sub(sh,el),sub(wr,el)), dev, psi, ax, ay, az,
+          vis:(lm[ix.s].visibility+lm[ix.e].visibility+lm[ix.w].visibility)/3, pts:[lm[ix.s],lm[ix.e],lm[ix.w]]};
+}
+function armMetrics(lm, ix, vw, vh, wl){
+  if(wl && wl.length>=25) return armMetrics3D(wl, lm, ix);
   const p = i => ({x:lm[i].x*vw, y:lm[i].y*vh, v:lm[i].visibility});
   const s=p(ix.s), e=p(ix.e), w=p(ix.w);
   let h=p(ix.h);
@@ -108,6 +136,7 @@ function armMetrics(lm, ix, vw, vh){
 // ---------- MediaPipe ----------
 let landmarker, lastT = -1;
 async function startCamera(){
+  if(landmarker){ S.demo = false; $('intro').style.display = 'none'; return; }
   $('intro').style.display = 'none';
   $('msg').textContent = 'Léo prépare la magie…';
   try{
@@ -129,26 +158,60 @@ function loop(){
   const cam = $('cam');
   if(landmarker && !S.demo && cam.readyState>=2 && cam.currentTime!==lastT){
     lastT = cam.currentTime;
-    const lm = landmarker.detectForVideo(cam, performance.now()).landmarks?.[0];
+    const res = landmarker.detectForVideo(cam, performance.now());
+    const lm = res.landmarks?.[0], wl = res.worldLandmarks?.[0];
     S.dbg.fr++; S.dbg.det = !!lm;
     if(lm){
       const vw=cam.videoWidth, vh=cam.videoHeight;
-      const a = armMetrics(lm, IDX[S.side], vw, vh);
-      const o = armMetrics(lm, IDX[S.side==='R'?'L':'R'], vw, vh);
-      S.ok = a.vis>0.25; S.dbg.vis = a.vis;
-      S.abd += (a.abd - S.abd)*0.5; S.elb += (a.elb - S.elb)*0.5; S.restAbd += (o.abd - S.restAbd)*0.5;
-      S.comp = S.mode==='hemi' && o.vis>0.25 && S.restAbd > S.restMax;
-      S.pts = a.pts;
+      const R = armMetrics(lm, IDX.R, vw, vh, wl), L = armMetrics(lm, IDX.L, vw, vh, wl);
+      let abd, abdMax, elb, vis, rest = 0, ov = 0, dev = 0, ref;
+      if(S.mode === 'bi'){                       // les DEUX bras doivent monter ensemble
+        abd = Math.min(R.abd,L.abd); abdMax = Math.max(R.abd,L.abd); elb = Math.min(R.elb,L.elb); vis = Math.min(R.vis,L.vis);
+        dev = Math.max(R.dev||0, L.dev||0); ref = R; S.arms = [R.pts, L.pts];
+      } else {                                   // UN bras : l'autre doit rester au repos
+        const a = S.side==='R' ? R : L, o = S.side==='R' ? L : R;
+        abd = abdMax = a.abd; elb = a.elb; vis = a.vis; rest = o.abd; ov = o.vis;
+        dev = a.dev||0; ref = a; S.arms = [a.pts];
+      }
+      S.psi = ref.psi||0;
+      S.ok = vis>0.25; S.dbg.vis = vis;
+      S.abd += (abd-S.abd)*0.4; S.abdMax += (abdMax-S.abdMax)*0.4; S.elb += (elb-S.elb)*0.4; S.restAbd += (rest-S.restAbd)*0.4; S.dev += (dev-S.dev)*0.4;
+      S.ax += ((ref.ax||0)-S.ax)*0.4; S.ay += ((ref.ay||0)-S.ay)*0.4; S.az += ((ref.az||0)-S.az)*0.4;
+      S.comp = S.mode !== 'bi' && ov>0.25 && S.restAbd > S.restMax;
     } else S.ok = false;
   }
   requestAnimationFrame(loop);
 }
 
-// ---------- Séance : résumé renvoyé à SensAI ----------
+// ---------- Réglages prescrits par le thérapeute (paramètres d'URL SensAI) ----------
+const Q = new URLSearchParams(location.search);
+const num = (k, def, lo, hi) => { const v = parseFloat(Q.get(k)); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : def; };
+const C = {                                                             // mêmes choix que l'écran d'accueil de Maram
+  arm: ({R:'R', L:'L', BI:'BI'})[(Q.get('side') || 'R').toUpperCase()] || 'R',
+  reps: Math.round(num('reps', 10, 1, 50)),
+  thr: num('thr', 90, 30, 170),
+  dir: ['any','side','front','mid'].includes(Q.get('dir')) ? Q.get('dir') : 'any',
+};
+S.target = C.reps; S.thr = C.thr; S.dir = C.dir;
+S.elbMin = num('elb', 140, 90, 180); S.restMax = num('rest', 35, 10, 60); S.holdMs = num('hold', 0.4, 0.2, 10) * 1000;
+const DIR_TXT = {any:'', side:' sur le côté', front:' devant toi', mid:' devant toi, vers le milieu'};
+$('goal').textContent = `Objectif : ${C.reps} lucioles, ${C.arm==='BI' ? 'les deux bras' : 'bras ' + (C.arm==='R' ? 'droit' : 'gauche')}${DIR_TXT[C.dir]}, jusqu'à ${C.thr}°`;
+
+// ---------- Dialogue avec la page SensAI (parent) ----------
+const toParent = msg => { if (parent !== window) parent.postMessage({source:'gardien-lucioles', ...msg}, location.origin); };
+addEventListener('message', e => {
+  if (e.origin !== location.origin || e.data?.source !== 'sensai') return;
+  if (e.data.type === 'stop') finishSession(true);
+});
+
 function beginSession(){
-  S.t0 = Date.now(); S.log = []; S.started = false; S.readyHold = 0; S.finished = false;
+  S.mode = C.arm==='BI' ? 'bi' : 'hemi'; if(C.arm!=='BI') S.side = C.arm;
+  S.thr = C.thr; S.target = C.reps; S.dir = C.dir; S.dev = 0;
+  S.reps = 0; S.peak = 0; S.compCount = 0; S.done = false; S.tEnd = 0; S.finished = false; $('end').style.display = 'none';
+  S.t0 = Date.now(); S.log = []; S.started = false; S.readyHold = 0;
   toParent({type:'started', input: S.demo ? 'keyboard' : 'camera'});
 }
+const EXERCISE = {side:"Abduction de l'épaule", front:"Flexion de l'épaule", mid:"Flexion-adduction de l'épaule", any:"Élévation du bras"};
 function buildSummary(stoppedEarly){
   const reps = S.log.filter(l => l.ev === 'repetition');
   const peaks = reps.map(r => r.a);
@@ -157,16 +220,16 @@ function buildSummary(stoppedEarly){
   const comps = S.log.filter(l => l.ev === 'compensation').length;
   const score = Math.max(0, Math.min(100, Math.round(success*0.7 + Math.min(1, meanPeak/S.thr)*30 - comps*2)));
   return {
-    duration_sec: Math.max(1, Math.round((Date.now()-S.t0)/1000)),
+    duration_sec: Math.max(1, Math.round(((S.tEnd||Date.now())-S.t0)/1000)),
     metrics: {
       score, success_rate: Math.round(success*10)/10,
       repetitions: reps.length, repetitions_target: S.target,
-      exercise_name: "Abduction de l'épaule",
+      exercise_name: EXERCISE[S.dir], direction: S.dir,
       played_at: new Date().toISOString(),
       abduction_max: peaks.length ? Math.max(...peaks) : 0,
       abduction_mean_peak: meanPeak,
       compensations: comps,
-      affected_arm: S.side, mode: S.mode,
+      affected_arm: S.mode==='bi' ? 'BI' : S.side, mode: S.mode,
       target_angle: S.thr, elbow_min: S.elbMin, rest_tolerance: S.restMax,
       completed: !stoppedEarly && reps.length >= S.target,
       stopped_early: !!stoppedEarly,
@@ -181,18 +244,20 @@ function stopCamera(){
 }
 function finishSession(stoppedEarly){
   if(S.finished) return;
-  S.finished = true; stopCamera();
+  S.finished = true; S.done = true; S.tEnd = S.tEnd || Date.now(); stopCamera();
   toParent({type:'done', ...buildSummary(stoppedEarly)});
 }
-const logEv = (ev,a) => { S.log.push({t:((Date.now()-S.t0)/1000).toFixed(1), ev, a:Math.round(a)}); };
+const logEv = (ev,a) => { S.log.push({t:((Date.now()-S.t0)/1000).toFixed(1), ev, a:Math.round(a), thr:S.thr}); };
 
 $('start').onclick = () => { S.demo = false; beginSession(); startCamera(); };
-$('demo').onclick = () => { S.demo = true; S.ok = true; S.pts = null; beginSession(); $('intro').style.display = 'none'; };
+$('demo').onclick = () => { S.demo = true; S.ok = true; S.arms = []; beginSession(); $('intro').style.display = 'none'; };
 
 // ---------- Phaser ----------
 const W=960, H=540, FONT='Fredoka, "Trebuchet MS", sans-serif';
 const BRAVO = ['Bravo !','Super !','Génial !','Magique !','Bien joué !'];
 const BANDS = [0xff6b6b,0xffa94d,0xffe066,0x8ce99a,0x74c0fc,0xb197fc];
+const fmt = v => (v>=0?'+':'−')+Math.abs(v).toFixed(2);
+const bar = v => { const n = Math.round(Math.min(1,Math.abs(v))*10); return '■'.repeat(n)+'·'.repeat(10-n); };
 
 class Jeu extends Phaser.Scene{
   create(){
@@ -226,8 +291,8 @@ class Jeu extends Phaser.Scene{
 
     // Lucioles (grandes, de tailles variées)
     this.flies = [];
-    for(let i=0;i<14;i++){
-      const sc = Phaser.Math.FloatBetween(2.0,2.8);
+    for(let i=0;i<10;i++){
+      const sc = Phaser.Math.FloatBetween(1.0,1.5);
       const s = this.add.image(Phaser.Math.Between(60,W-60),Phaser.Math.Between(300,H-60),'fly').setScale(sc).setDepth(5);
       this.flies.push({s,sc,vx:0,vy:0,ph:Math.random()*6,take:false});
     }
@@ -255,16 +320,18 @@ class Jeu extends Phaser.Scene{
     this.veilT = this.add.text(W/2,H/2-10,"Léo a besoin de TON bras magique,\npas de l'autre !",
       {fontFamily:FONT,fontSize:'44px',align:'center',color:'#fff',fontStyle:'bold',stroke:'#333',strokeThickness:6}).setOrigin(.5).setVisible(false).setDepth(11);
 
+    // Écran d'attente : position de départ (caméra nette, sans voile de couleur)
     this.wait = this.add.container(0,0).setDepth(15);
-    const wb = this.add.rectangle(W/2,H/2,W,H,0x1b1464,.08);
     const wt = this.add.text(W/2,H/2-70,"Mets-toi en position !\nBras le long du corps, face à la caméra",
       {fontFamily:FONT,fontSize:'38px',align:'center',color:'#fff',fontStyle:'bold',stroke:'#1b1464',strokeThickness:6}).setOrigin(.5);
     this.waitSub = this.add.text(W/2,H/2+10,'',{fontFamily:FONT,fontSize:'26px',align:'center',color:'#ffe066',fontStyle:'bold',stroke:'#1b1464',strokeThickness:5}).setOrigin(.5);
     this.waitBar = this.add.graphics();
     this.waitDbg = this.add.text(W/2,H/2+115,'',{fontFamily:FONT,fontSize:'20px',align:'center',color:'#fff',stroke:'#1b1464',strokeThickness:4}).setOrigin(.5);
-    this.wait.add([wb,wt,this.waitSub,this.waitBar,this.waitDbg]);
-    this.hold=0; this.armed=true; this.peakRep=0; this.wasComp=false; this.happy=0;
-    this.keys = this.input.keyboard.addKeys('UP,DOWN,C,SPACE');
+    this.wait.add([wt,this.waitSub,this.waitBar,this.waitDbg]);
+    this.hold=0; this.armed=true; this.peakRep=0; this.wasComp=false; this.statT=0; this.happy=0;
+    this.keys = this.input.keyboard.addKeys('UP,DOWN,C,SPACE,D');
+    this.showDbg = false;  // diagnostic masqué pour l'enfant (touche D pour l'afficher, côté kiné)
+    this.dbgTxt = this.add.text(10,10,'',{fontFamily:'monospace',fontSize:'17px',color:'#fff',backgroundColor:'rgba(0,0,0,.7)',padding:{x:10,y:6},lineSpacing:3}).setOrigin(0,0).setDepth(30);
   }
   celebrate(){
     const em = this.add.particles(this.jar.x,this.jar.y,'fly',{speed:{min:120,max:320},lifespan:900,scale:{start:1.2,end:0},emitting:false}).setDepth(14);
@@ -273,6 +340,13 @@ class Jeu extends Phaser.Scene{
     this.tweens.add({targets:this.pop,scale:1,duration:300,ease:'Back.out'});
     this.tweens.add({targets:this.pop,alpha:0,delay:900,duration:400});
     this.happy = 1500;
+  }
+  finish(){
+    S.done = true; S.tEnd = Date.now();
+    this.time.delayedCall(1300, () => {
+      $('endTxt').textContent = 'Tu as attrapé ' + S.reps + ' lucioles ! Meilleur angle : ' + Math.round(S.peak) + '°';
+      finishSession(false);                       // SensAI affiche l'auto-évaluation puis enregistre
+    });
   }
   collect(n){
     this.flies.filter(f=>!f.take).sort((a,b)=>a.s.y-b.s.y).slice(0,n).forEach(f=>{
@@ -297,22 +371,38 @@ class Jeu extends Phaser.Scene{
     if(sad) o.lineStyle(5,0x2a1a6e,1).lineBetween(x-38,y-42+bob,x-12,y-36+bob).lineBetween(x+38,y-42+bob,x+12,y-36+bob);
   }
   update(t,dt){
-    if(S.finished) return;
     const k = dt/1000;
+    if(Phaser.Input.Keyboard.JustDown(this.keys.D)) this.showDbg = !this.showDbg;
+    // Diagnostic détaillé des 3 axes (projection épaule→poignet sur X côté / Y haut / Z devant)
+    const hor = Math.hypot(S.ax,S.az), domZ = Math.abs(S.az) > Math.abs(S.ax);
+    const mesure = hor < 0.35 ? 'bras vertical (direction ignorée)' : (domZ ? 'Z : DEVANT' : 'X : CÔTÉ');
+    const cible = {any:'peu importe', side:'X (côté)', front:'Z (devant)', mid:'Z+X (milieu)'}[S.dir];
+    const ok = S.dev <= AZ_TOL ? '✓ direction OK' : '✗ mauvaise direction';
+    this.dbgTxt.setVisible(this.showDbg).setText(
+      'X côté   '+fmt(S.ax)+'  '+bar(S.ax)+'\n'+
+      'Y haut   '+fmt(S.ay)+'  '+bar(S.ay)+'\n'+
+      'Z devant '+fmt(S.az)+'  '+bar(S.az)+'\n'+
+      'Direction (X-Z) : '+Math.round(S.psi)+'°   [0=côté 90=devant 135=milieu]\n'+
+      'Mesuré : '+mesure+'\n'+
+      'Cible : '+cible+'   écart '+Math.round(S.dev)+'°   '+ok+'\n'+
+      'Élévation : '+Math.round(S.abd)+'°   [D = masquer]');
     if(S.demo){
       if(this.keys.UP.isDown) S.abd = Math.min(175,S.abd+70*k);
       if(this.keys.DOWN.isDown) S.abd = Math.max(0,S.abd-70*k);
-      S.elb = 170; S.comp = S.mode==='hemi' && this.keys.C.isDown;
+      S.elb = 170; S.abdMax = S.abd; S.dev = 0; S.comp = S.mode==='hemi' && this.keys.C.isDown;
     }
+    // Caméra toujours nette ; en mode caméra, le décor devient très discret pour ne pas la gêner
+    const da = S.demo ? 1 : 0;   // en mode caméra : plus aucun décor par-dessus l'image
+    $('cam').style.opacity = 1; this.deco.setAlpha(da); this.clouds.forEach(c=>c.setAlpha(da));
+
     // ----- Phase 1 : attendre que le joueur soit en position de départ -----
     if(!S.started){
-      const inPos = S.ok && S.abd < 30 && S.elb >= S.elbMin && S.restAbd < Math.max(30,S.restMax);
+      const inPos = S.ok && S.abdMax < 30 && S.elb >= S.elbMin && S.restAbd < Math.max(30,S.restMax);
       S.readyHold = inPos ? S.readyHold + dt : 0;
       const need = 1500, pr = Math.min(1,S.readyHold/need);
       this.wait.setVisible(true);
-      $('cam').style.opacity = .95; this.deco.setAlpha(.15); this.clouds.forEach(c=>c.setAlpha(.15));
       this.waitSub.setText(!S.ok ? 'Je ne te vois pas… place-toi devant la caméra'
-        : S.abd >= 30 ? 'Baisse ton bras le long du corps'
+        : S.abdMax >= 30 ? (S.mode==='bi' ? 'Baisse tes deux bras le long du corps' : 'Baisse ton bras le long du corps')
         : S.elb < S.elbMin ? 'Tends bien ton coude'
         : !inPos ? "Baisse aussi l'autre bras"
         : 'Super ! Ne bouge plus…');
@@ -322,25 +412,25 @@ class Jeu extends Phaser.Scene{
       this.waitDbg.setText(S.demo ? 'Mode clavier : ↑ ↓ pour lever le bras  •  C = lever l\'autre bras  •  Espace = commencer'
         : 'Modèle : '+(d.model?'✓ chargé':'… chargement')+'   Personne : '+(d.det?'✓':'✗')+'   Visibilité bras : '+d.vis.toFixed(2)+
           '   Angle : '+Math.round(S.abd)+'°\nEspace = commencer sans attendre');
+      this.waitDbg.setVisible(this.showDbg || S.demo);   // infos techniques cachées à l'enfant
       const skip = Phaser.Input.Keyboard.JustDown(this.keys.SPACE);
       if(S.readyHold >= need || skip){
         S.started = true; S.t0 = Date.now(); S.log = []; S.reps = 0; S.peak = 0; S.compCount = 0;
         this.wait.setVisible(false); this.armed = true; this.hold = 0;
-        $('cam').style.opacity = .4; this.deco.setAlpha(1); this.clouds.forEach(c=>c.setAlpha(1));
         this.pop.setText("C'est parti !").setAlpha(1).setScale(.4);
         this.tweens.add({targets:this.pop,scale:1,duration:300,ease:'Back.out'});
         this.tweens.add({targets:this.pop,alpha:0,delay:700,duration:400});
       }
     } else this.wait.setVisible(false);
 
-    const comp = S.started && S.comp;
+    const comp = S.started && !S.done && S.comp;
     if(comp && !this.wasComp){ S.compCount++; logEv('compensation', S.abd); }
     this.wasComp = comp; this.happy = Math.max(0,this.happy-dt);
     this.veil.setVisible(comp); this.veilT.setVisible(comp);
 
     // Validation d'une répétition
-    const okPose = S.ok && S.elb >= S.elbMin;
-    if(S.started && !comp && S.ok){
+    const okPose = S.ok && S.elb >= S.elbMin && S.dev <= AZ_TOL;
+    if(S.started && !S.done && !comp && S.ok){
       if(S.abd < S.thr-15) this.armed = true;
       if(S.abd >= S.thr && okPose && this.armed){
         this.hold += dt; this.peakRep = Math.max(this.peakRep,S.abd);
@@ -348,13 +438,13 @@ class Jeu extends Phaser.Scene{
           S.reps++; S.peak = Math.max(S.peak,this.peakRep); logEv('repetition', this.peakRep);
           this.collect(3); this.celebrate(); this.armed=false; this.hold=0; this.peakRep=0;
           toParent({type:'progress', reps:S.reps, target:S.target});
-          if(S.reps >= S.target) this.time.delayedCall(1300, () => finishSession(false));
+          if(S.reps >= S.target) this.finish();
         }
-      } else if(S.abd < S.thr){ this.hold=0; this.peakRep=0; }
+      } else { this.hold=0; this.peakRep=0; }
     } else this.hold = 0;
 
     // Lucioles : dérive + attraction proportionnelle à l'amplitude
-    const pull = (S.started && !comp && S.ok) ? Phaser.Math.Clamp((S.abd-20)/(S.thr-20),0,1) : 0;
+    const pull = (S.started && !S.done && !comp && S.ok && S.dev <= AZ_TOL) ? Phaser.Math.Clamp((S.abd-20)/(S.thr-20),0,1) : 0;
     this.flies.forEach(f=>{
       if(f.take) return;
       f.ph += k;
@@ -377,19 +467,24 @@ class Jeu extends Phaser.Scene{
 
     // Bras suivi (vue miroir)
     this.arm.clear();
-    if(S.pts && !S.demo){
-      const P = S.pts.map(p=>({x:(1-p.x)*W,y:p.y*H}));
-      this.arm.lineStyle(14,comp?0x999999:0x2fbf71,.5).strokePoints(P);
-      this.arm.lineStyle(7,comp?0xbbbbbb:0xffffff,.9).strokePoints(P);
-      P.forEach(p=>this.arm.fillStyle(0xffe066,1).fillCircle(p.x,p.y,11));
+    if(S.arms.length && !S.demo){
+      S.arms.forEach(pts => {
+        const P = pts.map(p=>({x:(1-p.x)*W,y:p.y*H}));
+        this.arm.lineStyle(14,comp?0x999999:0x2fbf71,.5).strokePoints(P);
+        this.arm.lineStyle(7,comp?0xbbbbbb:0xffffff,.9).strokePoints(P);
+        P.forEach(q=>this.arm.fillStyle(0xffe066,1).fillCircle(q.x,q.y,11));
+      });
     }
     this.drawOwl(comp,t);
 
     this.score.setText('⭐ '+S.reps+' / '+S.target);
+    const DL = {any:'comme tu veux', side:'sur le côté', front:'devant toi', mid:'devant toi, vers le milieu'}[S.dir];
+    const who = S.mode==='bi' ? 'tes deux bras' : 'ton bras';
     this.info.setText(!S.ok ? 'Place-toi devant la caméra, bras visibles'
       : S.elb<S.elbMin && S.abd>30 ? 'Tends bien ton coude !'
-      : S.abd>=S.thr ? 'Super ! Tiens un instant…' : 'Lève ton bras magique : '+Math.round(S.abd)+'° / '+S.thr+'°');
-
+      : S.dev>AZ_TOL && S.abd>30 ? 'Lève '+who+' '+DL+' !'
+      : S.abd>=S.thr ? 'Super ! Tiens un instant…'
+      : 'Lève '+who+' '+DL+' : '+Math.round(S.abd)+'° / '+S.thr+'°');
   }
 }
 const start = () => new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,transparent:true,

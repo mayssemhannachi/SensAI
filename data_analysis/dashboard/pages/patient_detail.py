@@ -309,11 +309,11 @@ def show_patient_detail():
     if not abduction.empty:
         last_abd, first_abd = abduction.iloc[-1], abduction.iloc[0]
         threshold = last_abd["target_angle"]
-        arm = {"R": "bras droit", "L": "bras gauche"}.get(last_abd["affected_arm"], "bras entraîné")
+        arm = {"R": "bras droit", "L": "bras gauche", "BI": "des deux bras", "both": "des deux bras"}.get(
+            last_abd["affected_arm"], "bras entraîné")
         recent_comp = abduction.tail(3)["compensations"].mean()
-        section("Abduction de l’épaule",
-                f"Élévation latérale du {arm} à chaque séance du Gardien des Lucioles, "
-                "comparée au seuil prescrit.")
+        section("Élévation du bras (épaule)",
+                f"Élévation du {arm} à chaque séance du Gardien des Lucioles, comparée à la hauteur prescrite.")
         kpi_row([
             kpi_card("Abduction max", fmt_number(last_abd["abduction_max"]), "↑", "tone-violet", unit="°",
                      foot=f"seuil {fmt_number(threshold)}°" if pd.notna(threshold) else "dernière séance",

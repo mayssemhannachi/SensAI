@@ -57,8 +57,9 @@ export const DEFAULT_CONFIG: Required<Pick<GameConfig,
 };
 
 export const LUCIOLES_DEFAULTS = {
-  affected_arm: "R" as "R" | "L",
+  affected_arm: "R" as "R" | "L" | "BI",
   mode: "hemi" as "hemi" | "bi",
+  direction: "side" as "side" | "front" | "mid" | "any",
   target_angle: 90,
   elbow_min: 140,
   rest_tolerance: 35,
