@@ -69,6 +69,7 @@ GAME_SETTINGS_DEFAULTS = {
     "safety_limit": 35,      # degrés à ne pas dépasser
     "camera_gain": 1.25,     # gain de l'angle mesuré par la caméra (hibou.py de Chahed)
     "invert_direction": False,
+    "shoulder_threshold": 18, # écart du buste (°) compté comme compensation (hibou.py)
     "active": True,
 }
 

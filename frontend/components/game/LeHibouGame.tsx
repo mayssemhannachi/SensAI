@@ -19,6 +19,10 @@ import { getMyGames, saveMySession, type PatientGame, type SessionMetrics } from
 import { DIFFICULTY_LEVEL, SPEED_LABELS, withDefaults } from "@/lib/games";
 import { useRequireAuth } from "@/lib/useAuth";
 import RatingRow from "./RatingRow";
+import {
+  countFingers, loadBodyTrackers, median, painFromFingers, shoulderDeviation, shoulderFramingHint,
+  shouldersFrom, thumbDown, type BodyTrackers, type Shoulders,
+} from "./hibouBody";
 
 type Phase = "loading" | "intro" | "framing" | "calibrating" | "playing" | "rating" | "saving" | "done" | "error";
 type Step = "turn" | "hold" | "return";
@@ -30,7 +34,12 @@ const CENTER_ZONE = 8; // ° : zone considérée comme « au centre »
 const DEFAULT_CAMERA_GAIN = 1.25; // gain du ratio nez / visage (hibou.py)
 const TILT_LIMIT = 15; // ° d'inclinaison de la tête au-delà desquels on parle de compensation
 const COMPENSATION_DELAY = 0.35; // s de confirmation avant d'afficher l'alerte (hibou.py)
-const FRAMING_HOLD = 1.2; // s à rester bien cadré avant le calibrage (écran de cadrage de hibou.py)
+const FRAMING_HOLD = 1.3; // s à rester bien cadré avant le calibrage (écran de cadrage de hibou.py)
+const SHOULDER_THRESHOLD = 18; // ° d'écart du buste = compensation (seuil_epaule de hibou.py)
+const SHOULDER_CONFIRM = 0.45; // s de confirmation (hibou.py)
+const THUMB_HOLD = 1.2; // s de pouce vers le bas pour arrêter (hibou.py)
+const FINGERS_HOLD = 1.4; // s de doigts montrés pour l'échelle de douleur (hibou.py)
+type BodyStatus = "off" | "loading" | "ready" | "failed";
 
 type FaceBox = { cx: number; cy: number; width: number };
 
@@ -134,6 +143,10 @@ type Tracker = {
   compensations: number;
   compTimer: number;
   compensating: boolean;
+  shoulderComp: number;
+  shTimer: number;
+  shWarn: boolean;
+  thumbHold: number;
   lastYaw: number;
   lastDelta: number;
   lastTime: number;
@@ -156,6 +169,10 @@ const newTracker = (): Tracker => ({
   compensations: 0,
   compTimer: 0,
   compensating: false,
+  shoulderComp: 0,
+  shTimer: 0,
+  shWarn: false,
+  thumbHold: 0,
   lastYaw: 0,
   lastDelta: 0,
   lastTime: 0,
@@ -177,7 +194,17 @@ export default function LeHibouGame() {
   const [view, setView] = useState({
     yaw: 0, rep: 0, step: "turn" as Step, hold: 0, successes: 0, tooFast: false, tooFar: false, tilted: false,
     framingHint: null as string | null, framing: 0,
+    shoulderWarn: false, thumb: 0, fingers: null as number | null, fingersHold: 0,
   });
+  const [bodyStatus, setBodyStatus] = useState<BodyStatus>("off");
+  const bodyRef = useRef<BodyTrackers | null>(null);
+  const bodyStatusRef = useRef<BodyStatus>("off");
+  const shouldersRef = useRef<Shoulders | null>(null);
+  const neutralShouldersRef = useRef<Shoulders | null>(null);
+  const shoulderSamplesRef = useRef<Shoulders[]>([]);
+  const thumbRef = useRef(false);
+  const fingersRef = useRef<number | null>(null);
+  const fingersCandRef = useRef<{ n: number | null; held: number; done: boolean }>({ n: null, held: 0, done: false });
   const [soundOn, setSoundOn] = useState(true);
   const audioRef = useRef<AudioContext | null>(null);
   const soundOnRef = useRef(true);
@@ -249,6 +276,7 @@ export default function LeHibouGame() {
     const stream = videoRef.current?.srcObject as MediaStream | null;
     stream?.getTracks().forEach((t) => t.stop());
     if (videoRef.current) videoRef.current.srcObject = null;
+    setCameraState("off");
   }, []);
 
   const startCamera = useCallback(async (): Promise<boolean> => {
@@ -340,7 +368,10 @@ export default function LeHibouGame() {
       hold_seconds_avg: t.holds.length ? Math.round((t.holds.reduce((a, b) => a + b, 0) / t.holds.length) * 10) / 10 : 0,
       smoothness: Math.max(0, Math.min(100, Math.round(100 - jitter * 25))),
       overshoots: t.overshoots,
-      compensations: t.compensations,
+      compensations: t.compensations + t.shoulderComp,
+      head_tilt_compensations: t.compensations,
+      shoulder_compensations: t.shoulderComp,
+      shoulder_tracking: bodyStatusRef.current === "ready",
       fast_moves: Math.round(t.fastMoves * 10) / 10,
       completed: !stoppedEarly && t.successes >= reps,
       stopped_early: stoppedEarly,
@@ -348,9 +379,51 @@ export default function LeHibouGame() {
       target_angle: c.target_angle,
     };
     setResult({ metrics, duration });
-    stopCamera();
+    // La caméra reste allumée si la main est suivie : l'enfant peut répondre avec ses doigts.
+    if (!(modeRef.current === "camera" && bodyStatusRef.current === "ready")) stopCamera();
+    fingersCandRef.current = { n: null, held: 0, done: false };
     setPhase("rating");
   }, [stopCamera]);
+
+  // ── Épaules et main (MediaPipe Pose + Hands, d'après hibou.py) ─────────────
+  useEffect(() => {
+    if (cameraState !== "on" || bodyStatus !== "ready") return;
+    let frame = 0;
+    let count = 0;
+    const loop = () => {
+      const video = videoRef.current;
+      const body = bodyRef.current;
+      if (video && body && video.readyState >= 2) {
+        const now = performance.now();
+        const phase = phaseRef.current;
+        count += 1;
+        // Épaules une image sur deux, main une image sur trois (économie de calcul, comme hibou.py)
+        if (body.pose && count % 2 === 0 && phase !== "rating") {
+          try {
+            const lm = body.pose.detectForVideo(video, now).landmarks?.[0];
+            const s = shouldersFrom(lm, video.videoWidth, video.videoHeight);
+            const prev = shouldersRef.current;
+            shouldersRef.current = !s ? null : !prev ? s : {
+              tilt: prev.tilt + (s.tilt - prev.tilt) * 0.2,
+              cx: prev.cx + (s.cx - prev.cx) * 0.2,
+              cy: prev.cy + (s.cy - prev.cy) * 0.2,
+              width: prev.width + (s.width - prev.width) * 0.2,
+            };
+          } catch { /* image ignorée */ }
+        }
+        if (body.hands && count % 3 === 0) {
+          try {
+            const hand = body.hands.detectForVideo(video, now + 0.1).landmarks?.[0];
+            thumbRef.current = thumbDown(hand);
+            fingersRef.current = countFingers(hand);
+          } catch { /* image ignorée */ }
+        }
+      }
+      frame = requestAnimationFrame(loop);
+    };
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, [cameraState, bodyStatus]);
 
   // ── Boucle de jeu ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -374,6 +447,7 @@ export default function LeHibouGame() {
         if (p === "calibrating") {
           calibrationRef.current.push(rawYawRef.current);
           if (rawRollRef.current !== null) rollCalibrationRef.current.push(rawRollRef.current);
+          if (shouldersRef.current) shoulderSamplesRef.current.push(shouldersRef.current);
         }
         const target = rawYawRef.current - baselineRef.current;
         yawRef.current += (target - yawRef.current) * 0.5; // lissage léger
@@ -384,8 +458,12 @@ export default function LeHibouGame() {
       // 1 bis. Cadrage (caméra) : visage centré, à bonne distance, face à l'écran
       let hint: string | null = null;
       if (p === "framing") {
-        hint = framingHint(faceBoxRef.current, rawYawRef.current);
+        const body = bodyStatusRef.current;
+        hint = framingHint(faceBoxRef.current, rawYawRef.current)
+          ?? (body === "loading" ? "Préparation du suivi des épaules…"
+            : body === "ready" ? shoulderFramingHint(shouldersRef.current) : null);
         framingRef.current = hint ? Math.max(0, framingRef.current - dt * 2) : framingRef.current + dt;
+        if (!hint && shouldersRef.current) shoulderSamplesRef.current.push(shouldersRef.current);
         if (framingRef.current >= FRAMING_HOLD) {
           framingRef.current = 0;
           calibrationRef.current = [];
@@ -402,6 +480,14 @@ export default function LeHibouGame() {
         baselineRef.current = sorted[Math.floor(sorted.length / 2)];
         const rolls = [...rollCalibrationRef.current].sort((a, b) => a - b);
         baselineRollRef.current = rolls.length ? rolls[Math.floor(rolls.length / 2)] : 0;
+        // Position neutre des épaules (médianes, comme hibou.py)
+        const samples = shoulderSamplesRef.current;
+        neutralShouldersRef.current = samples.length ? {
+          tilt: median(samples.map((x) => x.tilt)),
+          cx: median(samples.map((x) => x.cx)),
+          cy: median(samples.map((x) => x.cy)),
+          width: median(samples.map((x) => x.width)),
+        } : shouldersRef.current;
         yawRef.current = 0;
         trackerRef.current = { ...newTracker(), startedAt: performance.now(), lastTime: now };
         setPhase("playing");
@@ -412,6 +498,7 @@ export default function LeHibouGame() {
       let tooFast = false;
       let tooFar = false;
       let tilted = false;
+      let shoulderWarn = false;
       if (p === "playing") {
         const yaw = yawRef.current;
         const direction = t.rep % 2 === 0 ? 1 : -1; // droite puis gauche
@@ -445,6 +532,32 @@ export default function LeHibouGame() {
           tilted = compensating;
         }
 
+        // Compensation par le buste (épaules), logique de hibou.py
+        const neutralSh = neutralShouldersRef.current;
+        if (modeRef.current === "camera" && shouldersRef.current && neutralSh) {
+          const deviating = shoulderDeviation(shouldersRef.current, neutralSh) > (Number(c.shoulder_threshold) || SHOULDER_THRESHOLD);
+          t.shTimer = deviating ? t.shTimer + dt : Math.max(0, t.shTimer - dt * 2);
+          const warn = t.shTimer >= SHOULDER_CONFIRM || (t.shWarn && t.shTimer > 0.15);
+          if (warn && !t.shWarn) {
+            t.shoulderComp += 1;
+            beep("warning");
+          }
+          t.shWarn = warn;
+          shoulderWarn = warn;
+        }
+
+        // Pouce vers le bas maintenu 1,2 s = « J'ai mal / Stop » (hibou.py)
+        if (modeRef.current === "camera" && thumbRef.current) {
+          t.thumbHold += dt;
+          if (t.thumbHold >= THUMB_HOLD) {
+            beep("warning");
+            phaseRef.current = "rating";
+            finish(true);
+          }
+        } else {
+          t.thumbHold = Math.max(0, t.thumbHold - dt * 2.5);
+        }
+
         tooFar = Math.abs(yaw) > c.safety_limit;
         if (tooFar && !t.overshooting) t.overshoots += 1;
 
@@ -473,6 +586,22 @@ export default function LeHibouGame() {
         }
       }
 
+      // 3 bis. Échelle de douleur avec les doigts (1 = pas mal … 5 = très mal), hibou.py
+      const fc = fingersCandRef.current;
+      if (p === "rating" && bodyStatusRef.current === "ready" && modeRef.current === "camera" && !fc.done) {
+        const n = fingersRef.current;
+        if (n !== null && n >= 1 && n <= 5 && n === fc.n) fc.held += dt;
+        else {
+          fc.n = n !== null && n >= 1 && n <= 5 ? n : null;
+          fc.held = 0;
+        }
+        if (fc.n !== null && fc.held >= FINGERS_HOLD) {
+          fc.done = true;
+          setPain(painFromFingers(fc.n));
+          beep("success");
+        }
+      }
+
       // 4. Rendu (limité)
       if (now - lastRender > 66) {
         lastRender = now;
@@ -486,6 +615,10 @@ export default function LeHibouGame() {
           tooFar,
           tilted,
           framingHint: hint,
+          shoulderWarn,
+          thumb: Math.min(1, t.thumbHold / THUMB_HOLD),
+          fingers: fc.done ? null : fc.n,
+          fingersHold: Math.min(1, fc.held / FINGERS_HOLD),
           framing: Math.min(1, framingRef.current / FRAMING_HOLD),
         });
       }
@@ -517,6 +650,23 @@ export default function LeHibouGame() {
         return;
       }
       framingRef.current = 0;
+      shoulderSamplesRef.current = [];
+      neutralShouldersRef.current = null;
+      if (bodyStatusRef.current === "off" || bodyStatusRef.current === "failed") {
+        bodyStatusRef.current = "loading";
+        setBodyStatus("loading");
+        loadBodyTrackers()
+          .then((trackers) => {
+            bodyRef.current = trackers;
+            const status: BodyStatus = trackers.pose || trackers.hands ? "ready" : "failed";
+            bodyStatusRef.current = status;
+            setBodyStatus(status);
+          })
+          .catch(() => {
+            bodyStatusRef.current = "failed";
+            setBodyStatus("failed");
+          });
+      }
       setPhase("framing");
     } else {
       trackerRef.current = { ...newTracker(), startedAt: performance.now() };
@@ -533,6 +683,7 @@ export default function LeHibouGame() {
         pain_level: pain ?? 0,
         effort: effort ?? 0,
       });
+      stopCamera();
       setPhase("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Enregistrement impossible.");
@@ -546,6 +697,7 @@ export default function LeHibouGame() {
     setEffort(null);
     setError(null);
     trackerRef.current = newTracker();
+    stopCamera();
     setPhase("intro");
   };
 
@@ -560,6 +712,7 @@ export default function LeHibouGame() {
   const gaugePct = Math.min(1, Math.abs(view.yaw) / Math.max(config.target_angle, 1));
   const instruction =
     view.tooFar ? "Trop loin ! Reviens doucement 🛡️"
+      : view.shoulderWarn ? "Garde les épaules immobiles, tourne seulement la tête 🙂"
       : view.tilted ? "Garde la tête bien droite, tourne-la seulement 🙂"
       : view.tooFast ? "Plus doucement… 🪶"
         : view.step === "turn" ? `Regarde la souris… tourne doucement à ${direction} !`
@@ -605,6 +758,17 @@ export default function LeHibouGame() {
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/50 rounded-full border border-indigo-100 text-[10px] font-bold text-indigo-600">
             🛡️ Zone sûre
           </div>
+          {mode === "camera" && bodyStatus !== "off" && (
+            <div
+              className={`px-3 py-1.5 rounded-full border text-[10px] font-bold ${
+                bodyStatus === "ready" ? (view.shoulderWarn ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-emerald-50 border-emerald-100 text-emerald-600")
+                  : bodyStatus === "loading" ? "bg-slate-50 border-slate-200 text-slate-500" : "bg-slate-50 border-slate-200 text-slate-400"}`}
+              title="Contrôle des épaules et gestes de la main"
+            >
+              {bodyStatus === "ready" ? (view.shoulderWarn ? "🧍 Épaules : bouge moins" : "🧍 Épaules suivies")
+                : bodyStatus === "loading" ? "🧍 Chargement…" : "🧍 Épaules non suivies"}
+            </div>
+          )}
           <button
             onClick={() => {
               soundOnRef.current = !soundOn;
@@ -715,6 +879,14 @@ export default function LeHibouGame() {
                     {result.metrics.repetitions} / {reps} souris attrapées · score {result.metrics.score}
                   </p>
                   <RatingRow label="As-tu eu mal ?" value={pain} onChange={setPain} faces={["😀", "🙂", "😐", "😕", "😣", "😭"]} testId="pain" />
+                  {mode === "camera" && bodyStatus === "ready" && cameraState === "on" && (
+                    <p className="text-[11px] font-bold text-indigo-500 mt-2" data-testid="fingers-hint">
+                      ✋ Ou montre avec tes doigts : 1 = pas mal … 5 = très mal
+                      {view.fingers !== null && (
+                        <span className="ml-1 text-indigo-700">· {view.fingers} doigt{view.fingers > 1 ? "s" : ""} ({Math.round(view.fingersHold * 100)} %)</span>
+                      )}
+                    </p>
+                  )}
                   <RatingRow label="C’était difficile ?" value={effort} onChange={setEffort} faces={["😴", "🙂", "😊", "😤", "🥵", "🤯"]} testId="effort" />
                   {error && <p className="text-xs font-bold text-rose-600 mt-2">{error}</p>}
                   <button
@@ -748,7 +920,9 @@ export default function LeHibouGame() {
                 <div className="flex flex-col text-center">
                   <span className="text-[15px] font-black text-indigo-900 leading-tight" data-testid="instruction">{instruction}</span>
                   <span className="text-[11px] font-bold text-indigo-400">
-                    {mode === "keyboard" ? "Maintiens la flèche ← ou → du clavier" : faceVisible ? "Bouge seulement la tête" : "Visage non détecté"}
+                    {mode === "keyboard" ? "Maintiens la flèche ← ou → du clavier"
+                      : view.thumb > 0 ? `👎 Arrêt dans ${Math.max(0, (1 - view.thumb) * 1.2).toFixed(1)} s…`
+                        : faceVisible ? "Bouge seulement la tête · 👎 pouce en bas = stop" : "Visage non détecté"}
                   </span>
                 </div>
               </div>

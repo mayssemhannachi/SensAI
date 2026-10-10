@@ -34,6 +34,7 @@ export type GameConfig = {
   // Le Hibou : réglages de la caméra
   camera_gain?: number;
   invert_direction?: boolean;
+  shoulder_threshold?: number;
   // Le Gardien des Lucioles (abduction de l'épaule)
   affected_arm?: "R" | "L";
   mode?: "hemi" | "bi";

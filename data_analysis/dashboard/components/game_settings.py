@@ -62,7 +62,12 @@ def _hibou_fields(config: dict, key: str) -> dict:
         difficulty = st.selectbox("Difficulté", list(DIFFICULTIES), format_func=DIFFICULTIES.get,
                                   index=_index(DIFFICULTIES, config.get("difficulty"), 1),
                                   key=f"{key}_difficulty")
-    c4, c5 = st.columns([1, 2])
+    c4, c6, c5 = st.columns([1, 1, 1.4])
+    with c6:
+        shoulder = st.number_input("Seuil épaules (°)", 8, 40, int(config.get("shoulder_threshold", 18)), step=1,
+                                   help="Au-delà de cet écart du buste, le mouvement compte comme une compensation "
+                                        "(l'enfant tourne les épaules au lieu du cou).",
+                                   key=f"{key}_shoulder")
     with c4:
         gain = st.number_input("Sensibilité caméra", 0.8, 2.0, float(config.get("camera_gain", 1.25)), step=0.05,
                                help="Amplifie l’angle mesuré par la caméra (1,25 par défaut).",
@@ -74,7 +79,8 @@ def _hibou_fields(config: dict, key: str) -> dict:
                            key=f"{key}_invert")
     return {**config, "target_angle": int(target), "safety_limit": int(safety),
             "hold_seconds": int(hold), "repetitions": int(reps), "speed": speed,
-            "difficulty": difficulty, "camera_gain": round(float(gain), 2), "invert_direction": bool(invert)}
+            "difficulty": difficulty, "camera_gain": round(float(gain), 2), "invert_direction": bool(invert),
+            "shoulder_threshold": int(shoulder)}
 
 
 def _lucioles_fields(config: dict, key: str) -> dict:
