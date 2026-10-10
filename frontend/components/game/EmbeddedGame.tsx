@@ -133,54 +133,56 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
   const params = new URLSearchParams(spec.params(config));
   const target = spec.target(config);
   const badge = spec.badge?.(config);
+  const isCastle = spec.slug === "gardien-chateau";
+  const isLucioles = spec.slug === "danse-lucioles";
 
   return (
-    <div className={`min-h-screen bg-[#F3F5FA] font-outfit p-4 flex flex-col h-screen ${spec.slug === "danse-lucioles" ? "gap-3 bg-[#e9e9ff]" : "gap-4"}`}>
+    <div className={`min-h-screen font-outfit flex flex-col h-screen ${isCastle ? "bg-[#EEF2FA] p-4 gap-3" : isLucioles ? "bg-[#e9e9ff] p-4 gap-3" : "bg-[#F3F5FA] p-4 gap-4"}`}>
       {/* ── EN-TÊTE ── */}
-      <header className={`flex items-center justify-between bg-white/80 backdrop-blur-md px-4 py-2.5 rounded-[2rem] shadow-sm border border-white/50 gap-4 ${spec.slug === "danse-lucioles" ? "mx-[5vw] gap-2 px-5 py-2 max-md:flex-wrap" : ""}`}>
-        <div className={`flex items-center min-w-0 ${spec.slug === "danse-lucioles" ? "gap-4" : "gap-6"}`}>
-          <Link href="/dashboard" className={`flex items-center ${spec.slug === "danse-lucioles" ? "gap-2" : "gap-2.5"}`}>
+      <header className={`flex items-center justify-between bg-white/90 backdrop-blur-md px-6 py-2.5 rounded-full shadow-sm border border-white/80 gap-4 ${isLucioles ? "mx-[5vw] gap-2 px-5 py-2 max-md:flex-wrap" : isCastle ? "mx-[4vw]" : ""}`}>
+        <div className={`flex items-center min-w-0 ${isLucioles ? "gap-4" : isCastle ? "gap-3" : "gap-6"}`}>
+          <Link href="/dashboard" className="flex items-center shrink-0 gap-2">
             <Image
               src="/assets_flat/sensai-mascot.png"
               alt="SensAI"
-              width={spec.slug === "danse-lucioles" ? 40 : 36}
-              height={spec.slug === "danse-lucioles" ? 40 : 36}
-              className={`${spec.slug === "danse-lucioles" ? "w-10 h-10" : "w-9 h-9"} object-contain`}
+              width={38}
+              height={38}
+              className="w-9 h-9 object-contain"
               priority
             />
             <span className="text-xl font-black tracking-tight text-slate-900">
               Sens<span className="text-[#FF6B8B]">A</span><span className="text-[#7C3AED]">I</span>
             </span>
           </Link>
-          <div className="w-px h-8 bg-slate-200" />
-          <div className={`flex items-center min-w-0 ${spec.slug === "danse-lucioles" ? "gap-2" : "gap-3"}`}>
-            <Image src={spec.image} width={40} height={40} alt="" className={`${spec.slug === "danse-lucioles" ? "w-9 h-9" : "w-10 h-10"} object-cover rounded-2xl`} />
+          <div className="w-px h-6 bg-slate-200 mx-1" />
+          <div className="flex items-center min-w-0 gap-2.5">
+            <Image src={spec.image} width={38} height={38} alt="" className="w-9 h-9 shrink-0 rounded-2xl object-contain bg-indigo-50/60 shadow-sm" />
             <div className="flex flex-col min-w-0">
-              <h2 className="text-sm font-black text-slate-800 leading-tight truncate">{spec.title}</h2>
-              <span className="text-[10px] font-bold text-slate-400">{spec.subtitle(config)}</span>
+              <h2 className="text-sm font-extrabold text-slate-800 leading-tight truncate">{spec.title}</h2>
+              <span className="text-xs font-semibold text-slate-400 truncate">{spec.subtitle(config)}</span>
             </div>
           </div>
         </div>
-        <div className={`flex items-center justify-end ${spec.slug === "danse-lucioles" ? "gap-1.5 flex-nowrap max-md:flex-wrap" : "gap-2 flex-wrap"}`}>
-          <span className={`px-3 py-1.5 bg-indigo-50 rounded-full border border-indigo-100 text-[11px] font-extrabold text-indigo-600 ${spec.slug === "danse-lucioles" ? "hidden" : ""}`}>
-            ✨ <span data-testid="lucioles-progress">{progress} / {target}</span> {spec.unit}
+        <div className={`flex items-center justify-end shrink-0 gap-2.5 ${isLucioles ? "gap-1.5 flex-nowrap max-md:flex-wrap" : ""}`}>
+          <span className={`px-4 py-1.5 text-xs bg-[#EEF2FF] rounded-full border border-indigo-100 font-extrabold text-[#4F46E5] flex items-center gap-1.5 shadow-sm ${spec.slug === "danse-lucioles" ? "hidden" : ""}`}>
+            ⭐ <span data-testid={isCastle ? "castle-progress" : "lucioles-progress"}>{progress} / {target}</span> {spec.unit}
           </span>
           {badge && (
-            <span className={`px-3 py-1.5 bg-amber-50 rounded-full border border-amber-100 text-[11px] font-extrabold text-amber-700 ${spec.slug === "danse-lucioles" ? "hidden" : ""}`}>
+            <span className={`px-4 py-1.5 text-xs bg-[#FFF7ED] rounded-full border border-orange-100 font-extrabold text-[#C2410C] flex items-center gap-1.5 shadow-sm ${spec.slug === "danse-lucioles" ? "hidden" : ""}`}>
               {badge}
             </span>
           )}
           <button
             onClick={stop}
-            className={`${spec.slug === "danse-lucioles" ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs"} bg-fuchsia-50 hover:bg-fuchsia-100 rounded-full border-2 border-fuchsia-100 text-fuchsia-600 font-black whitespace-nowrap`}
+            className="px-4 py-1.5 text-xs bg-[#FDF2F8] hover:bg-pink-100 rounded-full border border-pink-100 text-[#DB2777] font-black whitespace-nowrap flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            ♥ J&apos;ai mal / Stop
+            💖 J&apos;ai mal / Stop
           </button>
         </div>
       </header>
 
       {/* ── JEU ── */}
-      <main className={`flex-1 min-h-0 rounded-[2rem] overflow-hidden relative shadow-sm border border-white ${spec.slug === "danse-lucioles" ? "mx-[5vw] bg-[#e9e9ff]" : "bg-[#8fd8ff]"}`}>
+      <main className={`flex-1 min-h-0 rounded-[2.5rem] overflow-hidden relative shadow-sm border border-white/80 ${isLucioles ? "mx-[5vw] bg-[#e9e9ff]" : isCastle ? "mx-[4vw] bg-[#EEF2FA]" : "bg-[#8fd8ff]"}`}>
         {assignment && (
           <iframe
             key={round}

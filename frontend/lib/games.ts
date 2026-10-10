@@ -34,7 +34,7 @@ export const GAME_META: Record<string, GameMeta> = {
     path: "/dashboard/game/danse-lucioles",
   },
   "gardien-chateau": {
-    image: "/Assets/dashboard/Girl Activates a Magical Portal.png",
+    image: "/Assets/gardien chateau/Whimsical Purple Castle Icon.png",
     category: "Attention et contrôle des gestes",
     limb: "Corps entier",
     playable: true,

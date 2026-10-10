@@ -3,14 +3,17 @@ import { Tracker } from '../pose/tracker';
 import { classifyGesture, motionSpeed, thresholds, type Gesture, type Pose, type Posture } from '../core/gestures';
 import { summarize, type Kind, type TrialResult } from '../core/metrics';
 import { buildTrials, Staircase } from '../core/engine';
-import { drawBackdrop, drawInitialZone } from './castle';
+import { drawInitialZone } from './castle';
 import { speak, stopSpeech } from './speech';
 import { PRESCRIPTION, onStopRequest, toPlatform } from '../platform';
 
 type Phase = 'load' | 'calib' | 'gap' | 'stim' | 'fb' | 'pause' | 'result';
 type Go = Exclude<Kind, 'enemy'>;
 const HOLD_MS = 250;
-const CX = 780, CY = 230; // place du personnage : en haut à droite, la caméra reste visible
+// Creature display: right-side panel, well clear of the person in camera
+const CX = 780, CY = 230; // burst / feedback position (centre-screen)
+const CARD_X = 1155, CARD_Y = 190; // creature card: far right, doesn't overlap person
+const CARD_SIZE = 140;             // display size in game units
 
 /** voice = consigne orale courte et claire pour l'enfant */
 const INFO: Record<Go, { e: string; voice: string; g: Gesture }> = {
@@ -45,7 +48,8 @@ const ALL: Kind[] = ['fairy_r', 'fairy_l', 'star', 'crown', 'dragon'];
 export class MainScene extends Phaser.Scene {
   private tracker = new Tracker();
   private video!: HTMLVideoElement;
-  private emo!: Phaser.GameObjects.Text;
+  private creatureImg!: Phaser.GameObjects.Image;
+  private fbTxt!: Phaser.GameObjects.Text;  // feedback-only emoji overlay
   private msg!: Phaser.GameObjects.Text;
   private tag!: Phaser.GameObjects.Text;
   private starTxt!: Phaser.GameObjects.Text;
@@ -93,6 +97,15 @@ export class MainScene extends Phaser.Scene {
 
   constructor() { super('main'); }
 
+  preload() {
+    this.load.image('sel_fairy_r', '/Assets/gardien%20chateau/Fairy%20Mascot%20and%20Glossy%20Blue%20Orb.png');
+    this.load.image('sel_fairy_l', '/Assets/gardien%20chateau/Kawaii%20Fairy%20with%20Sparkling%20Heart.png');
+    this.load.image('sel_star',    '/Assets/gardien%20chateau/Glossy%20Fairy%20Hugging%20a%20Golden%20Star.png');
+    this.load.image('sel_crown',   '/Assets/gardien%20chateau/Crowned%20Purple%20Mascot%20with%20Sparkles.png');
+    this.load.image('sel_dragon',  '/Assets/gardien%20chateau/Joyful%20Mint%20Baby%20Dragon%20in%20Flight.png');
+    this.load.image('sel_ogre',    '/Assets/gardien%20chateau/Cute%20Chibi%20Ogre%20with%20Spiked%20Club.png');
+  }
+
   init(data?: { kinds?: Kind[] }) {
     if (data?.kinds && data.kinds.length === 3) {
       this.cfg.kinds = data.kinds;
@@ -100,11 +113,23 @@ export class MainScene extends Phaser.Scene {
   }
 
   create() {
-    drawBackdrop(this);
     const w = this.scale.width;
     this.bar = this.add.rectangle(0, 0, 0, 10, 0xffd23f).setOrigin(0, 0);
-    this.glow = this.add.circle(CX, CY, 110, 0xffffff, 0.4).setVisible(false);
-    this.emo = this.add.text(CX, CY, '', { fontSize: '150px' }).setOrigin(0.5);
+
+    // Semi-transparent card behind creature so it's readable over the camera feed
+    const cardBg = this.add.graphics();
+    cardBg.fillStyle(0x000000, 0.35);
+    cardBg.fillRoundedRect(CARD_X - CARD_SIZE / 2 - 10, CARD_Y - CARD_SIZE / 2 - 10, CARD_SIZE + 20, CARD_SIZE + 20, 16);
+
+    this.glow = this.add.circle(CARD_X, CARD_Y, CARD_SIZE / 2 + 10, 0xffffff, 0.25).setVisible(false);
+
+    // Creature mascot image – starts hidden
+    this.creatureImg = this.add.image(CARD_X, CARD_Y, 'sel_fairy_r')
+      .setVisible(false);
+
+    // Lightweight feedback text overlay (✨ 🔄 etc.) – shown briefly after each trial
+    this.fbTxt = this.add.text(CX, CY - 60, '', { fontSize: '80px' }).setOrigin(0.5).setVisible(false);
+
     this.msg = this.add.text(w / 2, 610, '', {
       fontSize: '38px', color: '#fff', backgroundColor: '#1d2b53dd', padding: { x: 20, y: 12 }, align: 'center', wordWrap: { width: 860 },
     }).setOrigin(0.5).setVisible(false);
@@ -134,15 +159,67 @@ export class MainScene extends Phaser.Scene {
   }
   private setTag(s: string) { this.tag.setText(s).setVisible(s !== ''); }
 
-  /** Affiche un personnage avec une petite animation (apparition + flottement). */
-  private show(e: string) {
+  /** Affiche une créature avec une petite animation (apparition + flottement). */
+  private show(key: string) {
     this.bob?.stop();
-    this.tweens.killTweensOf([this.emo, this.glow]);
-    this.emo.setText(e).setY(CY).setScale(1);
-    this.glow.setVisible(e !== '').setScale(1);
-    if (!e) return;
-    this.tweens.add({ targets: [this.emo, this.glow], scale: { from: 0, to: 1 }, duration: 320, ease: 'Back.Out' });
-    this.bob = this.tweens.add({ targets: this.emo, y: CY - 16, yoyo: true, repeat: -1, duration: 500, delay: 320, ease: 'Sine.InOut' });
+    this.tweens.killTweensOf([this.creatureImg, this.glow, this.fbTxt]);
+    this.fbTxt.setVisible(false);
+
+    if (!key) {
+      this.creatureImg.setVisible(false);
+      this.glow.setVisible(false);
+      return;
+    }
+
+    // Feedback-only emoji keys (not texture keys)
+    const fbEmojis: Record<string, string> = {
+      '✨': '✨', '🔄': '🔄', '😬': '😬', '💤': '💤', '🏰': '🏰',
+      '🗿': '🗿', '🎉': '🎉', '🏆': '🏆', '🛑': '🛑',
+    };
+
+    if (fbEmojis[key]) {
+      this.creatureImg.setVisible(false);
+      this.glow.setVisible(false);
+      this.fbTxt.setText(key).setAlpha(0).setScale(1).setY(CY).setVisible(true);
+      this.tweens.add({ targets: this.fbTxt, alpha: 1, duration: 250, ease: 'Sine.Out' });
+      return;
+    }
+
+    // Texture key → show creature image at CARD position with correct size
+    if (this.textures.exists(key)) {
+      // 1. Apply desired display size – this internally sets scaleX/scaleY
+      this.creatureImg
+        .setTexture(key)
+        .setDisplaySize(CARD_SIZE, CARD_SIZE)
+        .setPosition(CARD_X, CARD_Y)
+        .setVisible(true);
+
+      // 2. Read the computed scales (don't use setScale(1) which would reset them!)
+      const sx = this.creatureImg.scaleX;
+      const sy = this.creatureImg.scaleY;
+
+      // 3. Animate FROM 0 TO the correct computed scale
+      this.creatureImg.setScale(0);
+      this.glow.setVisible(true).setScale(0);
+      this.tweens.add({
+        targets: [this.creatureImg, this.glow],
+        scaleX: sx,
+        scaleY: sy,
+        duration: 320,
+        ease: 'Back.Out',
+      });
+
+      // 4. Gentle float animation
+      this.bob = this.tweens.add({
+        targets: this.creatureImg,
+        y: CARD_Y - 10,
+        yoyo: true,
+        repeat: -1,
+        duration: 800,
+        delay: 320,
+        ease: 'Sine.InOut',
+      });
+    }
   }
 
   private burst(emoji: string, n = 14) {
@@ -161,11 +238,12 @@ export class MainScene extends Phaser.Scene {
       this.video = document.getElementById('cam') as HTMLVideoElement;
       this.video.srcObject = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
       await this.video.play();
+      document.body.classList.add('camera-active');
     } catch (e) {
       this.say('Caméra ou modèle indisponible :\n' + (e as Error).message);
       return;
     }
-    this.show('🗿');
+    this.show('');
     this.phase = 'calib';
     // SensAI : la séance commence, la page peut demander l'arrêt (« J'ai mal / Stop »)
     this.startedAt = Date.now();
@@ -286,8 +364,8 @@ export class MainScene extends Phaser.Scene {
     this.until = now + trialDuration + 6000;
 
     const voice = this.kind === 'enemy' ? 'Ogre ! Ne bouge plus !' : INFO[this.kind as Go].voice;
-    const emoji = this.kind === 'enemy' ? '👹' : INFO[this.kind as Go].e;
-    this.show(emoji);
+    const textureKey = this.kind === 'enemy' ? 'sel_ogre' : `sel_${this.kind}`;
+    this.show(textureKey);
 
     // Dès que le son termine, on commence à compter le temps pour retard !
     speak(voice, () => {
@@ -378,8 +456,9 @@ export class MainScene extends Phaser.Scene {
       }
     }
 
-    // Feedback visuel uniquement par emoji et effets (pas d'écriture invasive)
-    this.show(ok ? '✨' : wrongArm ? '🔄' : this.kind === 'enemy' ? '😬' : '💤');
+    // Feedback visuel : emoji léger en overlay + effets
+    const fbKey = ok ? '✨' : wrongArm ? '🔄' : this.kind === 'enemy' ? '😬' : '💤';
+    this.show(fbKey);
     if (ok) this.burst('✨');
     else if (this.kind === 'enemy') {
       this.cameras.main.shake(250, 0.012);
