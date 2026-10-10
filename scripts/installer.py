@@ -107,7 +107,7 @@ host, port, user, password, name = sys.argv[1:6]
 try:
     conn = psycopg2.connect(host=host, port=port, user=user, password=password, dbname="postgres")
 except Exception as error:
-    print("CONNEXION:" + str(error).strip().splitlines()[0])
+    print("CONNEXION:" + " | ".join(line.strip() for line in str(error).strip().splitlines() if line.strip()))
     sys.exit(2)
 conn.autocommit = True
 cur = conn.cursor()
@@ -118,6 +118,17 @@ else:
     cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
     print("CREEE")
 """
+
+
+def find_postgres_port(host: str) -> str | None:
+    """Premier port PostgreSQL ouvert (5432 par défaut, 5433+ si plusieurs versions installées)."""
+    import socket
+    for port in (5432, 5433, 5434, 5435):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.7)
+            if sock.connect_ex((host, port)) == 0:
+                return str(port)
+    return None
 
 
 def database(args) -> None:
@@ -136,10 +147,15 @@ def database(args) -> None:
         except ValueError:
             fail("DATABASE_URL du fichier .env illisible. Supprimez .env et relancez l'installation.")
     else:
-        host, port, user, name = "localhost", "5432", "postgres", args.db_name
+        host, user, name = "127.0.0.1", "postgres", args.db_name
+        port = args.pg_port or find_postgres_port(host)
+        if port is None:
+            fail("PostgreSQL ne répond sur aucun des ports habituels (5432 à 5435).\n"
+                 "           Démarrez-le (Windows : Services → postgresql-x64-… → Démarrer)\n"
+                 "           ou indiquez son port : installer.bat --pg-port 5433")
+        ok(f"PostgreSQL trouvé sur le port {port}")
         password = args.password
         if password is None:
-            print("  PostgreSQL doit être installé et démarré (https://www.postgresql.org/download/).")
             password = getpass.getpass("  Mot de passe de l'utilisateur « postgres » : ")
         name = name.strip() or "sensai_db"
 
@@ -230,6 +246,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Installation de la plateforme SensAI")
     parser.add_argument("--password", help="mot de passe PostgreSQL")
     parser.add_argument("--db-name", default="sensai_db")
+    parser.add_argument("--pg-port", help="port PostgreSQL (détecté automatiquement sinon)")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--no-demo", action="store_true")
     args = parser.parse_args()
