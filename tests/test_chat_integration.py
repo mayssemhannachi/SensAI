@@ -13,6 +13,7 @@ from sqlalchemy.pool import StaticPool
 import app.models
 from app.core.config import settings
 from app.core.security import create_access_token
+from app.ai.llm_provider import LLMProviderError
 from app.database.base import Base
 from app.database.database import get_db
 from app.main import app
@@ -45,16 +46,28 @@ class _FakeLlmHandler(BaseHTTPRequestHandler):
 		context = json.loads(user_message)
 		notes = context["consultation_note_passages"]
 		sessions = context["sql_data"]["sessions"]
-		score = sessions[0]["metrics"]["score"] if sessions else "indisponible"
+		metric_summaries = context["sql_data"]["metric_summaries"]
+		score = metric_summaries[0]["mean"] if metric_summaries else "non interprétable"
+		comparison_notes = context.get("comparison_consultation_note_passages", [])
+		comparison_data = context.get("comparison_sql_data")
+		if comparison_data is not None:
+			comparison_metrics = comparison_data["metric_summaries"]
+			comparison_score = comparison_metrics[0]["mean"] if comparison_metrics else "non interprétable"
+			analysis = (
+				f"Comparaison intégrée: {len(notes)} note(s) vs "
+				f"{len(comparison_notes)} note(s), score {score} vs {comparison_score}."
+			)
+		else:
+			analysis = (
+				f"Analyse intégrée: {len(notes)} note(s), "
+				f"{len(sessions)} session(s), score SQL {score}."
+			)
 		body = json.dumps(
 			{
 				"choices": [
 					{
 						"message": {
-							"content": (
-								f"Analyse intégrée: {len(notes)} note(s), "
-								f"{len(sessions)} session(s), score SQL {score}."
-							)
+							"content": analysis,
 						}
 					}
 				]
@@ -130,6 +143,7 @@ class ChatIntegrationTests(unittest.TestCase):
 			AI_LLM_API_KEY=None,
 			AI_LLM_MODEL="integration-chat",
 			AI_EMBEDDING_MODEL="integration-embeddings",
+			AI_COMPARABLE_METRIC_KEYS=["score"],
 		)
 		self.settings_patch.start()
 		self.patient_id, self.owner_id, self.previous_therapist_id = self._seed_data()
@@ -211,10 +225,42 @@ class ChatIntegrationTests(unittest.TestCase):
 			)
 			db.add(session)
 			db.flush()
-			db.add(
+			db.add_all([
 				SessionEvent(
 					session_id=session.id,
 					timestamp_sec=32.5,
+					event_data={"event": "sequence_completed"},
+				),
+			])
+
+			previous_consultation = Consultation(
+				patient_id=patient.id,
+				therapist_id=previous_therapist.id,
+				consultation_date=date(2026, 7, 12),
+				diagnosis="SECOND_DIAGNOSIS_SENTINEL_MUST_NOT_LEAK",
+			)
+			db.add(previous_consultation)
+			db.flush()
+			db.add(
+				ConsultationNote(
+					consultation_id=previous_consultation.id,
+					therapist_id=previous_therapist.id,
+					note="En juillet, la séquence a été réalisée avec un guidage fréquent.",
+					created_at=datetime(2026, 7, 12, 14, 0),
+				)
+			)
+			previous_session = GameSession(
+				patient_game_id=patient_game.id,
+				duration_sec=70,
+				metrics={"score": 5, "completed_rounds": 3},
+				created_at=datetime(2026, 7, 16, 10, 0),
+			)
+			db.add(previous_session)
+			db.flush()
+			db.add(
+				SessionEvent(
+					session_id=previous_session.id,
+					timestamp_sec=45.0,
 					event_data={"event": "sequence_completed"},
 				)
 			)
@@ -258,7 +304,7 @@ class ChatIntegrationTests(unittest.TestCase):
 		)
 
 		self.assertEqual(status, 200)
-		self.assertEqual(response["analysis"], "Analyse intégrée: 1 note(s), 1 session(s), score SQL 7.")
+		self.assertEqual(response["analysis"], "Analyse intégrée: 1 note(s), 1 session(s), score SQL 7.0.")
 		self.assertEqual(response["conversation_id"], "integration-session-1")
 		self.assertEqual(response["period_analyzed"]["observed_start_date"], "2026-08-12")
 		self.assertEqual(response["period_analyzed"]["observed_end_date"], "2026-08-15")
@@ -284,8 +330,57 @@ class ChatIntegrationTests(unittest.TestCase):
 			"Une aide verbale a été nécessaire",
 			context["consultation_note_passages"][0]["text"],
 		)
-		self.assertEqual(context["sql_data"]["sessions"][0]["metrics"]["score"], 7)
+		self.assertEqual(context["sql_data"]["metric_summaries"][0]["mean"], 7.0)
+		self.assertNotIn("metrics", context["sql_data"]["sessions"][0])
+		self.assertNotIn("duration_sec", context["sql_data"]["sessions"][0])
 		self.assertNotIn("DIAGNOSIS_SENTINEL_MUST_NOT_LEAK", json.dumps(context))
+
+	def test_chat_compares_two_periods_with_distinct_backend_metadata(self):
+		status, response = self._post_chat(
+			{
+				"patient_id": self.patient_id,
+				"question": "Compare ces deux périodes",
+				"period": {
+					"start_date": "2026-08-01",
+					"end_date": "2026-08-31",
+				},
+				"comparison_period": {
+					"start_date": "2026-07-01",
+					"end_date": "2026-07-31",
+				},
+			},
+			self._token(self.owner_id),
+		)
+
+		self.assertEqual(status, 200)
+		self.assertEqual(
+			response["analysis"],
+			"Comparaison intégrée: 1 note(s) vs 1 note(s), score 7.0 vs 5.0.",
+		)
+		self.assertEqual(response["period_analyzed"]["observed_start_date"], "2026-08-12")
+		self.assertEqual(response["period_analyzed"]["observed_end_date"], "2026-08-15")
+		self.assertEqual(
+			response["comparison_period_analyzed"]["observed_start_date"],
+			"2026-07-12",
+		)
+		self.assertEqual(
+			response["comparison_period_analyzed"]["observed_end_date"],
+			"2026-07-16",
+		)
+		self.assertEqual(response["sources_used"]["consultations"], 2)
+		self.assertEqual(response["sources_used"]["consultation_notes"], 2)
+		self.assertEqual(response["sources_used"]["sessions"], 2)
+		self.assertEqual(response["sources_used"]["session_events"], 2)
+		self.assertEqual(len(response["sources"]), 8)
+		_, payload = self.llm_server.requests[0]
+		user_message = next(
+			message["content"]
+			for message in payload["messages"]
+			if message["role"] == "user"
+		)
+		context = json.loads(user_message)
+		self.assertEqual(len(context["comparison_consultation_note_passages"]), 1)
+		self.assertNotIn("SECOND_DIAGNOSIS_SENTINEL_MUST_NOT_LEAK", json.dumps(context))
 
 	def test_chat_rejects_non_owner_and_missing_patient_before_llm_call(self):
 		body = {"patient_id": self.patient_id, "question": "Résumé"}
@@ -316,6 +411,50 @@ class ChatIntegrationTests(unittest.TestCase):
 			{"patient_id": self.patient_id, "question": "Résumé"},
 		)
 		self.assertEqual(status, 401)
+		self.assertEqual(self.llm_server.requests, [])
+
+	def test_chat_returns_422_for_invalid_request_and_documents_openapi(self):
+		status, _ = self._post_chat(
+			{"patient_id": 1, "question": "   "},
+			self._token(self.owner_id),
+		)
+		self.assertEqual(status, 422)
+
+		status, _ = self._post_chat(
+			{
+				"patient_id": 1,
+				"question": "Compare",
+				"period": {"start_date": "2026-09-30", "end_date": "2026-09-01"},
+			},
+			self._token(self.owner_id),
+		)
+		self.assertEqual(status, 422)
+		self.assertEqual(self.llm_server.requests, [])
+
+		operation = app.openapi()["paths"]["/chat"]["post"]
+		self.assertIn("AI Chat", operation["tags"])
+		self.assertTrue(operation["security"])
+		self.assertTrue({"200", "401", "403", "404", "422", "503"}.issubset(operation["responses"]))
+
+	def test_chat_returns_503_only_when_the_llm_is_unavailable(self):
+		with patch(
+			"app.ai.chat_service.generate_analysis",
+			side_effect=LLMProviderError("local Ollama unavailable"),
+		):
+			status, response = self._post_chat(
+				{
+					"patient_id": self.patient_id,
+					"question": "Résume les observations",
+				},
+				self._token(self.owner_id),
+			)
+
+		self.assertEqual(status, 503)
+		self.assertEqual(
+			response["detail"],
+			"Le service d'analyse IA est indisponible ou mal configuré.",
+		)
+		self.assertNotIn("sémantique", response["detail"])
 		self.assertEqual(self.llm_server.requests, [])
 
 

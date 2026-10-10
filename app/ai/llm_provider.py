@@ -34,7 +34,13 @@ def _post(endpoint: str, payload: dict[str, Any], timeout: float) -> dict[str, A
 		raise LLMProviderError(
 			f"LLM service returned HTTP {error.code}"
 		) from error
-	except (URLError, TimeoutError, OSError, json.JSONDecodeError) as error:
+	except (
+		URLError,
+		TimeoutError,
+		OSError,
+		UnicodeDecodeError,
+		json.JSONDecodeError,
+	) as error:
 		raise LLMProviderError("LLM service request failed") from error
 
 

@@ -125,8 +125,9 @@ Les origines doivent correspondre exactement au protocole, au nom d’hôte et a
 ### Authentification
 
 1. Créer un compte avec `POST /auth/register`.
-2. Se connecter avec `POST /auth/login`.
-3. Pour les routes protégées, envoyer le jeton reçu dans l’en-tête `Authorization`.
+2. Un patient crée son compte avec `POST /auth/activate`, en fournissant un code d’activation valide, une adresse e-mail et un mot de passe d’au moins 8 caractères.
+3. Se connecter avec `POST /auth/login`.
+4. Pour les routes protégées, envoyer le jeton reçu dans l’en-tête `Authorization`. Les routes de gestion clinique sont réservées aux comptes thérapeute.
 
 Exemple de connexion :
 
@@ -159,11 +160,12 @@ Authorization: Bearer <access_token>
 
 ### Référence des routes
 
-Toutes les routes listées, sauf `GET /health`, nécessitent le jeton Bearer.
+Les routes `/auth/register`, `/auth/activate`, `/auth/login` et `GET /health` sont publiques. Les autres routes listées nécessitent le jeton Bearer.
 
 | Méthode | Route | Corps de requête | Réponse principale |
 | --- | --- | --- | --- |
 | `POST` | `/auth/register` | `full_name`, `email`, `password` | `UserRegistrationResponse` (`201`) |
+| `POST` | `/auth/activate` | `code`, `email`, `password` | `PatientActivationResponse` (`201`) |
 | `POST` | `/auth/login` | `email`, `password` | `TokenResponse` |
 | `GET` | `/auth/me` | Aucun | `CurrentUserResponse` |
 | `POST` | `/patients/` | `first_name`, `last_name`, `age` | `PatientResponse` |
@@ -175,7 +177,7 @@ Toutes les routes listées, sauf `GET /health`, nécessitent le jeton Bearer.
 | `POST` | `/patients/{patient_id}/regenerate-code` | Aucun | `PatientResponse` avec le nouveau code |
 | `POST` | `/consultations` ou `/consultations/` | `patient_id`, `consultation_date`, `diagnosis` optionnel | `ConsultationResponse` |
 | `POST` | `/consultation-notes/` | `consultation_id`, `note` | `ConsultationNoteResponse` |
-| `POST` | `/activation-codes/` | `patient_id` | `ActivationCodeResponse` |
+| `POST` | `/activation-codes/` | `patient_id` | `ActivationCodeResponse` (thérapeute uniquement) |
 | `POST` | `/patient-transfers/` | `patient_code` | `PatientTransferResponse` |
 | `GET` | `/games/` | Aucun | `GameResponse[]` |
 | `POST` | `/games/` | `name`, `slug`, `description` optionnel | `GameResponse` |
@@ -185,6 +187,7 @@ Toutes les routes listées, sauf `GET /health`, nécessitent le jeton Bearer.
 | `GET` | `/sessions/patient-game/{patient_game_id}` | Aucun | `SessionResponse[]` |
 | `POST` | `/session-events/` | `session_id`, `timestamp_sec`, `event_data` | `SessionEventResponse` |
 | `GET` | `/session-events/session/{session_id}` | Aucun | `SessionEventResponse[]` |
+| `POST` | `/chat` | `patient_id`, `question`, `period` optionnelle, `comparison_period` optionnelle | `ChatResponse` (thérapeute propriétaire uniquement) |
 
 Les champs `configuration`, `metrics` et `event_data` sont des objets JSON dont la structure dépend des données métier du frontend. Les réponses complètes et leurs champs sont consultables dans Swagger (`/docs`). Les dates de consultation utilisent `YYYY-MM-DD`; les dates-heures retournées par l’API sont des chaînes ISO 8601.
 
@@ -418,6 +421,33 @@ python -m alembic upgrade head
 ```powershell
 pip freeze > requirements.txt
 ```
+
+## Assistant IA
+
+Le endpoint `POST /chat` est réservé aux thérapeutes authentifiés et n'autorise que le propriétaire actuel du patient. Les données structurées viennent de PostgreSQL; la recherche vectorielle utilise exclusivement le texte de `ConsultationNote`. Le champ `diagnosis` n'est pas inclus dans le contexte envoyé au modèle.
+
+Configurer un endpoint LLM et embeddings compatible avec l'API OpenAI dans `.env` :
+
+```env
+AI_LLM_BASE_URL=http://localhost:11434/v1
+AI_LLM_API_KEY=
+AI_LLM_MODEL=qwen2.5:7b
+AI_EMBEDDING_MODEL=nomic-embed-text
+AI_LLM_TIMEOUT_SECONDS=45
+AI_EMBEDDING_TIMEOUT_SECONDS=30
+AI_RAG_TOP_K=5
+AI_RAG_BATCH_SIZE=32
+AI_SQL_FALLBACK_NOTE_LIMIT=20
+AI_COMPARABLE_METRIC_KEYS='[]'
+```
+
+Ollama est la configuration par défaut; les clés API restent optionnelles et aucune clé n'est requise en local. `AI_COMPARABLE_METRIC_KEYS` est une liste JSON de clés numériques dont la définition et l'unité sont stables (par exemple `AI_COMPARABLE_METRIC_KEYS='["score"]'`). Les résumés sont calculés côté SQL et séparément pour chaque jeu; toute autre clé JSON est signalée comme non interprétable. Les durées de session sont résumées en secondes.
+
+Le corps de `POST /chat` accepte une période principale et, pour les comparaisons, une seconde période `comparison_period`, chacune avec `start_date` et `end_date` ISO optionnelles. La réponse expose séparément les bornes observées de chaque période; les comptages et sources couvrent l'union des éléments utilisés.
+
+Avant d'appliquer les migrations, installer l'extension serveur pgvector correspondant à la version et à l'installation PostgreSQL utilisées. La migration Alembic active ensuite l'extension et crée la table réservée aux embeddings de notes. Si pgvector ou sa table sont absents, le chatbot reste utilisable en mode SQL-only : les notes de consultation récentes de la période sont récupérées par SQL et la réponse signale que la recherche sémantique n'est pas disponible. La base PostgreSQL Windows actuellement configurée ne dispose pas encore des fichiers serveur pgvector; la migration ne peut donc pas y être appliquée avant cette installation.
+
+Les dates observées, les comptages de sources et les limites sont calculés par le backend. `analysis` peut être `null` lorsqu'aucune source exploitable n'est disponible. `conversation_id` est accepté et renvoyé comme identifiant de corrélation; l'historique conversationnel n'est pas persisté à ce stade.
 
 ## Technologies
 

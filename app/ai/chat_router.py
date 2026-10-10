@@ -14,10 +14,16 @@ router = APIRouter(tags=["AI Chat"])
 	"/chat",
 	response_model=ChatResponse,
 	summary="Analyser les données d'un patient",
+	description=(
+		"Produit une analyse descriptive à partir du contexte SQL et des notes "
+		"de consultation autorisées. Les périodes comparées, sources et limites "
+		"sont calculées côté backend."
+	),
 	responses={
 		401: {"description": "Authentification requise ou jeton invalide."},
 		403: {"description": "Le thérapeute n'est pas propriétaire du patient."},
 		404: {"description": "Patient introuvable."},
+		422: {"description": "Corps invalide ou période incohérente."},
 		503: {"description": "Le service IA ou le fournisseur configuré est indisponible."},
 	},
 )

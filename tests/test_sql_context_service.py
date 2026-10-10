@@ -10,7 +10,10 @@ from sqlalchemy.pool import StaticPool
 import app.models
 from app.ai.chat_service import answer_chat
 from app.ai.sql_context_service import build_sql_patient_context
-from app.ai.vector_store_service import index_patient_consultation_notes
+from app.ai.vector_store_service import (
+    index_patient_consultation_notes,
+    is_vector_store_available,
+)
 from app.database.base import Base
 from app.models.consultation import Consultation
 from app.models.consultation_note import ConsultationNote
@@ -196,6 +199,69 @@ class SqlContextServiceTests(unittest.TestCase):
         self.assertEqual(context.sources_used.sessions, 2)
         self.assertEqual(context.period_analyzed.observed_end_date, date(2026, 9, 30))
 
+    def test_only_allowlisted_numeric_metrics_are_summarized(self):
+        with self.session_factory() as db:
+            patient_game = db.query(PatientGame).one()
+            db.add(
+                GameSession(
+                    patient_game_id=patient_game.id,
+                    duration_sec=90,
+                    metrics={"score": 9, "completed_rounds": "four"},
+                    created_at=datetime(2026, 9, 13, 9),
+                )
+            )
+            db.commit()
+
+            with patch(
+                "app.ai.sql_context_service.settings.AI_COMPARABLE_METRIC_KEYS",
+                ["score"],
+            ):
+                context = build_sql_patient_context(
+                    db,
+                    self.patient_id,
+                    self.current_therapist_id,
+                    ChatPeriod(start_date=date(2026, 9, 1), end_date=date(2026, 9, 30)),
+                )
+
+        self.assertEqual(len(context.metric_summaries), 1)
+        score = context.metric_summaries[0]
+        self.assertEqual(score["metric_key"], "score")
+        self.assertEqual(score["count"], 2)
+        self.assertEqual(score["mean"], 8.0)
+        self.assertEqual(score["change"], 2.0)
+        self.assertEqual(score["trend"], "increasing")
+        self.assertEqual(score["first_date"], date(2026, 9, 12))
+        self.assertEqual(score["last_date"], date(2026, 9, 13))
+        self.assertIn("completed_rounds", context.uninterpretable_metric_keys)
+        self.assertEqual(context.duration_summaries[0]["mean"], 67.5)
+
+    def test_metric_with_missing_session_value_is_not_compared(self):
+        with self.session_factory() as db:
+            patient_game = db.query(PatientGame).one()
+            db.add(
+                GameSession(
+                    patient_game_id=patient_game.id,
+                    duration_sec=60,
+                    metrics={"completed_rounds": 2},
+                    created_at=datetime(2026, 9, 13, 10),
+                )
+            )
+            db.commit()
+
+            with patch(
+                "app.ai.sql_context_service.settings.AI_COMPARABLE_METRIC_KEYS",
+                ["score"],
+            ):
+                context = build_sql_patient_context(
+                    db,
+                    self.patient_id,
+                    self.current_therapist_id,
+                    ChatPeriod(start_date=date(2026, 9, 1), end_date=date(2026, 9, 30)),
+                )
+
+        self.assertEqual(context.metric_summaries, [])
+        self.assertIn("score", context.uninterpretable_metric_keys)
+
     def test_chat_response_contract_validates_backend_metadata(self):
         response = ChatResponse(
             patient_id=self.patient_id,
@@ -299,6 +365,8 @@ class SqlContextServiceTests(unittest.TestCase):
         self.assertIn("Observation retrouvée par le RAG", serialized_context)
         self.assertNotIn("period_analyzed", serialized_context)
         self.assertNotIn("sources_used", serialized_context)
+        self.assertNotIn('"metrics"', serialized_context)
+        self.assertNotIn('"duration_sec"', serialized_context)
 
     def test_sql_only_mode_uses_notes_and_reports_semantic_search_unavailable(self):
         request = ChatRequest(
@@ -403,6 +471,48 @@ class SqlContextServiceTests(unittest.TestCase):
             )
 
         self.assertEqual(embedder.call_count, 2)
+
+        with self.session_factory() as db:
+            self.assertEqual(
+                index_patient_consultation_notes(
+                    db,
+                    self.patient_id,
+                    self.previous_therapist_id,
+                    None,
+                    "test-embedding-model",
+                    embedder,
+                ),
+                0,
+            )
+            self.assertEqual(
+                index_patient_consultation_notes(
+                    db,
+                    self.patient_id,
+                    self.current_therapist_id,
+                    ChatPeriod(start_date=date(2025, 1, 1), end_date=date(2025, 1, 31)),
+                    "test-embedding-model",
+                    embedder,
+                ),
+                0,
+            )
+        self.assertEqual(embedder.call_count, 2)
+
+    def test_vector_store_detection_requires_postgres_extension_and_table(self):
+        db = Mock()
+        db.get_bind.return_value.dialect.name = "postgresql"
+        db.execute.return_value.scalar.return_value = False
+        self.assertFalse(is_vector_store_available(db))
+        query = str(db.execute.call_args.args[0])
+        self.assertIn("pg_extension", query)
+        self.assertIn("to_regclass('consultation_note_embeddings')", query)
+
+        db.execute.return_value.scalar.return_value = True
+        self.assertTrue(is_vector_store_available(db))
+
+        non_postgres_db = Mock()
+        non_postgres_db.get_bind.return_value.dialect.name = "sqlite"
+        self.assertFalse(is_vector_store_available(non_postgres_db))
+        non_postgres_db.execute.assert_not_called()
 
 
 if __name__ == "__main__":

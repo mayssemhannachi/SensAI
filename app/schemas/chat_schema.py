@@ -1,12 +1,47 @@
-from datetime import date
-from typing import Literal
+from datetime import date, datetime
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
+
+
+ChatQuestion = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=4000),
+]
+ConversationId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
+]
+PositiveStrictInt = Annotated[int, Field(strict=True, gt=0)]
 
 
 class ChatPeriod(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     start_date: date | None = None
     end_date: date | None = None
+
+    @field_validator("start_date", "end_date", mode="before")
+    @classmethod
+    def validate_iso_date(cls, value):
+        if value is None or isinstance(value, date) and not isinstance(value, datetime):
+            return value
+        if not isinstance(value, str):
+            raise ValueError("Dates must use the ISO YYYY-MM-DD format")
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError as error:
+            raise ValueError("Dates must use the ISO YYYY-MM-DD format") from error
+        if parsed.isoformat() != value:
+            raise ValueError("Dates must use the ISO YYYY-MM-DD format")
+        return parsed
 
     @model_validator(mode="after")
     def validate_date_order(self):
@@ -20,10 +55,19 @@ class ChatPeriod(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    patient_id: int
-    question: str
-    conversation_id: str | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    patient_id: PositiveStrictInt
+    question: ChatQuestion
+    conversation_id: ConversationId | None = None
     period: ChatPeriod | None = None
+    comparison_period: ChatPeriod | None = None
+
+    @model_validator(mode="after")
+    def validate_comparison_period(self):
+        if self.comparison_period is not None and self.period is None:
+            raise ValueError("period is required when comparison_period is provided")
+        return self
 
 
 class ChatPeriodAnalyzed(BaseModel):
@@ -56,14 +100,17 @@ class ChatSourceReference(BaseModel):
         "session",
         "session_event",
     ]
-    source_id: int
+    source_id: PositiveStrictInt
     source_date: date
 
 
 class ChatResponse(BaseModel):
-    patient_id: int
-    conversation_id: str | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    patient_id: PositiveStrictInt
+    conversation_id: ConversationId | None = None
     period_analyzed: ChatPeriodAnalyzed
+    comparison_period_analyzed: ChatPeriodAnalyzed | None = None
     sources_used: ChatSourcesUsed
     sources: list[ChatSourceReference]
     analysis: str | None = Field(

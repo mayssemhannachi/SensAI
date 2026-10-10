@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from math import fsum, isfinite
 from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.consultation import Consultation
 from app.models.consultation_note import ConsultationNote
 from app.models.game import Game
@@ -39,6 +41,9 @@ class SqlPatientContext:
 	consultation_notes: list[dict[str, Any]]
 	sessions: list[dict[str, Any]]
 	session_events: list[dict[str, Any]]
+	duration_summaries: list[dict[str, Any]]
+	metric_summaries: list[dict[str, Any]]
+	uninterpretable_metric_keys: list[str]
 	period_analyzed: AnalyzedPeriod
 	sources_used: SqlSourcesUsed
 	source_references: list[dict[str, Any]]
@@ -77,6 +82,95 @@ def _apply_datetime_period(
 
 def _row_dict(row: Any) -> dict[str, Any]:
 	return dict(row._mapping)
+
+
+def _summarize_numeric_series(
+	series: dict[tuple[int, str], list[dict[str, Any]]],
+	value_field: str,
+	include_metric_key: bool,
+) -> list[dict[str, Any]]:
+	summaries = []
+	for (game_id, key), observations in sorted(series.items()):
+		observations.sort(key=lambda item: (item["session_date"], item["session_id"]))
+		values = [float(item[value_field]) for item in observations]
+		first_value = values[0]
+		last_value = values[-1]
+		summary = {
+			"game_id": game_id,
+			"game_name": observations[0]["game_name"],
+			"count": len(values),
+			"mean": fsum(values) / len(values),
+			"minimum": min(values),
+			"maximum": max(values),
+			"first_date": observations[0]["session_date"],
+			"last_date": observations[-1]["session_date"],
+			"session_ids": [item["session_id"] for item in observations],
+		}
+		if include_metric_key:
+			summary["metric_key"] = key
+		if len(values) >= 2:
+			summary["first_value"] = first_value
+			summary["last_value"] = last_value
+			summary["change"] = last_value - first_value
+			summary["trend"] = (
+				"increasing"
+				if last_value > first_value
+				else "decreasing"
+				if last_value < first_value
+				else "stable"
+			)
+		summaries.append(summary)
+	return summaries
+
+
+def _build_numeric_summaries(
+	sessions: list[dict[str, Any]],
+	comparable_metric_keys: set[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
+	duration_series: dict[tuple[int, str], list[dict[str, Any]]] = {}
+	metric_series: dict[tuple[int, str], list[dict[str, Any]]] = {}
+	uninterpretable_keys = set()
+	invalid_metric_series = set()
+	sessions_per_game: dict[int, int] = {}
+	for session in sessions:
+		game_id = session["game_id"]
+		sessions_per_game[game_id] = sessions_per_game.get(game_id, 0) + 1
+		base = {
+			"game_id": game_id,
+			"game_name": session["game_name"],
+			"session_id": session["session_id"],
+			"session_date": session["session_date"],
+		}
+		duration = session["duration_sec"]
+		if type(duration) in (int, float) and isfinite(float(duration)):
+			duration_series.setdefault((game_id, "duration_sec"), []).append(
+				{**base, "value": duration}
+			)
+		for key, value in (session["metrics"] or {}).items():
+			metric_key = (game_id, key)
+			if key not in comparable_metric_keys:
+				uninterpretable_keys.add(key)
+				continue
+			if type(value) not in (int, float) or not isfinite(float(value)):
+				uninterpretable_keys.add(key)
+				invalid_metric_series.add(metric_key)
+				continue
+			metric_series.setdefault(metric_key, []).append(
+				{**base, "value": value}
+			)
+	for metric_key, observations in list(metric_series.items()):
+		game_id, key = metric_key
+		if (
+			metric_key in invalid_metric_series
+			or len(observations) != sessions_per_game[game_id]
+		):
+			uninterpretable_keys.add(key)
+			del metric_series[metric_key]
+	return (
+		_summarize_numeric_series(duration_series, "value", False),
+		_summarize_numeric_series(metric_series, "value", True),
+		sorted(uninterpretable_keys),
+	)
 
 
 def ensure_current_patient_owner(
@@ -244,6 +338,19 @@ def build_sql_patient_context(
 		"Les dates indiquent les bornes des sources trouvées et ne garantissent "
 		"pas une couverture continue entre elles."
 	]
+	duration_summaries, metric_summaries, uninterpretable_metric_keys = (
+		_build_numeric_summaries(
+			sessions,
+			set(settings.AI_COMPARABLE_METRIC_KEYS),
+		)
+	)
+	if uninterpretable_metric_keys:
+		limitations.append(
+			"Métriques non interprétées faute de définition autorisée ou de valeurs "
+			"numériques comparables : "
+			+ ", ".join(uninterpretable_metric_keys)
+			+ "."
+		)
 	if not consultations:
 		limitations.append("Aucune consultation n'a été trouvée pour cette période.")
 	if not consultation_notes:
@@ -310,6 +417,9 @@ def build_sql_patient_context(
 		consultation_notes=consultation_notes,
 		sessions=sessions,
 		session_events=session_events,
+		duration_summaries=duration_summaries,
+		metric_summaries=metric_summaries,
+		uninterpretable_metric_keys=uninterpretable_metric_keys,
 		period_analyzed=AnalyzedPeriod(
 			requested_start_date=period.start_date if period else None,
 			requested_end_date=period.end_date if period else None,
