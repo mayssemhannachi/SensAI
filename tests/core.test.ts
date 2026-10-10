@@ -21,16 +21,21 @@ describe('gestes', () => {
     expect(classifyGesture(pose({ 15: [0.65, 0.2], 16: [0.35, 0.2] }))).toBe('both');
     expect(classifyGesture(null)).toBe('unknown');
   });
-  it('main sur la tête et accroupi', () => {
+  it('main sur la tête et accroupi (debout et assis)', () => {
     expect(classifyGesture(pose({ 16: [0.52, 0.4] }))).toBe('head');
-    expect(classifyGesture(pose({ 0: [0.5, 0.7] }), { noseY: 0.5 })).toBe('duck');
+    expect(classifyGesture(pose({ 0: [0.5, 0.7] }), { noseY: 0.5 }, 'standing')).toBe('duck');
+    // En position assise, une amplitude plus faible (se pencher) suffit pour détecter duck
+    expect(classifyGesture(pose({ 0: [0.5, 0.58] }), { noseY: 0.5 }, 'sitting')).toBe('duck');
   });
-  it('vitesse nulle si immobile', () => {
+  it('vitesse nulle si immobile et réactive sur un seul membre', () => {
     expect(motionSpeed(pose(), pose(), 0.1)).toBe(0);
-    expect(motionSpeed(pose(), pose({ 16: [0.35, 0.2] }), 0.1)).toBeGreaterThan(0);
+    // Un seul poignet qui bouge rapidement doit être clairement détecté
+    const fastWrist = motionSpeed(pose(), pose({ 16: [0.35, 0.1] }), 0.1);
+    expect(fastWrist).toBeGreaterThan(0.4);
   });
-  it('seuils croissants avec le bruit', () => {
+  it('seuils croissants avec le bruit et bornés', () => {
     expect(thresholds([0.2]).still).toBeGreaterThan(thresholds([0.01]).still);
+    expect(thresholds([5.0]).move).toBeLessThanOrEqual(0.55); // ne diverge pas sur bruit extrême
   });
 });
 

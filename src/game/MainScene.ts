@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { Tracker } from '../pose/tracker';
-import { classifyGesture, motionSpeed, thresholds, type Gesture, type Pose } from '../core/gestures';
+import { classifyGesture, motionSpeed, thresholds, type Gesture, type Pose, type Posture } from '../core/gestures';
 import { summarize, type Kind, type TrialResult } from '../core/metrics';
 import { buildTrials, Staircase } from '../core/engine';
-import { drawBackdrop } from './castle';
+import { drawBackdrop, drawInitialZone } from './castle';
 import { speak, stopSpeech } from './speech';
 
 type Phase = 'load' | 'calib' | 'gap' | 'stim' | 'fb' | 'pause' | 'result';
@@ -83,12 +83,20 @@ export class MainScene extends Phaser.Scene {
   private cnt = 0;
   private audioPlaying = false;
   private audioEndAt: number | null = null;
+  private posture: Posture = 'standing';
+  private zoneG!: Phaser.GameObjects.Graphics;
+  private postureBadge!: Phaser.GameObjects.Text;
+  private inZone = false;
+  private inZoneSince = 0;
 
   constructor() { super('main'); }
 
-  init(data?: { kinds?: Kind[] }) {
+  init(data?: { kinds?: Kind[]; posture?: Posture }) {
     if (data?.kinds && data.kinds.length === 3) {
       this.cfg.kinds = data.kinds;
+    }
+    if (data?.posture) {
+      this.posture = data.posture;
     }
   }
 
@@ -103,7 +111,54 @@ export class MainScene extends Phaser.Scene {
     }).setOrigin(0.5).setVisible(false);
     this.tag = this.add.text(24, 24, '', { fontSize: '28px', color: '#fff', backgroundColor: '#6c4ad6', padding: { x: 12, y: 6 } }).setVisible(false);
     this.starTxt = this.add.text(w - 24, 24, '', { fontSize: '40px', color: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(1, 0);
+
+    // Zone guide caméra (silhouette debout / assis)
+    this.zoneG = this.add.graphics();
+
+    // Badge interactif pour voir et basculer la posture (debout / assis)
+    this.postureBadge = this.add.text(24, 68, '', {
+      fontSize: '20px',
+      color: '#fff',
+      backgroundColor: '#1d2b53dd',
+      padding: { x: 10, y: 5 },
+    })
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.togglePosture());
+    this.updatePostureBadge();
+
     void this.startCamera();
+  }
+
+  private togglePosture() {
+    this.posture = this.posture === 'standing' ? 'sitting' : 'standing';
+    this.updatePostureBadge();
+    if (this.phase === 'calib') {
+      drawInitialZone(this.zoneG, this.scale.width / 2, 380, this.posture, this.inZone);
+      this.inZoneSince = 0;
+      this.noise = [];
+      this.noseS = [];
+      this.say(
+        this.posture === 'standing'
+          ? 'Place-toi debout dans le cadre guide…'
+          : 'Place-toi assis face à la caméra…'
+      );
+    }
+  }
+
+  private updatePostureBadge() {
+    const isStand = this.posture === 'standing';
+    this.postureBadge.setText(isStand ? '🧍 Debout (clic: 🪑 Assis)' : '🪑 Assis (clic: 🧍 Debout)');
+  }
+
+  private isPoseInInitialZone(p: Pose): boolean {
+    if (!p || p.length < 25) return false;
+    const nose = p[0], lSh = p[11], rSh = p[12];
+    const vis = (pt?: { visibility?: number }) => (pt?.visibility ?? 1) > 0.45;
+    if (!vis(nose) || !vis(lSh) || !vis(rSh)) return false;
+    const midX = (lSh.x + rSh.x) / 2;
+    if (midX < 0.22 || midX > 0.78) return false;
+    if (nose.y < 0.08 || nose.y > 0.6) return false;
+    return true;
   }
 
   private say(s: string) {
@@ -144,9 +199,16 @@ export class MainScene extends Phaser.Scene {
       return;
     }
     this.show('🗿');
-    this.say('Reste immobile comme une statue…');
-    this.calibEnd = performance.now() + 2500;
     this.phase = 'calib';
+    this.inZoneSince = 0;
+    this.noise = [];
+    this.noseS = [];
+    drawInitialZone(this.zoneG, this.scale.width / 2, 380, this.posture, false);
+    this.say(
+      this.posture === 'standing'
+        ? 'Place-toi debout dans le cadre guide…'
+        : 'Place-toi assis face à la caméra…'
+    );
   }
 
   update() {
@@ -159,20 +221,44 @@ export class MainScene extends Phaser.Scene {
       if (p) { this.prevPose = p; this.prevT = now; }
       this.pose = p;
     }
-    this.step(now, classifyGesture(this.pose, this.base));
+    this.step(now, classifyGesture(this.pose, this.base, this.posture));
   }
 
   private step(now: number, g: Gesture) {
     switch (this.phase) {
-      case 'calib':
-        this.noise.push(this.speed);
-        if (this.pose) this.noseS.push(this.pose[0].y);
-        if (now > this.calibEnd) {
-          this.thr = thresholds(this.noise);
-          if (this.noseS.length) this.base = { noseY: this.noseS.reduce((a, b) => a + b, 0) / this.noseS.length };
-          this.startPlay();
+      case 'calib': {
+        const inZone = this.pose ? this.isPoseInInitialZone(this.pose) : false;
+        if (inZone !== this.inZone) {
+          this.inZone = inZone;
+          drawInitialZone(this.zoneG, this.scale.width / 2, 380, this.posture, inZone);
+        }
+
+        if (!inZone) {
+          // L'enfant n'est pas encore en place : réinitialiser le compte de calibration
+          this.inZoneSince = 0;
+          this.noise = [];
+          this.noseS = [];
+        } else {
+          // L'enfant est bien dans la zone guide
+          if (!this.inZoneSince) {
+            this.inZoneSince = now;
+            this.say('Parfait ! Reste immobile comme une statue…');
+          }
+          this.noise.push(this.speed);
+          if (this.pose) this.noseS.push(this.pose[0].y);
+
+          // Calibrer pendant 1.8s d'immobilité stabilisée dans la zone
+          if (now - this.inZoneSince >= 1800) {
+            this.zoneG.clear();
+            this.thr = thresholds(this.noise);
+            if (this.noseS.length) {
+              this.base = { noseY: this.noseS.reduce((a, b) => a + b, 0) / this.noseS.length };
+            }
+            this.startPlay();
+          }
         }
         break;
+      }
       case 'gap':
         if (now >= this.until) {
           if (g === 'neutral' || now > this.until + 3000) this.begin(now);
@@ -264,10 +350,13 @@ export class MainScene extends Phaser.Scene {
         } else this.stillS = null;
       }
       // S'il bouge (même pendant la consigne vocale) : repéré immédiatement !
-      if (this.speed > this.thr.move) {
+      const isMoving = this.speed > this.thr.move || (g !== 'neutral' && g !== 'unknown');
+      if (isMoving) {
         this.moveS ??= now;
-        if (now - this.moveS >= 150) return this.finish(now, false);
-      } else this.moveS = null;
+        if (now - this.moveS >= 100) return this.finish(now, false);
+      } else {
+        this.moveS = null;
+      }
 
       // Réussite : le son est terminé ET le temps d'immobilité complet est respecté
       if (!this.audioPlaying && now >= this.until) this.finish(now, true);

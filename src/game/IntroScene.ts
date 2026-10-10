@@ -66,6 +66,7 @@ interface TutorialSlide {
 export class IntroScene extends Phaser.Scene {
   private step = 0; // 0 = accueil, 1 = sélection des 3 gestes, 2+ = tutoriel dynamique
   private selected: GoKind[] = ['fairy_r', 'fairy_l', 'star']; // 3 par défaut
+  private posture: 'standing' | 'sitting' = 'standing'; // debout par défaut, ou assis (kiné)
   private ui: Phaser.GameObjects.GameObject[] = [];
   private kidG!: Phaser.GameObjects.Graphics;
 
@@ -280,6 +281,48 @@ export class IntroScene extends Phaser.Scene {
       .setOrigin(0.5);
     this.ui.push(ogreEmoji, ogreName, ogreAction, ogreBadge);
 
+    // Sélecteur de posture : Debout / Assis (choix de l'enfant ou du kiné)
+    const postTitle = this.add.text(w / 2, 510, 'Zone & posture de jeu (choix joueur / kiné) :', {
+      fontSize: '20px',
+      color: '#1d2b53',
+      fontStyle: 'bold',
+      stroke: '#fff',
+      strokeThickness: 3,
+    }).setOrigin(0.5);
+    this.ui.push(postTitle);
+
+    const isStand = this.posture === 'standing';
+    this.btn(
+      w / 2 - 160,
+      555,
+      isStand ? '✓ 🧍 Debout' : '🧍 Debout',
+      () => {
+        this.posture = 'standing';
+        this.render();
+      },
+      isStand ? '#2e9e5b' : '#8a8fa8'
+    );
+    this.btn(
+      w / 2 + 160,
+      555,
+      !isStand ? '✓ 🪑 Assis (Kiné)' : '🪑 Assis (Kiné)',
+      () => {
+        this.posture = 'sitting';
+        this.render();
+      },
+      !isStand ? '#2e9e5b' : '#8a8fa8'
+    );
+
+    const subText = this.add.text(
+      w / 2,
+      600,
+      isStand
+        ? 'Zone corps entier debout • Idéal pour l’attention et les réflexes'
+        : 'Zone assise (tête, buste et bras) • Idéal sur chaise, fauteuil ou kiné',
+      { fontSize: '16px', color: '#444', fontStyle: 'italic', backgroundColor: '#ffffffb0', padding: { x: 10, y: 3 } }
+    ).setOrigin(0.5);
+    this.ui.push(subText);
+
     // Barre d'action
     this.btn(140, 660, '◀ Accueil', () => {
       this.step = 0;
@@ -309,9 +352,15 @@ export class IntroScene extends Phaser.Scene {
     this.selected.forEach((kind) => {
       const def = GESTURE_OPTIONS.find((g) => g.kind === kind);
       if (def) {
+        let action = def.action;
+        let desc = def.desc;
+        if (kind === 'dragon' && this.posture === 'sitting') {
+          action = 'Penche le buste et la tête en avant !';
+          desc = 'Le dragon arrive ! En position assise, penche vite ton buste et baisse ta tête pour te cacher !';
+        }
         slides.push({
           title: `${def.name} ${def.emoji}`,
-          text: `${def.desc}\n\n👉 Geste : ${def.action}`,
+          text: `${desc}\n\n👉 Geste : ${action}`,
           kid: def.kid,
         });
       }
@@ -324,10 +373,13 @@ export class IntroScene extends Phaser.Scene {
       kid: 'still',
     });
 
-    // Slide recommandations
+    // Slide recommandations adaptée à la posture
     slides.push({
       title: 'Avant de jouer',
-      text: 'Entre deux personnages, garde les bras le long du corps.\n\nPlace-toi à deux pas de l’écran, bien visible en entier, avec une bonne lumière.',
+      text: this.posture === 'standing'
+        ? 'Zone de départ : Reste bien DEBOUT dans le cadre guide.\n\nEntre deux personnages, garde les bras le long du corps.'
+        : 'Zone de départ : Reste bien ASSIS dans le cadre guide.\n\nIdéal pour la rééducation motrice et le travail avec le kiné.',
+      kid: 'still',
     });
 
     // Slide finale de l'entraînement
@@ -398,7 +450,7 @@ export class IntroScene extends Phaser.Scene {
         740,
         690,
         '▶ Commencer l’entraînement',
-        () => this.scene.start('main', { kinds: this.selected }),
+        () => this.scene.start('main', { kinds: this.selected, posture: this.posture }),
         '#2e9e5b'
       );
     } else {

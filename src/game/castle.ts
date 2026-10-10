@@ -79,3 +79,53 @@ export function drawKid(g: G, cx: number, cy: number, k: number, pose: KidPose) 
   g.strokeCircle(cx, cy - 70 * k, 22 * k);
   if (pose === 'head') { g.fillStyle(0xffd23f, 1); g.fillRect(cx - 14 * k, cy - 100 * k, 28 * k, 10 * k); }
 }
+
+/**
+ * Dessine la zone initiale de cadrage (silhouette guide debout / assis)
+ * au-dessus du flux caméra pendant le calibrage ou le départ.
+ */
+export function drawInitialZone(
+  g: G,
+  cx: number,
+  cy: number,
+  posture: 'standing' | 'sitting',
+  inZone = false
+) {
+  g.clear();
+  const color = inZone ? 0x2e9e5b : 0xffd23f;
+  const alpha = inZone ? 0.95 : 0.65;
+  const bgAlpha = inZone ? 0.16 : 0.08;
+
+  const bw = posture === 'sitting' ? 360 : 310;
+  const bh = posture === 'sitting' ? 380 : 490;
+  const by = posture === 'sitting' ? cy - 20 : cy;
+
+  g.fillStyle(color, bgAlpha);
+  g.fillRoundedRect(cx - bw / 2, by - bh / 2, bw, bh, 24);
+  g.lineStyle(4, color, alpha);
+  g.strokeRoundedRect(cx - bw / 2, by - bh / 2, bw, bh, 24);
+
+  // Guide tête
+  const headY = by - bh / 2 + 65;
+  g.strokeCircle(cx, headY, 44);
+
+  // Guide épaules & torse
+  const shY = headY + 70;
+  const shW = posture === 'sitting' ? 135 : 115;
+  g.lineBetween(cx - shW, shY, cx + shW, shY);
+  g.lineBetween(cx - shW, shY, cx - shW + 20, by + bh / 2 - (posture === 'sitting' ? 85 : 180));
+  g.lineBetween(cx + shW, shY, cx + shW - 20, by + bh / 2 - (posture === 'sitting' ? 85 : 180));
+
+  if (posture === 'sitting') {
+    // Esquisse de chaise sous le torse
+    const chairY = by + bh / 2 - 35;
+    g.lineBetween(cx - 130, chairY, cx + 130, chairY);
+    g.lineBetween(cx - 100, chairY, cx - 110, chairY + 25);
+    g.lineBetween(cx + 100, chairY, cx + 110, chairY + 25);
+  } else {
+    // Guide jambes debout
+    const hipY = by + 70;
+    g.lineBetween(cx, hipY, cx - 40, by + bh / 2 - 20);
+    g.lineBetween(cx, hipY, cx + 40, by + bh / 2 - 20);
+  }
+}
