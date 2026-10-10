@@ -92,8 +92,10 @@ On n'ouvre qu'**une seule adresse : http://localhost:3000**. Le site envoie chac
 
 | Rôle | E-mail | Mot de passe |
 |------|--------|--------------|
-| Thérapeute (15 patients suivis) | `demo@sensai.tn` | `demo1234` |
-| Parent de Salma (2 jeux attribués) | `salma.parent@sensai.tn` | `demo1234` |
+| Kinésithérapeute (15 patients suivis) | `demo@sensai.tn` | `demo1234` |
+| Parent de Salma (Le Hibou, Le Gardien des Lucioles) | `salma.parent@sensai.tn` | `demo1234` |
+| Ergothérapeute (5 patients suivis) | `ergo@sensai.tn` | `demo1234` |
+| Parent d'Ines (La Danse des Lucioles) | `ines.parent@sensai.tn` | `demo1234` |
 
 ---
 
@@ -123,13 +125,21 @@ On n'ouvre qu'**une seule adresse : http://localhost:3000**. Le site envoie chac
 
 ### Espaces par spécialité
 
-À l'inscription, le professionnel choisit **kinésithérapeute** ou **ergothérapeute**.
-Chaque compte conserve sa propre liste de patients ; le catalogue de jeux affiché dépend de la
-spécialité. L'espace kinésithérapeute propose les jeux jouables **Le Hibou** et **Le Gardien des
-Lucioles**. L'espace ergothérapeute est destiné aux jeux cognitifs et de coordination, encore en
-cours de développement : ses patients et leurs codes peuvent être créés, mais aucun de ces jeux
-n'est encore jouable dans la démo. Les comptes thérapeutes existants restent dans l'espace
-kinésithérapeute.
+SensAI est une plateforme de **rééducation de l'enfant** ouverte à plusieurs spécialités.
+À l'inscription, le professionnel choisit sa spécialité ; elle détermine **le catalogue de jeux**
+qu'il peut prescrire. Tout le reste est commun : dashboard, fiche patient, diagnostic, codes
+d'activation, espace enfant, analyses et alertes.
+
+| Spécialité | Jeux jouables | Ce qui est travaillé |
+|------------|---------------|----------------------|
+| **Kinésithérapeute** | Le Hibou, Le Gardien des Lucioles | mobilité (rotation du cou, élévation du bras / épaule) |
+| **Ergothérapeute** | La Danse des Lucioles | mémoire de séquence, planification, coordination œil-main et des deux mains |
+
+Chaque compte ne voit que ses propres patients. La spécialité est enregistrée avec le compte
+(champ `specialty`, table `users`) et chaque jeu appartient à une spécialité (table `games`) ;
+le backend refuse d'attribuer un jeu d'une autre spécialité. D'autres spécialités
+(orthophonie, psychomotricité…) peuvent être ajoutées de la même façon. Les comptes existants
+avant cette évolution sont dans l'espace kinésithérapeute.
 
 ### Les jeux disponibles
 
@@ -137,6 +147,7 @@ kinésithérapeute.
 |-----|-----------|------------------------|-------------------|
 | **Le Hibou** | rotation cervicale (tête) | angle cible, maintien, répétitions, vitesse, limite de sécurité, sensibilité caméra, inversion du sens | rotation gauche / droite, symétrie, maintien, fluidité, compensations (tête penchée) |
 | **Le Gardien des Lucioles** | abduction de l'épaule (bras) | bras atteint, mode hémiplégie / bilatéral, seuil d'abduction, extension du coude, tolérance de l'autre bras, nombre de lucioles, maintien | abduction max, pic moyen, compensations (autre bras levé) |
+| **La Danse des Lucioles** (ergothérapie) | l'enfant refait avec ses mains la séquence de fleurs montrée par Léo | main (droite, gauche, au choix, à tour de rôle), niveau de départ, nombre de danses, taille des fleurs | plus longue séquence, erreurs d'ordre, aides de Léo, temps par fleur |
 
 Les deux jeux enregistrent aussi le score, le taux de réussite, la durée, la **douleur** et
 l'**effort** déclarés par l'enfant. Le bouton **« J'ai mal / Stop »** arrête la séance à tout moment.
@@ -262,7 +273,7 @@ Le détail des mesures attendues est dans [`data_analysis/README.md`](data_analy
 |--------|--------------|
 | Site SensAI (UI / UX) | Mayssem — branche `sensAI-ui` |
 | Backend FastAPI | branche `backend-fastapi` |
-| Jeu Le Gardien des Lucioles | Maram — branche `maram-game` |
+| Jeux Le Gardien des Lucioles et La Danse des Lucioles | Maram — branche `maram-game` |
 | Jeu Le Hibou (prototype Python / OpenCV) | Chahed — branche `feature/game-hibou` |
 | Data Analysis & dashboard thérapeute, intégration de la plateforme | branche `feature/dashboard-analytics` |
 

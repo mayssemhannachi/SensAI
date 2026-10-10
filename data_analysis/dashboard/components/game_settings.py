@@ -23,6 +23,8 @@ DIRECTIONS = {
 
 GAME_HINTS = {
     "le-hibou": "Rotation cervicale : l’enfant tourne la tête à droite puis à gauche et maintient la position.",
+    "danse-lucioles": "Mémoire et coordination : Léo allume des fleurs dans un ordre, l’enfant refait la même "
+                      "danse en les touchant avec ses mains (planification, mémoire de travail, œil-main).",
     "gardien-lucioles": "Élévation du bras (épaule) : l’enfant lève le bras, coude tendu, dans la direction "
                         "et jusqu’à la hauteur prescrites.",
 }
@@ -38,6 +40,8 @@ def settings_fields(slug: str | None, current: dict | None, key: str) -> dict:
     config = {**settings_defaults(slug), **(current or {})}
     if slug == "gardien-lucioles":
         return _lucioles_fields(config, key)
+    if slug == "danse-lucioles":
+        return _danse_fields(config, key)
     return _hibou_fields(config, key)
 
 
@@ -114,3 +118,29 @@ def _lucioles_fields(config: dict, key: str) -> dict:
             "target_angle": int(threshold), "elbow_min": int(elbow), "rest_tolerance": int(rest),
             "repetitions": int(reps), "hold_seconds": float(hold),
             "difficulty": ["faible", "moyenne", "elevee"][level - 1]}
+
+
+HANDS = {"any": "Au choix", "R": "Main droite", "L": "Main gauche", "alt": "Les deux à tour de rôle"}
+LEVELS = {"easy": "Facile : 2 fleurs, numéros visibles", "mid": "Moyen : 3 fleurs, de mémoire",
+          "hard": "Difficile : 4 fleurs, de mémoire"}
+SIZES = {"big": "Grandes", "mid": "Moyennes", "small": "Petites"}
+
+
+def _danse_fields(config: dict, key: str) -> dict:
+    """Mêmes choix que l'écran d'accueil de La Danse des Lucioles (Maram)."""
+    c1, c2 = st.columns(2)
+    with c1:
+        hand = st.selectbox("Quelle main", list(HANDS), format_func=HANDS.get,
+                            index=_index(HANDS, config.get("hand_mode")), key=f"{key}_hand",
+                            help="« Les deux à tour de rôle » travaille la coordination bimanuelle.")
+        level = st.selectbox("Niveau de départ", list(LEVELS), format_func=LEVELS.get,
+                             index=_index(LEVELS, config.get("level")), key=f"{key}_level",
+                             help="Le jeu s’adapte ensuite : une fleur de plus après une danse sans faute.")
+    with c2:
+        reps = st.number_input("Nombre de danses", 1, 30, int(config.get("repetitions", 5)), key=f"{key}_reps")
+        size = st.selectbox("Taille des fleurs", list(SIZES), format_func=SIZES.get,
+                            index=_index(SIZES, config.get("target_size")), key=f"{key}_size",
+                            help="Plus les fleurs sont petites, plus le geste doit être précis.")
+    difficulty = {"easy": "faible", "mid": "moyenne", "hard": "elevee"}[level]
+    return {**config, "hand_mode": hand, "level": level, "repetitions": int(reps),
+            "target_size": size, "difficulty": difficulty}

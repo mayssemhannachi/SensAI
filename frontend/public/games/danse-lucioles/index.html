@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<!--
+  La Danse des Lucioles — jeu d'ergothérapie (mémoire de séquence, planification,
+  coordination œil-main, alternance des mains).
+  Conception et jeu original : Maram (branche maram-game, 9d2341e).
+  Intégration SensAI : les réglages viennent de l'ergothérapeute (paramètres d'URL passés
+  par la page /dashboard/game/danse-lucioles) et la séance est renvoyée à cette page par
+  postMessage, qui l'enregistre dans le backend. Le reste du jeu est celui de Maram.
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>La Danse des Lucioles</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--texte:#3b2a7a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#8fd8ff;color:var(--texte);font:18px/1.35 Fredoka,"Trebuchet MS",sans-serif;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;overflow:hidden;
+  background:linear-gradient(180deg,#4fc3ff 0%,#a5e4ff 55%,#e3f8ff 100%)}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;transform:scaleX(-1);filter:brightness(1.12) contrast(1.12) saturate(1.1)}
+#game{position:absolute;inset:0}
+#game canvas{width:100%!important;height:100%!important}
+#intro{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2)}
+.card{display:flex;flex-direction:column;align-items:center;gap:9px;padding:clamp(14px,2.2vw,28px) clamp(22px,4vw,50px);
+  border-radius:40px;background:rgba(255,255,255,.93);border:6px solid #ffb938;
+  box-shadow:0 10px 0 #e89a1a,0 18px 40px rgba(0,80,160,.35);text-align:center;max-width:92%;max-height:96%;overflow:auto}
+.card h1{margin:0;font-size:clamp(28px,5vw,58px);line-height:1.05;color:#ff6b3d;text-shadow:0 4px 0 #b8381a}
+.card .owl{font-size:clamp(34px,5vw,60px);animation:bob 2.4s ease-in-out infinite}
+.card p{margin:0;font-size:clamp(15px,2vw,22px);color:#5b4a9e}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-4deg)}}
+@media (prefers-reduced-motion:reduce){.owl{animation:none}}
+input,button{font:inherit}
+.btn{cursor:pointer;border:0;border-radius:999px;font-weight:700;padding:12px 30px;font-size:clamp(16px,2.2vw,26px);min-width:280px;
+  color:#3a2500;background:linear-gradient(180deg,#fff08a,#ffb938);box-shadow:0 6px 0 #c77d00,0 10px 20px rgba(0,0,0,.35);transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #c77d00}
+.btn.alt{color:#06382d;background:linear-gradient(180deg,#b6ffe6,#4fd8a8);box-shadow:0 6px 0 #1f9c75,0 10px 20px rgba(0,0,0,.35)}
+.btn:focus-visible{outline:4px solid #3b2a7a;outline-offset:3px}
+.kine{font-size:14px;color:#8a7fc7}
+.grp{display:flex;flex-direction:column;align-items:center;gap:4px}
+.lbl{font-weight:600;font-size:clamp(13px,1.6vw,17px);color:#5b4a9e}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.chip{cursor:pointer;border:3px solid #cfc8f3;background:#fff;color:#3b2a7a;border-radius:999px;padding:6px 16px;font-weight:700;font-size:clamp(13px,1.7vw,18px)}
+.chip.on{background:#ffe066;border-color:#ffb938;box-shadow:0 3px 0 #c77d00}
+.chip:focus-visible{outline:4px solid #3b2a7a;outline-offset:2px}
+#end{position:absolute;inset:0;z-index:22;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.25)}
+#msg{position:absolute;bottom:64px;left:0;right:0;text-align:center;color:#d9480f;z-index:25;pointer-events:none;font-weight:600;text-shadow:0 0 6px #fff}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="cam" playsinline muted></video>
+  <div id="game"></div>
+
+  <div id="intro"><div class="card">
+    <div class="owl">🦉</div>
+    <h1>La Danse<br>des Lucioles</h1>
+    <p>Léo allume des fleurs magiques. Regarde bien, puis refais la même danse avec tes mains !</p>
+    <p id="goal" style="font-weight:700;color:#7c3aed"></p>
+    <button id="start" class="btn">📷 Jouer avec la caméra</button>
+    <button id="demo" class="btn alt">🖱️ Essayer à la souris</button>
+  </div></div>
+
+  <div id="msg"></div>
+
+  <div id="end"><div class="card">
+    <div class="owl">🏆</div><h1>Bravo !</h1><p id="endTxt"></p>
+  </div></div>
+</div>
+
+<script src="../gardien-lucioles/vendor/phaser.min.js"></script><!-- Phaser 3.80.1 (MIT), embarqué pour fonctionner sans CDN -->
+<script type="module">
+// MediaPipe est chargé à la demande (mode caméra) : le mode souris fonctionne même hors ligne.
+const MP_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const $ = id => document.getElementById(id);
+const W=960, H=540, FONT='Fredoka, "Trebuchet MS", sans-serif';
+const SIZES = {big:62, mid:46, small:34};                          // rayon d'une fleur (zone à toucher)
+const LEVELS = {easy:{len:2,nums:true}, mid:{len:3,nums:false}, hard:{len:4,nums:false}};   // nums = numéros gardés pendant « À toi ! »
+const COL = {R:0xff8a3d, L:0x3a9be8, any:0xffd43b};                // orange = main droite, bleu = main gauche
+const SPOTS = [[-1.25,-1.05],[1.25,-1.05],[-1.6,.15],[1.6,.15],[-1,1],[1,1]];   // 6 fleurs autour du corps (en largeurs d'épaules)
+const NOTES = [262,294,330,392,440,523];
+const OKS = ['Bravo !','Super !','Génial !','Magique !','Bien joué !'];
+// Position de départ : deux cercles pour les épaules (centre, hauteur, demi-écart, rayon)
+const GUIDE = {x:W/2, y:300, d:110, r:60, swMin:160, swMax:300};
+const VIS = .5, HVIS = .4;                                         // seuils de visibilité : corps / mains
+
+const S = {arm:'any', level:'easy', size:'big', rad:62, player:'', sid:'', ok:false, hv:{R:false,L:false}, demo:false,
+  started:false, done:false, readyHold:0, target:5, reps:0, cal:null, sh:null, hand:{R:null,L:null}, arms:[],
+  log:[], t0:Date.now(), tEnd:0, dbg:{model:false,det:false}};
+
+addEventListener('error', e => { $('msg').textContent = 'Erreur : ' + e.message; });
+addEventListener('unhandledrejection', e => { $('msg').textContent = 'Erreur : ' + (e.reason?.message || e.reason); });
+
+// ---------- Sons (une note par fleur) ----------
+let AC;
+const tone = (f,d=.2,type='sine',v=.15) => { if(!AC) return; const o=AC.createOscillator(), g=AC.createGain(), t=AC.currentTime;
+  o.type=type; o.frequency.value=f; g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+d);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d); };
+
+// ---------- Calibration : les fleurs sont placées par rapport aux épaules de l'enfant ----------
+const defCal = () => ({mid:{x:GUIDE.x,y:GUIDE.y}, sw:GUIDE.d*2});
+const calNow = () => { const {R,L}=S.sh; return {mid:{x:(R.x+L.x)/2,y:(R.y+L.y)/2}, sw:Math.max(110,Math.hypot(R.x-L.x,R.y-L.y))}; };
+
+// ---------- MediaPipe ----------
+let landmarker, lastT = -1;
+const SM = {};                                                     // positions lissées par point du corps
+async function startCamera(){
+  if(landmarker){ S.demo = false; $('intro').style.display = 'none'; return; }
+  $('intro').style.display = 'none';
+  $('msg').textContent = 'Léo prépare la magie…';
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:'user'}});
+    const cam = $('cam'); cam.srcObject = stream; await cam.play();
+    const {PoseLandmarker, FilesetResolver} = await import(MP_URL + "/vision_bundle.mjs");
+    const fs = await FilesetResolver.forVisionTasks(MP_URL + "/wasm");
+    const opts = d => ({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:d},runningMode:"VIDEO",numPoses:1});
+    try{ landmarker = await PoseLandmarker.createFromOptions(fs, opts("GPU")); }
+    catch{ landmarker = await PoseLandmarker.createFromOptions(fs, opts("CPU")); }
+    S.demo = false; S.dbg.model = true; $('msg').textContent = ''; loop();
+  }catch(err){
+    stopCamera();
+    $('msg').textContent = 'Caméra ou modèle indisponible (' + err.message + ') : essaie à la souris.';
+    $('intro').style.display = 'flex';
+  }
+}
+function loop(){
+  const cam = $('cam');
+  if(landmarker && !S.demo && cam.readyState>=2 && cam.currentTime!==lastT){
+    lastT = cam.currentTime;
+    const lm = landmarker.detectForVideo(cam, performance.now()).landmarks?.[0];
+    S.dbg.det = !!lm;
+    if(lm){
+      // Point du corps lissé. Hors image ou peu visible : le point est marqué invisible (v bas) et ne bouge plus,
+      // pour ne jamais dessiner un trait vers un endroit inventé par le modèle.
+      const P = (i,a=.6,th=VIS) => { const l=lm[i];
+        const inside = l.x>=0 && l.x<=1 && l.y>=0 && l.y<=1;
+        const v = inside ? l.visibility : 0, x=(1-l.x)*W, y=l.y*H, o=SM[i];     // miroir : main droite = côté droit de l'écran
+        if(v<th) return o ? {x:o.x,y:o.y,v} : {x,y,v};
+        return SM[i] = o ? {x:o.x+(x-o.x)*a, y:o.y+(y-o.y)*a, v} : {x,y,v}; };
+      const sR=P(12,.3), sL=P(11,.3), eR=P(14), eL=P(13), wR=P(16,.6,HVIS), wL=P(15,.6,HVIS), tR=P(20,.6,HVIS), tL=P(19,.6,HVIS);
+      S.sh = {R:sR, L:sL}; S.ok = sR.v>VIS && sL.v>VIS;
+      const raw = {R:tR.v>HVIS?tR:wR, L:tL.v>HVIS?tL:wL};                        // bout de l'index, sinon poignet
+      for(const k of ['R','L']){ const h=S.hand[k], r=raw[k];
+        S.hand[k] = h ? {x:h.x+(r.x-h.x)*.7, y:h.y+(r.y-h.y)*.7, v:r.v} : {...r}; }
+      S.hv = {R:S.hand.R.v>HVIS, L:S.hand.L.v>HVIS};
+      const act = S.arm==='R' ? ['R'] : S.arm==='L' ? ['L'] : ['R','L'];
+      S.arms = [];                                                               // seulement les segments vraiment vus
+      act.forEach(k => { const [s,e,w] = k==='R' ? [sR,eR,wR] : [sL,eL,wL];
+        if(s.v>VIS && e.v>VIS) S.arms.push([s,e]);
+        if(e.v>VIS && w.v>VIS) S.arms.push([e,w]); });
+    } else { S.ok = false; S.hv = {R:false,L:false}; S.arms = []; }
+  }
+  requestAnimationFrame(loop);
+}
+
+// ---------- Réglages prescrits par l'ergothérapeute (paramètres d'URL SensAI) ----------
+const Q = new URLSearchParams(location.search);
+const pick = (k, allowed, def) => allowed.includes(Q.get(k)) ? Q.get(k) : def;
+const C = {                                                              // mêmes choix que l'écran d'accueil de Maram
+  arm: pick('hand', ['R','L','any','alt'], 'any'),
+  level: pick('level', ['easy','mid','hard'], 'easy'),
+  reps: Math.max(1, Math.min(30, Math.round(+Q.get('reps') || 5))),
+  size: pick('size', ['big','mid','small'], 'big'),
+};
+S.target = C.reps;
+const HAND_TXT = {R:'main droite', L:'main gauche', any:'la main de ton choix', alt:'les deux mains à tour de rôle'};
+const LEVEL_TXT = {easy:'facile', mid:'moyen', hard:'difficile'};
+$('goal').textContent = `Objectif : ${C.reps} danses · ${HAND_TXT[C.arm]} · niveau ${LEVEL_TXT[C.level]}`;
+
+// ---------- Dialogue avec la page SensAI (parent) ----------
+const toParent = msg => { if (parent !== window) parent.postMessage({source:'danse-lucioles', ...msg}, location.origin); };
+addEventListener('message', e => {
+  if (e.origin !== location.origin || e.data?.source !== 'sensai') return;
+  if (e.data.type === 'stop') finishSession(true);
+});
+
+function beginSession(){
+  AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+  S.arm = C.arm; S.level = C.level; S.size = C.size; S.rad = SIZES[C.size]; S.target = C.reps;
+  S.reps = 0; S.done = false; S.tEnd = 0; S.cal = null; S.hand = {R:null,L:null}; S.arms = []; S.finished = false;
+  $('end').style.display = 'none';
+  S.t0 = Date.now(); S.log = []; S.started = false; S.readyHold = 0;
+  toParent({type:'started', input: S.demo ? 'mouse' : 'camera'});
+}
+function buildSummary(stoppedEarly){
+  const rd = S.log.filter(l => l.ev==='repetition'), st = S.log.filter(l => l.ev==='step');
+  const errors = S.log.filter(l => l.ev==='error').length, hints = S.log.filter(l => l.ev==='hint').length;
+  const maxSeq = rd.length ? Math.max(...rd.map(r => r.len)) : 0;
+  const success = Math.min(100, rd.length / S.target * 100);
+  const score = Math.max(0, Math.min(100, Math.round(success*0.7 + Math.min(1, maxSeq/5)*30 - errors*2 - hints)));
+  return {
+    duration_sec: Math.max(1, Math.round(((S.tEnd||Date.now())-S.t0)/1000)),
+    metrics: {
+      score, success_rate: Math.round(success*10)/10,
+      repetitions: rd.length, repetitions_target: S.target,
+      level_number: {easy:1, mid:2, hard:3}[S.level],
+      exercise_name: 'Séquence de fleurs (mémoire et coordination)',
+      played_at: new Date().toISOString(),
+      max_sequence: maxSeq,
+      sequence_errors: errors,
+      hints_used: hints,
+      mean_step_sec: st.length ? +(st.reduce((a,l) => a+l.sec,0)/st.length).toFixed(2) : 0,
+      hand_mode: S.arm, level: S.level, target_size: S.size,
+      completed: !stoppedEarly && rd.length >= S.target,
+      stopped_early: !!stoppedEarly,
+      input_mode: S.demo ? 'mouse' : 'camera',
+      events: S.log.map(l => ({t:+l.t, type:l.ev, len:l.len||0, sec:l.sec||0, station:l.st ?? -1})),
+    },
+  };
+}
+function stopCamera(){
+  const stream = $('cam').srcObject; if(stream) stream.getTracks().forEach(t => t.stop());
+  $('cam').srcObject = null; landmarker = null;
+}
+function finishSession(stoppedEarly){
+  if(S.finished) return;
+  S.finished = true; S.done = true; S.tEnd = S.tEnd || Date.now(); stopCamera();
+  toParent({type:'done', ...buildSummary(stoppedEarly)});
+}
+const logEv = (ev, o={}) => { S.log.push({t:((Date.now()-S.t0)/1000).toFixed(1), ev, ...o}); };
+
+$('start').onclick = () => { S.demo = false; beginSession(); startCamera(); };
+$('demo').onclick = () => { S.demo = true; S.ok = true; S.arms = []; beginSession(); $('intro').style.display = 'none'; };
+
+// ---------- Jeu ----------
+const tc = h => S.arm==='alt' ? COL[h] : COL.any;                  // couleur d'une fleur (orange/bleu seulement en mode « tour de rôle »)
+
+class Jeu extends Phaser.Scene{
+  create(){
+    const g = this.make.graphics({add:false});                    // fleur blanche (teintée ensuite)
+    for(let i=0;i<6;i++){ const a=i*Math.PI/3; g.fillStyle(0xffffff,1).fillCircle(44+Math.cos(a)*23,44+Math.sin(a)*23,15); }
+    g.fillStyle(0xfff3b0,1).fillCircle(44,44,15); g.generateTexture('flower',88,88); g.clear();
+    g.fillStyle(0xffe066,1).fillCircle(8,8,8); g.generateTexture('spark',16,16); g.destroy();
+
+    this.ring = this.add.graphics().setDepth(7);
+    this.arm = this.add.graphics().setDepth(16);
+    this.owl = this.add.graphics().setDepth(12);
+    const tx = (x,y,t,sz,c) => this.add.text(x,y,t,{fontFamily:FONT,fontSize:sz+'px',color:c,fontStyle:'bold',stroke:'#1b1464',strokeThickness:6});
+    this.score = tx(24,18,'',36,'#ffe066').setDepth(9);
+    this.info = this.add.text(W/2,H-30,'',{fontFamily:FONT,fontSize:'26px',color:'#3b2a7a',fontStyle:'bold',backgroundColor:'rgba(255,255,255,.9)',padding:{x:22,y:8}}).setOrigin(.5).setDepth(9);
+    this.pop = tx(W/2,250,'',70,'#ff6b3d').setOrigin(.5).setAlpha(0).setDepth(13);
+
+    // écran d'attente : position de départ (deux cercles pour les épaules)
+    this.wait = this.add.container(0,0).setDepth(15);
+    const scrim = this.add.rectangle(W/2,H/2,W,H,0x1b1464,.18);
+    const wt = this.add.text(W/2,58,"Mets-toi à ta place !\nPose tes épaules dans les deux cercles",
+      {fontFamily:FONT,fontSize:'28px',align:'center',color:'#fff',fontStyle:'bold',stroke:'#1b1464',strokeThickness:6}).setOrigin(.5);
+    this.guide = this.add.graphics();
+    this.waitSub = this.add.text(W/2,H-150,'',{fontFamily:FONT,fontSize:'28px',align:'center',color:'#ffe066',fontStyle:'bold',stroke:'#1b1464',strokeThickness:5}).setOrigin(.5);
+    this.waitBar = this.add.graphics();
+    this.waitDbg = this.add.text(W/2,H-40,'',{fontFamily:FONT,fontSize:'18px',align:'center',color:'#fff',stroke:'#1b1464',strokeThickness:4}).setOrigin(.5);
+    this.wait.add([scrim,wt,this.guide,this.waitSub,this.waitBar,this.waitDbg]);
+
+    this.st = null; this.seq = []; this.hands = []; this.phase = 'idle'; this.lit = -1; this.step = 0; this.len = 2;
+    this.errR = 0; this.hintUsed = false; this.hintLogged = false; this.timer = 0; this.dOK = 0; this.dBad = 0; this.cool = 0;
+    this.stepT0 = 0; this.roundT0 = 0; this.msg = ''; this.msgT = 0; this.happy = 0; this.badI = -1;
+    this.keys = this.input.keyboard.addKeys('SPACE,D');
+    this.showDbg = false;                                        // diagnostic caché pour l'enfant (touche D)
+    this.dbgTxt = this.add.text(10,10,'',{fontFamily:'monospace',fontSize:'16px',color:'#fff',backgroundColor:'rgba(0,0,0,.7)',padding:{x:10,y:6},lineSpacing:3}).setDepth(30);
+  }
+  setMsg(m,ms){ this.msg = m; this.msgT = ms; }
+  buildStations(){
+    (this.st||[]).forEach(s => { s.img.destroy(); s.glow.destroy(); s.num.destroy(); });
+    const c = S.cal;
+    this.st = SPOTS.map(([dx,dy]) => {
+      const x = Phaser.Math.Clamp(c.mid.x+dx*c.sw,70,W-70), y = Phaser.Math.Clamp(c.mid.y+dy*c.sw,150,H-80);
+      const glow = this.add.circle(x,y,S.rad*1.5,0xffffff,0).setDepth(4);
+      const img = this.add.image(x,y,'flower').setScale(S.rad/34).setAlpha(.35).setDepth(5);
+      const num = this.add.text(x,y,'',{fontFamily:FONT,fontSize:Math.round(S.rad*.95)+'px',color:'#fff',fontStyle:'bold',stroke:'#1b1464',strokeThickness:6}).setOrigin(.5).setDepth(6);
+      return {x,y,glow,img,num};
+    });
+  }
+  begin(){
+    S.started = true; S.t0 = Date.now(); S.log = []; S.reps = 0;
+    S.cal = S.cal || ((S.sh && S.ok) ? calNow() : defCal());
+    this.len = LEVELS[S.level].len; this.buildStations(); this.wait.setVisible(false);
+    this.newRound();
+  }
+  newRound(){                                                    // nouvelle danse : fleurs différentes, ordre au hasard
+    const last = this.seq[0];
+    this.seq = Phaser.Utils.Array.Shuffle([0,1,2,3,4,5]).slice(0,this.len);
+    if(this.seq.length>1 && this.seq[0]===last) this.seq.reverse();
+    const first = Math.random()<.5 ? 0 : 1;                      // mode « tour de rôle » : main droite / gauche en alternance
+    this.hands = this.seq.map((_,i) => S.arm==='alt' ? ((i+first)%2 ? 'L' : 'R') : (S.arm==='any' ? 'any' : S.arm));
+    this.phase = 'show'; this.timer = 0; this.lit = -1; this.step = 0; this.errR = 0; this.hintUsed = false; this.hintLogged = false;
+  }
+  spark(x,y,n=14){
+    const em = this.add.particles(x,y,'spark',{speed:{min:80,max:240},lifespan:700,scale:{start:1.2,end:0},emitting:false}).setDepth(14);
+    em.explode(n); this.time.delayedCall(900,()=>em.destroy());
+  }
+  stepDone(exp){
+    const E = this.st[exp];
+    logEv('step',{sec:+((Date.now()-this.stepT0)/1000).toFixed(2), st:exp, len:this.seq.length});
+    tone(NOTES[exp],.3); this.spark(E.x,E.y);
+    this.step++; this.stepT0 = Date.now(); this.dOK = 0; this.dBad = 0; this.hintLogged = false;
+    if(this.step >= this.seq.length) this.roundWin();
+  }
+  roundWin(){
+    this.phase = 'win'; S.reps++;
+    logEv('repetition',{len:this.seq.length, sec:+((Date.now()-this.roundT0)/1000).toFixed(1), err:this.errR});
+    [0,1,2].forEach(i => this.time.delayedCall(i*130,()=>tone(NOTES[i+2],.25)));
+    this.pop.setText(Phaser.Utils.Array.GetRandom(OKS)).setAlpha(1).setScale(.4);
+    this.tweens.add({targets:this.pop,scale:1,duration:300,ease:'Back.out'});
+    this.tweens.add({targets:this.pop,alpha:0,delay:900,duration:400});
+    this.happy = 1500; this.setMsg('Quelle belle danse ! 🎉',1600);
+    // difficulté adaptative : danse sans faute → on ajoute une fleur ; trop d'erreurs → on en enlève une
+    if(this.errR===0 && !this.hintUsed) this.len = Math.min(5,this.len+1); else if(this.errR>=3) this.len = Math.max(2,this.len-1);
+    toParent({type:'progress', reps:S.reps, target:S.target});
+    if(S.reps >= S.target) this.finish(); else this.time.delayedCall(1700,()=>this.newRound());
+  }
+  finish(){
+    S.done = true; S.tEnd = Date.now();
+    this.time.delayedCall(1500, () => finishSession(false));   // SensAI affiche l'auto-évaluation puis enregistre
+  }
+  logic(dt,act){
+    if(this.phase==='show'){                                      // Léo montre la danse : une fleur s'allume à la fois
+      this.timer += dt;
+      const k = (this.timer-1000)/900, idx = Math.floor(k), off = (this.timer-1000)%900;
+      const lit = (k>=0 && idx<this.seq.length && off<650) ? this.seq[idx] : -1;
+      if(lit>=0 && lit!==this.lit) tone(NOTES[lit],.4);
+      this.lit = lit;
+      if(k>=this.seq.length){ this.phase='play'; this.step=0; this.lit=-1; this.dOK=0; this.dBad=0; this.cool=0; this.stepT0=this.roundT0=Date.now(); }
+    } else if(this.phase==='play'){                               // à l'enfant de refaire la danse, dans l'ordre
+      const exp = this.seq[this.step], eh = this.hands[this.step], E = this.st[exp];
+      const allowed = eh==='any' ? ['R','L'] : [eh];
+      const inside = (k,s) => { const h=S.hand[k]; return !!h && h.v>HVIS && Math.hypot(h.x-s.x,h.y-s.y) <= S.rad; };
+      const okHit = allowed.some(k => act.includes(k) && inside(k,E));
+      const wrongHand = !okHit && act.some(k => inside(k,E));
+      let bad = false;
+      this.st.forEach((s,i) => { if(i===exp) return; const idx=this.seq.indexOf(i);
+        if(idx>=0 && idx<this.step) return;                       // fleur déjà réussie : on ignore
+        if(act.some(k => inside(k,s))){ bad = true; this.badI = i; } });
+      if(!this.hintLogged && (this.errR>=2 || Date.now()-this.stepT0>8000)){ this.hintLogged = true; this.hintUsed = true; logEv('hint',{st:exp}); }
+      if(wrongHand && this.msgT<=0) this.setMsg('Utilise ta main '+(eh==='R'?'droite (orange)':'gauche (bleue)')+' !',1200);
+      this.dOK = okHit ? this.dOK+dt : 0;
+      this.cool = Math.max(0,this.cool-dt);
+      this.dBad = (bad && !okHit && this.cool<=0) ? this.dBad+dt : 0;   // le trajet de la main ne compte pas comme une erreur
+      if(this.dOK >= 200) this.stepDone(exp);
+      else if(this.dBad >= 450){
+        this.errR++; logEv('error',{st:this.badI}); this.cool = 1500; this.dBad = 0; tone(150,.3,'sawtooth',.08);
+        const B = this.st[this.badI];
+        this.tweens.add({targets:B.img,angle:{from:-14,to:14},yoyo:true,repeat:2,duration:80,onComplete:()=>B.img.setAngle(0)});
+        this.setMsg("Oups ! Essaie encore, tu y es presque 💪",1500);
+      }
+    }
+  }
+  drawOwl(sad,t){
+    const o=this.owl, x=110, y=H-95, bob=Math.sin(t/400)*3;
+    o.clear();
+    o.fillStyle(sad?0x8a8fa6:0x9b7bff,1);
+    o.fillTriangle(x-48,y-48+bob,x-18,y-72+bob,x-12,y-38+bob).fillTriangle(x+48,y-48+bob,x+18,y-72+bob,x+12,y-38+bob);
+    o.fillEllipse(x,y+bob,112,132).fillEllipse(x-62,y+10+bob,30,70).fillEllipse(x+62,y+10+bob,30,70);
+    o.fillStyle(sad?0xcfd3e3:0xefe6ff,1).fillEllipse(x,y+24+bob,72,80);
+    o.fillStyle(0xffffff,1).fillCircle(x-24,y-20+bob,24).fillCircle(x+24,y-20+bob,24);
+    o.fillStyle(0x2a1a6e,1).fillCircle(x-24,y-(sad?12:20)+bob,11).fillCircle(x+24,y-(sad?12:20)+bob,11);
+    o.fillStyle(0xffa62b,1).fillTriangle(x-9,y-4+bob,x+9,y-4+bob,x,y+14+bob);
+    if(!sad && this.happy>0) o.fillStyle(0xff8fd0,.7).fillCircle(x-46,y+4+bob,9).fillCircle(x+46,y+4+bob,9);
+  }
+  // Écran de départ : l'enfant doit poser ses deux épaules dans les deux cercles, puis ne plus bouger
+  drawStart(dt){
+    const {x:GX,y:GY,d:GD,r:GR,swMin,swMax} = GUIDE;
+    const tR = {x:GX+GD,y:GY}, tL = {x:GX-GD,y:GY};                 // épaule droite = côté droit de l'écran (miroir)
+    let good = false, tip = '';
+    if(!S.ok || !S.sh) tip = 'Je ne te vois pas… place-toi devant la caméra, tête et épaules visibles';
+    else {
+      const {R,L} = S.sh, sw = Math.hypot(R.x-L.x,R.y-L.y), mx = (R.x+L.x)/2-GX, my = (R.y+L.y)/2-GY;
+      const inR = Math.hypot(R.x-tR.x,R.y-tR.y) <= GR, inL = Math.hypot(L.x-tL.x,L.y-tL.y) <= GR;
+      good = inR && inL && sw>=swMin && sw<=swMax;
+      tip = good ? 'Super ! Ne bouge plus…'
+        : sw>swMax ? 'Recule un peu'
+        : sw<swMin ? 'Rapproche-toi un peu'
+        : Math.abs(mx)>GR*.8 ? (mx>0 ? '← Bouge un peu vers la gauche' : 'Bouge un peu vers la droite →')
+        : Math.abs(my)>GR*.8 ? (my>0 ? '↑ Monte un peu' : '↓ Baisse-toi un peu')
+        : 'Redresse tes épaules';
+    }
+    S.readyHold = good ? S.readyHold+dt : 0;
+    const need = 1500, pr = Math.min(1,S.readyHold/need), col = good ? 0x2fbf71 : 0xffb938;
+    const g = this.guide; g.clear();
+    g.lineStyle(6,0xffffff,.9);                                      // tête (pointillés) au-dessus des épaules
+    for(let i=0;i<20;i++){ const a=i*Math.PI/10; g.beginPath(); g.arc(GX,GY-125,56,a,a+.22); g.strokePath(); }
+    [tL,tR].forEach(p => { g.fillStyle(col,.35).fillCircle(p.x,p.y,GR); g.lineStyle(6,col,1).strokeCircle(p.x,p.y,GR); });
+    if(S.ok && S.sh) [S.sh.R,S.sh.L].forEach(p => { g.fillStyle(0xffffff,1).fillCircle(p.x,p.y,13); g.lineStyle(4,0x3b2a7a,1).strokeCircle(p.x,p.y,13); });
+    this.wait.setVisible(true);
+    this.waitSub.setText(tip);
+    this.waitBar.clear().fillStyle(0xffffff,.9).fillRoundedRect(W/2-200,H-115,400,26,13)
+      .fillStyle(0x2fbf71,1).fillRoundedRect(W/2-200,H-115,Math.max(0,400*pr),26,13);
+    this.waitDbg.setVisible(this.showDbg).setText('Modèle : '+(S.dbg.model?'✓':'…')+'   Personne : '+(S.dbg.det?'✓':'✗')+'   Espace = commencer sans attendre');
+    if(S.readyHold >= need || Phaser.Input.Keyboard.JustDown(this.keys.SPACE)) this.begin();
+  }
+  update(t,dt){
+    const act = S.arm==='R' ? ['R'] : S.arm==='L' ? ['L'] : ['R','L'];
+    if(Phaser.Input.Keyboard.JustDown(this.keys.D)) this.showDbg = !this.showDbg;
+    if(S.demo){                                                   // mode souris : la souris joue le rôle des mains
+      const p = this.input.activePointer;
+      S.hand.R = S.hand.L = {x:p.x,y:p.y,v:1}; S.ok = true; S.hv = {R:true,L:true}; S.arms = [];
+      if(!S.started) this.begin();
+    }
+    if(!S.started) this.drawStart(dt); else this.wait.setVisible(false);
+
+    this.msgT = Math.max(0,this.msgT-dt); this.happy = Math.max(0,this.happy-dt);
+    if(S.started && !S.done && this.st) this.logic(dt,act);
+
+    // ----- Affichage des fleurs : éteintes, allumées (démo), numérotées (facile), réussies (vertes), aide (clignote) -----
+    this.ring.clear();
+    if(this.st){
+      const play = this.phase==='play' || this.phase==='win', nums = LEVELS[S.level].nums;
+      const hintI = (this.phase==='play' && (this.errR>=2 || Date.now()-this.stepT0>8000)) ? this.seq[this.step] : -1;
+      this.st.forEach((s,i) => {
+        const idx = this.seq.indexOf(i), done = play && idx>=0 && (this.phase==='win' || idx<this.step);
+        let a=.35, tint=0xffffff, sc=1, ga=0, txt='';
+        if(i===this.lit){ a=1; tint=tc(this.hands[idx]); sc=1.25; ga=.6; txt=''+(idx+1); }
+        else if(done){ a=1; tint=0x2fbf71; sc=1.05; txt='✓'; }
+        else if(play && idx>=0 && nums){ a=.85; tint=tc(this.hands[idx]); txt=''+(idx+1); }
+        if(i===hintI){ const p=.5+.5*Math.sin(t/160); a=1; sc=1.1+.15*p; ga=.3+.4*p; if(tint===0xffffff) tint=tc(this.hands[this.step]); }
+        s.img.setAlpha(a).setTint(tint).setScale(sc*S.rad/34); s.glow.setFillStyle(tint,ga); s.num.setText(txt);
+      });
+      if(this.phase==='play' && this.dOK>0){ const E=this.st[this.seq[this.step]];
+        this.ring.lineStyle(8,0x2fbf71,1).beginPath().arc(E.x,E.y,S.rad+6,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,this.dOK/200)).strokePath(); }
+    }
+
+    // Bras et mains suivis (vue miroir) : uniquement les segments réellement visibles
+    this.arm.clear();
+    if(!S.demo && S.started) S.arms.forEach(seg => { this.arm.lineStyle(14,0x2fbf71,.5).strokePoints(seg); this.arm.lineStyle(7,0xffffff,.9).strokePoints(seg); });
+    if(S.started) act.forEach(k => { const h=S.hand[k]; if(h && (h.v>HVIS || S.demo)){
+      this.arm.fillStyle(S.arm==='alt'?COL[k]:0xffe066,1).fillCircle(h.x,h.y,16).lineStyle(4,0xffffff,1).strokeCircle(h.x,h.y,16); } });
+    this.drawOwl(this.msgT>0 && this.phase==='play',t);
+
+    // Textes pour l'enfant
+    this.score.setText('⭐ '+S.reps+' / '+S.target);
+    let m = '';
+    if(this.phase==='show') m = 'Regarde bien la danse de Léo ! 👀';
+    else if(this.phase==='play'){
+      const eh = this.hands[this.step];
+      m = this.msgT>0 ? this.msg : act.every(k => !S.hv[k]) ? 'Montre ta main à la caméra'
+        : 'À toi ! Fleur '+(this.step+1)+' sur '+this.seq.length + (S.arm==='alt' ? (eh==='R' ? ' : main orange' : ' : main bleue') : '');
+    } else if(this.phase==='win') m = this.msg;
+    this.info.setVisible(S.started && m!=='').setText(m);
+
+    this.dbgTxt.setVisible(this.showDbg).setText(
+      'Phase : '+this.phase+'   étape : '+this.step+'/'+this.seq.length+'   longueur : '+this.len+'\n'+
+      'Séquence : '+this.seq.join('-')+'   mains : '+this.hands.join('')+'\n'+
+      'Main R : '+(S.hand.R?Math.round(S.hand.R.x)+','+Math.round(S.hand.R.y):'-')+'   Main L : '+(S.hand.L?Math.round(S.hand.L.x)+','+Math.round(S.hand.L.y):'-')+'\n'+
+      'Erreurs (danse) : '+this.errR+'   [D = masquer]');
+  }
+}
+const start = () => new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,transparent:true,
+  scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:Jeu});
+document.fonts.load('700 20px Fredoka').then(start,start);
+</script>
+</body>
+</html>

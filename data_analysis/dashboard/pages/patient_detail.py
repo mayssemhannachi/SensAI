@@ -347,6 +347,43 @@ def show_patient_detail():
                                 key="patient_pain_lucioles")
 
     # --------------------------------------------------------
+    # MÉMOIRE ET COORDINATION (La Danse des Lucioles, ergothérapie)
+    # --------------------------------------------------------
+    sequence = history.dropna(subset=["max_sequence"])
+    if not sequence.empty:
+        last_seq, first_seq = sequence.iloc[-1], sequence.iloc[0]
+        recent = sequence.tail(3)
+        section("Mémoire et coordination",
+                "Séquences de fleurs reproduites avec les mains à chaque séance de La Danse des Lucioles.")
+        kpi_row([
+            kpi_card("Plus longue séquence", fmt_number(last_seq["max_sequence"]), "✿", "tone-violet",
+                     unit=" fleurs", foot=f"record {fmt_number(sequence['max_sequence'].max())} fleurs",
+                     delta_html=delta_chip(analytics.delta(last_seq["max_sequence"], first_seq["max_sequence"]), "", 0)),
+            kpi_card("Erreurs d’ordre", fmt_number(recent["sequence_errors"].mean(), 1), "✗", "tone-orange",
+                     foot="moyenne des 3 dernières séances"),
+            kpi_card("Aides de Léo", fmt_number(recent["hints_used"].mean(), 1), "?", "tone-blue",
+                     foot="moyenne des 3 dernières séances"),
+            kpi_card("Temps par fleur", fmt_number(last_seq["mean_step_sec"], 1), "⏱", "tone-green", unit=" s",
+                     foot="vitesse de planification du geste"),
+        ])
+        st.write("")
+        seq_col, err_col = st.columns([1.5, 1], gap="medium")
+        with seq_col:
+            with card("sequence"):
+                card_title("Longueur des séquences", "Plus longue danse réussie à chaque séance (mémoire de travail).")
+                st.plotly_chart(charts.sequence_chart(sequence), config=charts.CHART_CONFIG, key="patient_sequence")
+        with err_col:
+            with card("seq-errors"):
+                card_title("Erreurs et aides", "Fleurs touchées dans le mauvais ordre et aides données par Léo.")
+                st.plotly_chart(charts.errors_hints_chart(sequence), config=charts.CHART_CONFIG,
+                                key="patient_seq_errors")
+        if rotation.empty and abduction.empty and history[["pain_level", "effort"]].notna().any().any():
+            with card("pain-danse"):
+                card_title("Douleur & effort", "Auto-évaluation de l’enfant après chaque séance (0 à 5).")
+                st.plotly_chart(charts.pain_effort_chart(history), config=charts.CHART_CONFIG,
+                                key="patient_pain_danse")
+
+    # --------------------------------------------------------
     # ÉVOLUTION
     # --------------------------------------------------------
     section("Évolution des performances", "Chaque point est une séance, coloré par jeu.")
@@ -428,6 +465,8 @@ def show_patient_detail():
         "Rot. droite (°)": "rotation_right",
         "Abduction max (°)": "abduction_max",
         "Compensations": "compensations",
+        "Séquence max": "max_sequence",
+        "Erreurs d’ordre": "sequence_errors",
         "Douleur (/5)": "pain_level",
         "Effort (/5)": "effort",
     }
@@ -436,7 +475,7 @@ def show_patient_detail():
             display[label] = table[column].to_numpy()
     if display["Exercice"].nunique(dropna=True) <= 1:
         display = display.drop(columns="Exercice")
-    if display["Progression"].isna().all() or {"Rot. gauche (°)", "Abduction max (°)"} & set(display.columns):
+    if display["Progression"].isna().all() or {"Rot. gauche (°)", "Abduction max (°)", "Séquence max"} & set(display.columns):
         display = display.drop(columns="Progression")
     st.dataframe(
         display,
@@ -455,6 +494,8 @@ def show_patient_detail():
             "Rot. droite (°)": st.column_config.NumberColumn(format="%d"),
             "Abduction max (°)": st.column_config.NumberColumn(format="%d"),
             "Compensations": st.column_config.NumberColumn(format="%d"),
+            "Séquence max": st.column_config.NumberColumn(format="%d"),
+            "Erreurs d’ordre": st.column_config.NumberColumn(format="%d"),
             "Douleur (/5)": st.column_config.NumberColumn(format="%d"),
             "Effort (/5)": st.column_config.NumberColumn(format="%d"),
         },

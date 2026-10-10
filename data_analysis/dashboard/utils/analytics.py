@@ -28,6 +28,8 @@ AMPLITUDE_GAIN = 2.0        # gain d'amplitude moyenne (°) considéré comme un
 ABDUCTION_DROP = 5.0        # baisse du pic d'abduction moyen (°) — Gardien des Lucioles
 ABDUCTION_GAIN = 5.0        # gain du pic d'abduction moyen (°) considéré comme une progression
 COMPENSATION_HIGH = 3.0     # compensations par séance (moyenne des 3 dernières) à surveiller
+SEQUENCE_GAIN = 1.0         # +1 fleur de séquence moyenne = progression (Danse des Lucioles)
+SEQUENCE_ERRORS_HIGH = 4.0  # erreurs d'ordre par séance (moyenne des 3 dernières) à surveiller
 
 STATUS_ORDER = ["À surveiller", "En progression", "Stable", "Nouveau"]
 
@@ -192,6 +194,13 @@ def abduction_series(history: pd.DataFrame) -> pd.Series:
     return pd.to_numeric(history["abduction_mean_peak"], errors="coerce").dropna()
 
 
+def sequence_series(history: pd.DataFrame) -> pd.Series:
+    """Plus longue séquence réussie par séance (Danse des Lucioles), vide sinon."""
+    if "max_sequence" not in history.columns:
+        return pd.Series(dtype=float)
+    return pd.to_numeric(history["max_sequence"], errors="coerce").dropna()
+
+
 def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert]:
     """Signaux d'attention pour un patient (historique trié par date)."""
     alerts: list[Alert] = []
@@ -242,6 +251,14 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
                 f"{fr(comp.mean(), 1)} compensations par séance en moyenne (autre bras levé ou tête penchée).",
             ))
 
+    if "sequence_errors" in history.columns:
+        errs = pd.to_numeric(history["sequence_errors"], errors="coerce").dropna().tail(3)
+        if len(errs) >= 2 and errs.mean() >= SEQUENCE_ERRORS_HIGH:
+            alerts.append(Alert(
+                "Erreurs de séquence", "warning",
+                f"{fr(errs.mean(), 1)} erreurs d’ordre par séance en moyenne : niveau peut-être trop élevé.",
+            ))
+
     last_date = latest.get("session_date")
     if pd.notna(last_date):
         idle = (reference.normalize() - pd.Timestamp(last_date).normalize()).days
@@ -261,9 +278,12 @@ def patient_status(history: pd.DataFrame, alerts: list[Alert]) -> str:
     slope = score_slope(history["score"].tail(TREND_WINDOW))
     amplitude_gain = recent_change(amplitude_series(history))
     abduction_gain = recent_change(abduction_series(history))
+    sequence_gain = recent_change(sequence_series(history))
     if (slope is not None and slope >= TREND_SIGNIFICANT) or (
         amplitude_gain is not None and amplitude_gain >= AMPLITUDE_GAIN
-    ) or (abduction_gain is not None and abduction_gain >= ABDUCTION_GAIN):
+    ) or (abduction_gain is not None and abduction_gain >= ABDUCTION_GAIN) or (
+        sequence_gain is not None and sequence_gain >= SEQUENCE_GAIN
+    ):
         return "En progression"
     return "Stable"
 
@@ -450,6 +470,31 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
                 f"Bras levé jusqu’à {fr(best, 0)}°{goal}{comp_text}.{gain}",
                 "positive" if reached and not (pd.notna(comp) and comp >= COMPENSATION_HIGH) else "neutral",
                 "↑",
+            ))
+
+    # 2 quater. Mémoire de séquence (Danse des Lucioles)
+    if "max_sequence" in history.columns:
+        seq = history.dropna(subset=["max_sequence"])
+        if not seq.empty:
+            last_seq = seq.iloc[-1]
+            best = float(seq["max_sequence"].max())
+            errs = last_seq.get("sequence_errors")
+            hints = last_seq.get("hints_used")
+            gain = ""
+            if len(seq) >= 2:
+                change = float(last_seq["max_sequence"]) - float(seq.iloc[0]["max_sequence"])
+                gain = f" Séquence {fr(change, 0, True)} fleur(s) depuis le début."
+            details = []
+            if errs is not None and pd.notna(errs):
+                details.append(f"{fr(errs, 0)} erreur(s)")
+            if hints is not None and pd.notna(hints):
+                details.append(f"{fr(hints, 0)} aide(s)")
+            insights.append(Insight(
+                "Mémoire et coordination",
+                f"Plus longue danse : {fr(last_seq['max_sequence'], 0)} fleurs (record {fr(best, 0)})"
+                + (f", {', '.join(details)}" if details else "") + f".{gain}",
+                "positive" if gain and change > 0 else "neutral",
+                "✿",
             ))
 
     # 3. Meilleur / plus difficile jeu

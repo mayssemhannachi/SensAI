@@ -273,6 +273,37 @@ def compensation_chart(history: pd.DataFrame) -> go.Figure:
     return _layout(fig, height=330, legend=False)
 
 
+def sequence_chart(history: pd.DataFrame) -> go.Figure:
+    """La Danse des Lucioles : plus longue séquence réussie par séance (mémoire de travail)."""
+    data = history.dropna(subset=["session_date", "max_sequence"]).sort_values("session_date")
+    color = METRIC_COLORS["max_sequence"]
+    fig = go.Figure(go.Scatter(
+        x=data["session_date"], y=data["max_sequence"], name="Plus longue séquence", mode="lines+markers",
+        line=dict(color=color, width=2.5, shape="hv"),
+        marker=dict(size=8, color="#FFFFFF", line=dict(color=color, width=2)),
+        hovertemplate="<b>%{x|%d/%m/%Y}</b><br>Plus longue séquence : %{y:.0f} fleurs<extra></extra>",
+    ))
+    fig.update_yaxes(rangemode="tozero", dtick=1, ticksuffix=" fl.")
+    fig.update_xaxes(tickformat="%d/%m")
+    return _layout(fig, height=330, legend=False)
+
+
+def errors_hints_chart(history: pd.DataFrame) -> go.Figure:
+    """La Danse des Lucioles : erreurs d'ordre et aides de Léo par séance."""
+    data = history.dropna(subset=["session_date", "max_sequence"]).sort_values("session_date").tail(15)
+    labels = data["session_date"].dt.strftime("%d/%m")
+    fig = go.Figure()
+    for column, label in [("sequence_errors", "Erreurs d’ordre"), ("hints_used", "Aides de Léo")]:
+        fig.add_trace(go.Bar(
+            x=labels, y=data[column].fillna(0), name=label,
+            marker=dict(color=METRIC_COLORS[column], cornerradius=3),
+            hovertemplate=f"<b>%{{x}}</b><br>{label} : %{{y:.0f}}<extra></extra>",
+        ))
+    fig.update_yaxes(rangemode="tozero", dtick=1)
+    fig.update_layout(barmode="group", bargap=0.3, bargroupgap=0.08)
+    return _layout(fig, height=330)
+
+
 def pain_effort_chart(history: pd.DataFrame) -> go.Figure:
     """Douleur et effort déclarés par l'enfant après chaque séance (0-5)."""
     data = history.dropna(subset=["session_date"]).sort_values("session_date")

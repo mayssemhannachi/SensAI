@@ -43,6 +43,10 @@ export type GameConfig = {
   camera_gain?: number;
   invert_direction?: boolean;
   shoulder_threshold?: number;
+  // La Danse des Lucioles (ergothérapie)
+  hand_mode?: "R" | "L" | "any" | "alt";
+  level?: "easy" | "mid" | "hard";
+  target_size?: "big" | "mid" | "small";
   // Le Gardien des Lucioles (abduction de l'épaule)
   affected_arm?: "R" | "L" | "BI";
   mode?: "hemi" | "bi";

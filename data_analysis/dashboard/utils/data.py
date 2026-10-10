@@ -51,6 +51,8 @@ SESSION_COLUMNS = [
     "pain_level", "effort", "target_angle", "completed",
     # Mesures du jeu Le Gardien des Lucioles (abduction de l'épaule)
     "abduction_max", "abduction_mean_peak", "compensations", "affected_arm",
+    # Mesures du jeu La Danse des Lucioles (mémoire de séquence, ergothérapie)
+    "max_sequence", "sequence_errors", "hints_used", "mean_step_sec",
     "game_slug", "first_name", "last_name", "patient_name",
 ]
 
@@ -79,6 +81,7 @@ NUMERIC_SESSION_COLUMNS = [
     "rotation_left", "rotation_right", "hold_seconds_avg", "smoothness",
     "pain_level", "effort", "target_angle",
     "abduction_max", "abduction_mean_peak", "compensations",
+    "max_sequence", "sequence_errors", "hints_used", "mean_step_sec",
 ]
 
 # Le Gardien des Lucioles (abduction de l'épaule, jeu de Maram) :
@@ -94,13 +97,24 @@ LUCIOLES_SETTINGS_DEFAULTS = {
     "active": True,
 }
 
+# La Danse des Lucioles (mémoire de séquence et coordination, ergothérapie, jeu de Maram) :
+DANSE_SETTINGS_DEFAULTS = {
+    "hand_mode": "any",      # R | L | any (au choix) | alt (les deux à tour de rôle)
+    "level": "easy",         # easy : 2 fleurs numérotées | mid : 3 de mémoire | hard : 4 de mémoire
+    "repetitions": 5,        # danses à réussir
+    "target_size": "big",    # big | mid | small : taille des fleurs (précision)
+    "difficulty": "faible",
+    "active": True,
+}
+
 SETTINGS_DEFAULTS_BY_SLUG = {
     "le-hibou": GAME_SETTINGS_DEFAULTS,
     "gardien-lucioles": LUCIOLES_SETTINGS_DEFAULTS,
+    "danse-lucioles": DANSE_SETTINGS_DEFAULTS,
 }
 
 # Jeux réellement jouables dans l'espace patient du site (les autres arriveront plus tard).
-PLAYABLE_GAME_SLUGS = {"le-hibou", "gardien-lucioles"}
+PLAYABLE_GAME_SLUGS = {"le-hibou", "gardien-lucioles", "danse-lucioles"}
 
 
 def settings_defaults(slug: str | None) -> dict:
@@ -286,6 +300,10 @@ def api_session_to_row(session: dict, patient_id: int, patient_game_id: int,
         "abduction_mean_peak": _metric(metrics, "abduction_mean_peak"),
         "compensations": _metric(metrics, "compensations"),
         "affected_arm": _metric(metrics, "affected_arm"),
+        "max_sequence": _metric(metrics, "max_sequence"),
+        "sequence_errors": _metric(metrics, "sequence_errors"),
+        "hints_used": _metric(metrics, "hints_used"),
+        "mean_step_sec": _metric(metrics, "mean_step_sec"),
         "game_slug": game.get("slug"),
     }
 

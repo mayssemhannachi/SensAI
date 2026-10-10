@@ -52,6 +52,9 @@ METRIC_COLORS = {
     "abduction_max": "#7C3AED",
     "abduction_mean_peak": "#06B6D4",
     "compensations": "#F59E0B",
+    "max_sequence": "#7C3AED",
+    "sequence_errors": "#EC4899",
+    "hints_used": "#F59E0B",
 }
 
 # Rampe séquentielle (violet SensAI, clair → foncé) pour les heatmaps.

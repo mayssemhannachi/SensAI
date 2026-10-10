@@ -14,3 +14,4 @@ class GameResponse(BaseModel):
     name: str
     slug: str
     description: str | None
+    specialty: str | None = None

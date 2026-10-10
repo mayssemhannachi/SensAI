@@ -11,8 +11,10 @@ Exemple (depuis le dossier ``data_analysis``, backend démarré) :
     python scripts/seed_backend.py --register
 
 Identifiants créés par défaut :
-    thérapeute : demo@sensai.tn / demo1234
-    patient    : salma.parent@sensai.tn / demo1234
+    kinésithérapeute : demo@sensai.tn / demo1234         (Le Hibou, Le Gardien des Lucioles)
+    ergothérapeute   : ergo@sensai.tn / demo1234         (La Danse des Lucioles)
+    patient (kiné)   : salma.parent@sensai.tn / demo1234
+    patient (ergo)   : ines.parent@sensai.tn / demo1234
 
 Le script est idempotent : un patient déjà présent (même prénom et nom) est ignoré.
 Les séances portent leur date réelle dans ``metrics.played_at`` (l'API horodate
@@ -208,6 +210,131 @@ def simulate_lucioles(profile: str, arm: str, weeks: int, rng: random.Random, no
     return sessions
 
 
+# Patients suivis en ergothérapie (La Danse des Lucioles) : prénom, nom, âge, diagnostic, profil, main
+ERGO_PATIENTS = [
+    ("Ines", "Mabrouk", 7, "Trouble développemental de la coordination (dyspraxie)", "seq_progress", "any"),
+    ("Aziz", "Kammoun", 9, "TDAH : difficultés de planification et d'attention", "seq_errors", "any"),
+    ("Sarra", "Sassi", 8, "Hémiplégie cérébrale infantile : coordination des deux mains", "seq_progress", "alt"),
+    ("Mehdi", "Toumi", 10, "Retard de développement : autonomie dans les gestes du quotidien", "seq_stable", "R"),
+    ("Lyna", "Belhadj", 6, "Trouble développemental de la coordination (dyspraxie)", "new", "any"),
+]
+
+SEQ_PROFILES = {
+    #               séquence de départ, gain/séance, séances/sem, erreurs moyennes, aides moyennes
+    "seq_progress": (2.0, 0.12, 3, 1.6, 0.8),
+    "seq_errors":   (2.2, 0.04, 3, 4.6, 1.8),
+    "seq_stable":   (3.0, 0.02, 2, 1.2, 0.4),
+    "new":          (2.0, 0.15, 2, 2.0, 1.0),
+}
+
+
+def simulate_danse(profile: str, weeks: int, rng: random.Random, now: datetime):
+    """Séances simulées de La Danse des Lucioles (mémoire de séquence)."""
+    start, gain, per_week, err_base, hint_base = SEQ_PROFILES[profile]
+    if profile == "new":
+        weeks = 2
+    end = now - timedelta(hours=22)
+    first_day = end - timedelta(weeks=weeks)
+    total = max(3, weeks * per_week + rng.randint(-2, 1))
+    sessions = []
+    for k in range(total):
+        played = first_day + (end - first_day) * (k / max(total - 1, 1))
+        played = played.replace(hour=rng.choice([10, 14, 16, 17]), minute=rng.choice([0, 15, 30, 45]))
+        span = clamp(start + gain * k + rng.gauss(0, 0.35), 2, 5)
+        level = "easy" if span < 2.8 else "mid" if span < 3.8 else "hard"
+        target = 5
+        decay = 0.7 if profile != "seq_errors" else 1.0
+        errors = max(0, round(err_base * (decay ** (k / 6)) + rng.gauss(0, 0.9)))
+        hints = max(0, round(hint_base * (decay ** (k / 6)) + rng.gauss(0, 0.5)))
+        done = int(clamp(target - max(0, errors - 3) // 2 + (0 if rng.random() < 0.8 else -1), 1, target))
+        success = done / target * 100
+        max_seq = int(round(span))
+        score = clamp(round(success * 0.7 + min(1, max_seq / 5) * 30 - errors * 2 - hints), 0, 100)
+        sessions.append({
+            "played_at": played,
+            "duration_sec": int(rng.randint(200, 420)),
+            "metrics": {
+                "score": score,
+                "success_rate": round(success, 1),
+                "repetitions": done,
+                "repetitions_target": target,
+                "level_number": {"easy": 1, "mid": 2, "hard": 3}[level],
+                "exercise_name": "Séquence de fleurs (mémoire et coordination)",
+                "played_at": played.isoformat(),
+                "max_sequence": max_seq,
+                "sequence_errors": errors,
+                "hints_used": hints,
+                "mean_step_sec": round(clamp(3.2 - 0.04 * k + rng.gauss(0, 0.35), 1.1, 5), 2),
+                "level": level,
+                "completed": done >= target,
+                "pain_level": clamp(round(0.4 + rng.gauss(0, 0.6)), 0, 5),
+                "effort": clamp(round(1.5 + (max_seq - 2) * 0.6 + rng.gauss(0, 0.8)), 0, 5),
+                "input_mode": "camera",
+            },
+            "level": level,
+        })
+    return sessions
+
+
+def seed_ergo(args, rng: random.Random, now: datetime) -> tuple[int, int]:
+    """Compte ergothérapeute de démonstration et ses patients (La Danse des Lucioles)."""
+    api = Api(args.api_url)
+    credentials = {"email": args.ergo_email, "password": args.password}
+    try:
+        api.token = api.call("POST", "/auth/login", credentials, auth=False)["access_token"]
+    except RuntimeError:
+        api.call("POST", "/auth/register", {"full_name": args.ergo_name, "specialty": "ergotherapist",
+                                            **credentials}, auth=False)
+        api.token = api.call("POST", "/auth/login", credentials, auth=False)["access_token"]
+        print(f"✓ Compte ergothérapeute créé : {args.ergo_email}")
+    games = {g["slug"]: g for g in api.call("GET", "/games/")}
+    danse = games.get("danse-lucioles")
+    if not danse:
+        print("! La Danse des Lucioles est absente du catalogue ergothérapeute : "
+              "lancez `python -m alembic upgrade head`.")
+        return 0, 0
+    existing = {(p["first_name"].lower(), p["last_name"].lower()) for p in api.call("GET", "/patients/")}
+    created_patients = created_sessions = 0
+    for first, last, age, diagnosis, profile, hand in ERGO_PATIENTS:
+        if (first.lower(), last.lower()) in existing:
+            print(f"  = {first} {last} existe déjà, ignoré")
+            continue
+        patient = api.call("POST", "/patients/", {"first_name": first, "last_name": last, "age": age})
+        created_patients += 1
+        history = simulate_danse(profile, args.weeks, rng, now)
+        api.call("POST", "/consultations/", {
+            "patient_id": patient["id"],
+            "consultation_date": (history[0]["played_at"] - timedelta(days=3)).date().isoformat(),
+            "diagnosis": diagnosis,
+        })
+        level = history[-1]["level"]
+        config = {"hand_mode": hand, "level": level, "repetitions": 5, "target_size": "big",
+                  "difficulty": {"easy": "faible", "mid": "moyenne", "hard": "elevee"}[level], "active": True}
+        association = api.call("POST", "/patient-games/", {
+            "patient_id": patient["id"], "game_id": danse["id"], "configuration": config,
+        })
+        for session in history:
+            for key in ("hand_mode",):
+                session["metrics"][key] = hand
+            api.call("POST", "/sessions/", {
+                "patient_game_id": association["id"],
+                "duration_sec": session["duration_sec"],
+                "metrics": session["metrics"],
+            })
+            created_sessions += 1
+        print(f"  + {first} {last} ({profile}, Danse des Lucioles) · {len(history)} séance(s)")
+        if first == "Ines" and args.ergo_patient_email:
+            code = api.call("POST", "/activation-codes/", {"patient_id": patient["id"]})["code"]
+            try:
+                api.call("POST", "/auth/activate", {
+                    "code": code, "email": args.ergo_patient_email, "password": args.patient_password,
+                }, auth=False)
+                print(f"    ✓ compte patient activé : {args.ergo_patient_email} / {args.patient_password}")
+            except RuntimeError as error:
+                print(f"    ! compte patient non créé ({error}) — code d’activation : {code}")
+    return created_patients, created_sessions
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--api-url", default="http://127.0.0.1:8000")
@@ -219,6 +346,10 @@ def main() -> int:
     parser.add_argument("--patient-email", default="salma.parent@sensai.tn")
     parser.add_argument("--patient-password", default="demo1234")
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--ergo-email", default="ergo@sensai.tn")
+    parser.add_argument("--ergo-name", default="Dr Amel Gharbi")
+    parser.add_argument("--ergo-patient-email", default="ines.parent@sensai.tn")
+    parser.add_argument("--no-ergo", action="store_true", help="ne pas créer le compte ergothérapeute")
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -236,7 +367,8 @@ def main() -> int:
         if not args.register:
             print("✗ Connexion refusée. Ajoutez --register pour créer le compte.")
             return 1
-        api.call("POST", "/auth/register", {"full_name": args.full_name, **credentials}, auth=False)
+        api.call("POST", "/auth/register",
+                 {"full_name": args.full_name, "specialty": "kinesitherapist", **credentials}, auth=False)
         api.token = api.call("POST", "/auth/login", credentials, auth=False)["access_token"]
         print(f"✓ Compte thérapeute créé : {args.email}")
     print(f"✓ Connecté : {args.email}")
@@ -345,10 +477,19 @@ def main() -> int:
                 })
                 print("  + Gardien des Lucioles ajouté à Salma Ben Ali")
 
+    if not args.no_ergo:
+        print("— Espace ergothérapeute —")
+        ergo_patients, ergo_sessions = seed_ergo(args, rng, now)
+        created_patients += ergo_patients
+        created_sessions += ergo_sessions
+
     print(f"✓ Terminé : {created_patients} patient(s), {created_sessions} séance(s).")
-    print(f"  Thérapeute : {args.email} / {args.password}")
+    print(f"  Kinésithérapeute : {args.email} / {args.password}")
     if args.patient_email:
-        print(f"  Patient    : {args.patient_email} / {args.patient_password}")
+        print(f"  Patient (kiné)   : {args.patient_email} / {args.patient_password}")
+    if not args.no_ergo:
+        print(f"  Ergothérapeute   : {args.ergo_email} / {args.password}")
+        print(f"  Patient (ergo)   : {args.ergo_patient_email} / {args.patient_password}")
     return 0
 
 

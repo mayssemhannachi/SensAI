@@ -26,6 +26,13 @@ export const GAME_META: Record<string, GameMeta> = {
     playable: true,
     path: "/dashboard/game/gardien-lucioles",
   },
+  "danse-lucioles": {
+    image: "/Assets/dashboard/Magical Shape Quest with Friends.png",
+    category: "Mémoire et coordination",
+    limb: "Mains / Bras",
+    playable: true,
+    path: "/dashboard/game/danse-lucioles",
+  },
   "color-touch": { image: "/Assets/dashboard/Girl Activates a Magical Portal.png", category: "Jeu de couleur", limb: "Main droite" },
   "reaction-speed": { image: "/Assets/dashboard/Kawaii Cosmic Ring Adventure.png", category: "Jeu de rapidité", limb: "Main gauche" },
   "sequence-memory": { image: "/Assets/dashboard/Magical Shape Quest with Friends.png", category: "Jeu de mémoire", limb: "Œil / Vision" },
@@ -70,6 +77,18 @@ export const LUCIOLES_DEFAULTS = {
 
 export function luciolesConfig(config?: GameConfig) {
   return { ...LUCIOLES_DEFAULTS, ...(config || {}) } as typeof LUCIOLES_DEFAULTS;
+}
+
+export const DANSE_DEFAULTS = {
+  hand_mode: "any" as "R" | "L" | "any" | "alt",
+  level: "easy" as "easy" | "mid" | "hard",
+  repetitions: 5,
+  target_size: "big" as "big" | "mid" | "small",
+  active: true,
+};
+
+export function danseConfig(config?: GameConfig) {
+  return { ...DANSE_DEFAULTS, ...(config || {}) } as typeof DANSE_DEFAULTS;
 }
 
 export function withDefaults(config?: GameConfig) {

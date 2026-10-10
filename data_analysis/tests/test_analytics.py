@@ -85,3 +85,17 @@ def test_shoulder_abduction_signals():
     history["compensations"] = [0, 0, 0, 0, 0, 4, 3, 5]
     labels = {x.label for x in a.patient_alerts(history, reference)}
     assert labels == {"Abduction en baisse", "Compensations"}
+
+
+def test_sequence_memory_signals():
+    """Danse des Lucioles : progression de la séquence et erreurs d'ordre."""
+    history = _history([60] * 8)
+    history["max_sequence"] = [2, 2, 2, 3, 3, 3, 4, 4]
+    history["sequence_errors"] = [3, 2, 2, 1, 1, 1, 0, 1]
+    history["hints_used"] = [1, 1, 0, 0, 0, 0, 0, 0]
+    reference = history["session_date"].max()
+    assert a.patient_alerts(history, reference) == []
+    assert a.patient_status(history, []) == "En progression"
+    assert any(i.title == "Mémoire et coordination" for i in a.patient_insights(history, reference))
+    history["sequence_errors"] = [0, 0, 0, 0, 0, 5, 4, 6]
+    assert {x.label for x in a.patient_alerts(history, reference)} == {"Erreurs de séquence"}

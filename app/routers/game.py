@@ -18,6 +18,13 @@ from app.services.game_service import (
 from app.services.auth_service import (
     get_current_therapist
 )
+from app.models.user import User
+
+
+def _specialty(db: Session, current_user: dict) -> str:
+    """Spécialité lue en base (fiable même avec un jeton émis avant l'ajout des spécialités)."""
+    user = db.query(User).filter(User.id == current_user.get("user_id")).first()
+    return (user.specialty if user else None) or current_user.get("specialty") or "kinesitherapist"
 
 router = APIRouter(
     prefix="/games",
@@ -41,7 +48,7 @@ def create_new_game(
     return create_game(
         db,
         request,
-        current_user.get("specialty", "kinesitherapist"),
+        _specialty(db, current_user),
     )
 
 
@@ -57,4 +64,4 @@ def get_all_games_route(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_therapist)
 ):
-    return get_games(db, current_user.get("specialty", "kinesitherapist"))
+    return get_games(db, _specialty(db, current_user))
