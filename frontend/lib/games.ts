@@ -33,6 +33,13 @@ export const GAME_META: Record<string, GameMeta> = {
     playable: true,
     path: "/dashboard/game/danse-lucioles",
   },
+  "gardien-chateau": {
+    image: "/Assets/dashboard/Girl Activates a Magical Portal.png",
+    category: "Attention et contrôle des gestes",
+    limb: "Corps entier",
+    playable: true,
+    path: "/dashboard/game/gardien-chateau",
+  },
   "color-touch": { image: "/Assets/dashboard/Girl Activates a Magical Portal.png", category: "Jeu de couleur", limb: "Main droite" },
   "reaction-speed": { image: "/Assets/dashboard/Kawaii Cosmic Ring Adventure.png", category: "Jeu de rapidité", limb: "Main gauche" },
   "sequence-memory": { image: "/Assets/dashboard/Magical Shape Quest with Friends.png", category: "Jeu de mémoire", limb: "Œil / Vision" },
@@ -89,6 +96,23 @@ export const DANSE_DEFAULTS = {
 
 export function danseConfig(config?: GameConfig) {
   return { ...DANSE_DEFAULTS, ...(config || {}) } as typeof DANSE_DEFAULTS;
+}
+
+// Le Gardien du Château (attention et contrôle des gestes, ergothérapie, jeu de Chahed)
+export const CHATEAU_GESTURES = ["fairy_r", "fairy_l", "star", "crown", "dragon"] as const;
+export const CHATEAU_DEFAULTS = {
+  gestures: ["fairy_r", "fairy_l", "star"] as string[], // les 3 défis prescrits
+  trials: 40, // essais de la vraie partie
+  go_percent: 80, // % d'essais « défi » (le reste : l'ogre statue)
+  active: true,
+};
+
+export function chateauConfig(config?: GameConfig) {
+  const merged = { ...CHATEAU_DEFAULTS, ...(config || {}) } as typeof CHATEAU_DEFAULTS;
+  const gestures = Array.isArray(merged.gestures)
+    ? merged.gestures.filter((g) => (CHATEAU_GESTURES as readonly string[]).includes(g))
+    : [];
+  return { ...merged, gestures: gestures.length === 3 ? gestures : CHATEAU_DEFAULTS.gestures };
 }
 
 export function withDefaults(config?: GameConfig) {

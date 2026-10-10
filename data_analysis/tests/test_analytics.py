@@ -99,3 +99,20 @@ def test_sequence_memory_signals():
     assert any(i.title == "Mémoire et coordination" for i in a.patient_insights(history, reference))
     history["sequence_errors"] = [0, 0, 0, 0, 0, 5, 4, 6]
     assert {x.label for x in a.patient_alerts(history, reference)} == {"Erreurs de séquence"}
+
+
+def test_castle_attention_signals():
+    """Gardien du Château : contrôle de l'impulsivité (statues devant l'ogre) et attention en fin de partie."""
+    history = _history([60] * 8)
+    history["go_success_rate"] = [70, 72, 74, 75, 78, 80, 82, 84]
+    history["nogo_success_rate"] = [50, 55, 60, 62, 70, 75, 75, 88]
+    history["rt_mean_ms"] = [950, 930, 900, 880, 860, 850, 830, 800]
+    history["accuracy_start"] = [80] * 8
+    history["accuracy_end"] = [75] * 8
+    reference = history["session_date"].max()
+    assert a.patient_alerts(history, reference) == []
+    assert a.patient_status(history, []) == "En progression"
+    assert any(i.title == "Attention et contrôle des gestes" for i in a.patient_insights(history, reference))
+    history["nogo_success_rate"] = [70, 70, 70, 70, 70, 50, 40, 45]
+    history["accuracy_end"] = [75, 75, 75, 75, 75, 55, 50, 52]
+    assert {x.label for x in a.patient_alerts(history, reference)} == {"Impulsivité", "Attention qui baisse"}

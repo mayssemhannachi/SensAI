@@ -55,6 +55,12 @@ METRIC_COLORS = {
     "max_sequence": "#7C3AED",
     "sequence_errors": "#EC4899",
     "hints_used": "#F59E0B",
+    "go_success_rate": "#06B6D4",
+    "nogo_success_rate": "#7C3AED",
+    "false_alarms": "#EC4899",
+    "omissions": "#F59E0B",
+    "wrong_gestures": "#94A3B8",
+    "rt_mean_ms": "#10B981",
 }
 
 # Rampe séquentielle (violet SensAI, clair → foncé) pour les heatmaps.

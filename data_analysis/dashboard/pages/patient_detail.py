@@ -384,6 +384,41 @@ def show_patient_detail():
                                 key="patient_pain_danse")
 
     # --------------------------------------------------------
+    # ATTENTION ET CONTRÔLE DES GESTES (Le Gardien du Château, ergothérapie)
+    # --------------------------------------------------------
+    castle = history.dropna(subset=["nogo_success_rate"])
+    if not castle.empty:
+        last_c, first_c = castle.iloc[-1], castle.iloc[0]
+        section("Attention et contrôle des gestes",
+                "Défis faits au bon moment et statues tenues devant l’ogre, à chaque partie du Gardien du Château.")
+        fade = last_c.get("accuracy_start") - last_c.get("accuracy_end") \
+            if pd.notna(last_c.get("accuracy_start")) and pd.notna(last_c.get("accuracy_end")) else None
+        kpi_row([
+            kpi_card("Défis réussis", fmt_number(last_c["go_success_rate"]), "✦", "tone-blue", unit=" %",
+                     foot="attention : bon geste au bon moment",
+                     delta_html=delta_chip(analytics.delta(last_c["go_success_rate"], first_c["go_success_rate"]), "", 0)),
+            kpi_card("Statues réussies", fmt_number(last_c["nogo_success_rate"]), "♜", "tone-violet", unit=" %",
+                     foot="contrôle de l’impulsivité devant l’ogre",
+                     delta_html=delta_chip(analytics.delta(last_c["nogo_success_rate"], first_c["nogo_success_rate"]), "", 0)),
+            kpi_card("Temps de réaction", fmt_number(last_c["rt_mean_ms"]), "⏱", "tone-green", unit=" ms",
+                     foot=f"variabilité ± {fmt_number(last_c['rt_sd_ms'])} ms"),
+            kpi_card("Fin de partie", fmt_number(last_c["accuracy_end"]), "◔", "tone-orange", unit=" %",
+                     foot=(f"{fmt_number(fade)} points de moins qu’au début" if fade is not None and fade > 0
+                           else "réussite tenue jusqu’au bout")),
+        ])
+        st.write("")
+        att_col, castle_err_col = st.columns([1.5, 1], gap="medium")
+        with att_col:
+            with card("attention"):
+                card_title("Attention et inhibition", "Défis réussis et statues tenues devant l’ogre, par séance.")
+                st.plotly_chart(charts.attention_chart(castle), config=charts.CHART_CONFIG, key="patient_attention")
+        with castle_err_col:
+            with card("castle-errors"):
+                card_title("Types d’erreurs", "Bouger devant l’ogre (impulsivité), oublier un défi, se tromper de geste.")
+                st.plotly_chart(charts.castle_errors_chart(castle), config=charts.CHART_CONFIG,
+                                key="patient_castle_errors")
+
+    # --------------------------------------------------------
     # ÉVOLUTION
     # --------------------------------------------------------
     section("Évolution des performances", "Chaque point est une séance, coloré par jeu.")
@@ -467,6 +502,8 @@ def show_patient_detail():
         "Compensations": "compensations",
         "Séquence max": "max_sequence",
         "Erreurs d’ordre": "sequence_errors",
+        "Statues (%)": "nogo_success_rate",
+        "Réaction (ms)": "rt_mean_ms",
         "Douleur (/5)": "pain_level",
         "Effort (/5)": "effort",
     }
@@ -475,7 +512,7 @@ def show_patient_detail():
             display[label] = table[column].to_numpy()
     if display["Exercice"].nunique(dropna=True) <= 1:
         display = display.drop(columns="Exercice")
-    if display["Progression"].isna().all() or {"Rot. gauche (°)", "Abduction max (°)", "Séquence max"} & set(display.columns):
+    if display["Progression"].isna().all() or {"Rot. gauche (°)", "Abduction max (°)", "Séquence max", "Statues (%)"} & set(display.columns):
         display = display.drop(columns="Progression")
     st.dataframe(
         display,

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from dashboard.utils.data import settings_defaults
+from dashboard.utils.data import CHATEAU_GESTURES, settings_defaults
 
 SPEEDS = {"lente": "Lente", "moderee": "Modérée", "rapide": "Rapide"}
 DIFFICULTIES = {"faible": "Faible", "moyenne": "Moyenne", "elevee": "Élevée"}
@@ -25,6 +25,9 @@ GAME_HINTS = {
     "le-hibou": "Rotation cervicale : l’enfant tourne la tête à droite puis à gauche et maintient la position.",
     "danse-lucioles": "Mémoire et coordination : Léo allume des fleurs dans un ordre, l’enfant refait la même "
                       "danse en les touchant avec ses mains (planification, mémoire de travail, œil-main).",
+    "gardien-chateau": "Attention et contrôle des gestes : l’enfant, debout, fait le geste de chaque personnage "
+                       "(fée, étoile, couronne, dragon) et se fige comme une statue quand l’ogre apparaît "
+                       "(attention, inhibition, latéralité droite / gauche).",
     "gardien-lucioles": "Élévation du bras (épaule) : l’enfant lève le bras, coude tendu, dans la direction "
                         "et jusqu’à la hauteur prescrites.",
 }
@@ -42,11 +45,17 @@ def settings_fields(slug: str | None, current: dict | None, key: str) -> dict:
         return _lucioles_fields(config, key)
     if slug == "danse-lucioles":
         return _danse_fields(config, key)
+    if slug == "gardien-chateau":
+        return _chateau_fields(config, key)
     return _hibou_fields(config, key)
 
 
 def validate(slug: str | None, config: dict) -> str | None:
     """Message d'erreur si la configuration est incohérente, sinon ``None``."""
+    if slug == "gardien-chateau":
+        if len(config.get("gestures") or []) != 3:
+            return "Choisissez exactement 3 défis pour Le Gardien du Château."
+        return None
     if slug != "gardien-lucioles" and config.get("safety_limit", 0) < config.get("target_angle", 0):
         return "La limite de sécurité doit être supérieure ou égale à l’angle cible."
     return None
@@ -144,3 +153,23 @@ def _danse_fields(config: dict, key: str) -> dict:
     difficulty = {"easy": "faible", "mid": "moyenne", "hard": "elevee"}[level]
     return {**config, "hand_mode": hand, "level": level, "repetitions": int(reps),
             "target_size": size, "difficulty": difficulty}
+
+
+def _chateau_fields(config: dict, key: str) -> dict:
+    """Le Gardien du Château (Chahed) : les 3 défis, le nombre d'essais et la part de l'ogre."""
+    current = [g for g in (config.get("gestures") or []) if g in CHATEAU_GESTURES]
+    gestures = st.multiselect("Les 3 défis de l’enfant", list(CHATEAU_GESTURES), default=current,
+                              format_func=CHATEAU_GESTURES.get, max_selections=3, key=f"{key}_gestures",
+                              help="Fées : latéralité droite / gauche. Étoile et couronne : coordination. "
+                                   "Dragon : se baisser (équilibre).")
+    c1, c2 = st.columns(2)
+    with c1:
+        trials = st.number_input("Nombre d’essais", 10, 80, int(config.get("trials", 40)), step=5,
+                                 key=f"{key}_trials", help="Durée de la partie : environ 3 secondes par essai.")
+    with c2:
+        go = st.slider("Part des défis (%)", 50, 95, int(config.get("go_percent", 80)), step=5, key=f"{key}_go",
+                       help="Le reste des essais, c’est l’ogre : l’enfant doit se figer. "
+                            "Moins de défis = plus de contrôle de l’impulsivité.")
+    difficulty = "faible" if go >= 85 else "moyenne" if go >= 70 else "elevee"
+    return {**config, "gestures": list(gestures), "trials": int(trials), "go_percent": int(go),
+            "difficulty": difficulty}

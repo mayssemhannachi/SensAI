@@ -12,7 +12,7 @@ Exemple (depuis le dossier ``data_analysis``, backend démarré) :
 
 Identifiants créés par défaut :
     kinésithérapeute : demo@sensai.tn / demo1234         (Le Hibou, Le Gardien des Lucioles)
-    ergothérapeute   : ergo@sensai.tn / demo1234         (La Danse des Lucioles)
+    ergothérapeute   : ergo@sensai.tn / demo1234         (La Danse des Lucioles, Le Gardien du Château)
     patient (kiné)   : salma.parent@sensai.tn / demo1234
     patient (ergo)   : ines.parent@sensai.tn / demo1234
 
@@ -276,6 +276,78 @@ def simulate_danse(profile: str, weeks: int, rng: random.Random, now: datetime):
     return sessions
 
 
+# Patients suivis en ergothérapie sur Le Gardien du Château (attention et contrôle des gestes)
+CHATEAU_PATIENTS = [
+    ("Rayen", "Jlassi", 8, "TDAH : impulsivité et difficultés d'attention", "impulsive_progress"),
+    ("Yasmine", "Ferchichi", 7, "Trouble de l'attention : fatigabilité en fin d'activité", "attention_fade"),
+]
+
+CASTLE_PROFILES = {
+    #                      statues départ, gain/séance, défis départ, gain, réaction (ms), baisse fin de partie
+    "impulsive_progress": (42.0, 2.6, 72.0, 0.9, 980.0, 24.0),
+    "attention_fade":     (78.0, 0.3, 70.0, 0.2, 1150.0, 30.0),
+}
+
+
+def simulate_chateau(profile: str, weeks: int, rng: random.Random, now: datetime):
+    """Séances simulées du Gardien du Château (40 essais : 32 défis, 8 ogres)."""
+    nogo0, nogo_gain, go0, go_gain, rt0, fade0 = CASTLE_PROFILES[profile]
+    end = now - timedelta(hours=20)
+    first_day = end - timedelta(weeks=weeks)
+    total = max(4, weeks * 2 + rng.randint(-1, 1))
+    sessions = []
+    for k in range(total):
+        played = first_day + (end - first_day) * (k / max(total - 1, 1))
+        played = played.replace(hour=rng.choice([10, 15, 17]), minute=rng.choice([0, 20, 40]))
+        go_n, nogo_n = 32, 8
+        go_rate = clamp(go0 + go_gain * k + rng.gauss(0, 4), 30, 100)
+        nogo_rate = clamp(nogo0 + nogo_gain * k + rng.gauss(0, 7), 0, 100)
+        go_ok = round(go_n * go_rate / 100)
+        nogo_ok = round(nogo_n * nogo_rate / 100)
+        wrong = max(0, round((go_n - go_ok) * 0.35 + rng.gauss(0, 0.6)))
+        wrong = min(wrong, go_n - go_ok)
+        omissions = go_n - go_ok - wrong
+        overall = (go_ok + nogo_ok) / (go_n + nogo_n) * 100
+        fade = fade0 * (0.85 ** k if profile == "impulsive_progress" else 1.0) + rng.gauss(0, 4)
+        start = clamp(overall + fade / 2, 0, 100)
+        end_acc = clamp(overall - fade / 2, 0, 100)
+        rt = clamp(rt0 - 12 * k + rng.gauss(0, 60), 450, 1600)
+        sessions.append({
+            "played_at": played,
+            "duration_sec": int(rng.randint(150, 230)),
+            "metrics": {
+                "score": round(overall),
+                "success_rate": round(overall, 1),
+                "repetitions": go_n + nogo_n,
+                "repetitions_target": go_n + nogo_n,
+                "level_number": 2,
+                "exercise_name": "Attention et contrôle des gestes (le château)",
+                "played_at": played.isoformat(),
+                "go_success_rate": round(go_ok / go_n * 100, 1),
+                "nogo_success_rate": round(nogo_ok / nogo_n * 100, 1),
+                "omissions": omissions,
+                "wrong_gestures": wrong,
+                "false_alarms": nogo_n - nogo_ok,
+                "go_trials": go_n,
+                "nogo_trials": nogo_n,
+                "rt_mean_ms": round(rt),
+                "rt_sd_ms": round(clamp(rt * 0.28 + rng.gauss(0, 30), 60, 600)),
+                "agitation": round(clamp(70 - nogo_rate * 0.5 + rng.gauss(0, 8), 5, 120)),
+                "accuracy_start": round(start),
+                "accuracy_middle": round(overall),
+                "accuracy_end": round(end_acc),
+                "gestures": "fairy_r,fairy_l,star",
+                "go_ratio": 0.8,
+                "completed": True,
+                "stopped_early": False,
+                "pain_level": clamp(round(0.3 + rng.gauss(0, 0.5)), 0, 5),
+                "effort": clamp(round(2 + rng.gauss(0, 0.8)), 0, 5),
+                "input_mode": "camera",
+            },
+        })
+    return sessions
+
+
 def seed_ergo(args, rng: random.Random, now: datetime) -> tuple[int, int]:
     """Compte ergothérapeute de démonstration et ses patients (La Danse des Lucioles)."""
     api = Api(args.api_url)
@@ -293,8 +365,36 @@ def seed_ergo(args, rng: random.Random, now: datetime) -> tuple[int, int]:
         print("! La Danse des Lucioles est absente du catalogue ergothérapeute : "
               "lancez `python -m alembic upgrade head`.")
         return 0, 0
+    chateau = games.get("gardien-chateau")
     existing = {(p["first_name"].lower(), p["last_name"].lower()) for p in api.call("GET", "/patients/")}
     created_patients = created_sessions = 0
+    for first, last, age, diagnosis, profile in CHATEAU_PATIENTS if chateau else []:
+        if (first.lower(), last.lower()) in existing:
+            print(f"  = {first} {last} existe déjà, ignoré")
+            continue
+        patient = api.call("POST", "/patients/", {"first_name": first, "last_name": last, "age": age})
+        created_patients += 1
+        history = simulate_chateau(profile, args.weeks, rng, now)
+        api.call("POST", "/consultations/", {
+            "patient_id": patient["id"],
+            "consultation_date": (history[0]["played_at"] - timedelta(days=3)).date().isoformat(),
+            "diagnosis": diagnosis,
+        })
+        association = api.call("POST", "/patient-games/", {
+            "patient_id": patient["id"], "game_id": chateau["id"],
+            "configuration": {"gestures": ["fairy_r", "fairy_l", "star"], "trials": 40, "go_percent": 80,
+                              "difficulty": "moyenne", "active": True},
+        })
+        for session in history:
+            api.call("POST", "/sessions/", {
+                "patient_game_id": association["id"],
+                "duration_sec": session["duration_sec"],
+                "metrics": session["metrics"],
+            })
+            created_sessions += 1
+        print(f"  + {first} {last} ({profile}, Gardien du Château) · {len(history)} séance(s)")
+    if not chateau:
+        print("! Le Gardien du Château est absent du catalogue : lancez `python -m alembic upgrade head`.")
     for first, last, age, diagnosis, profile, hand in ERGO_PATIENTS:
         if (first.lower(), last.lower()) in existing:
             print(f"  = {first} {last} existe déjà, ignoré")
@@ -323,6 +423,13 @@ def seed_ergo(args, rng: random.Random, now: datetime) -> tuple[int, int]:
             })
             created_sessions += 1
         print(f"  + {first} {last} ({profile}, Danse des Lucioles) · {len(history)} séance(s)")
+        if first == "Ines" and args.ergo_patient_email and chateau:
+            # Ines joue aussi au Gardien du Château (2 jeux d'ergothérapie sur son compte)
+            api.call("POST", "/patient-games/", {
+                "patient_id": patient["id"], "game_id": chateau["id"],
+                "configuration": {"gestures": ["fairy_r", "fairy_l", "star"], "trials": 30, "go_percent": 80,
+                                  "difficulty": "moyenne", "active": True},
+            })
         if first == "Ines" and args.ergo_patient_email:
             code = api.call("POST", "/activation-codes/", {"patient_id": patient["id"]})["code"]
             try:

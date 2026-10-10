@@ -201,10 +201,11 @@ def show_global_view():
         "Rot. D (°)": recent["rotation_right"],
         "Abd. max (°)": recent["abduction_max"],
         "Séq. max": recent["max_sequence"],
+        "Statues (%)": recent["nogo_success_rate"],
         "Douleur (/5)": recent["pain_level"],
         "Durée": recent["duration_min"],
     })
-    optional = ["Rot. G (°)", "Rot. D (°)", "Abd. max (°)", "Séq. max", "Douleur (/5)"]
+    optional = ["Rot. G (°)", "Rot. D (°)", "Abd. max (°)", "Séq. max", "Statues (%)", "Douleur (/5)"]
     table = table.drop(columns=[c for c in optional if table[c].isna().all()])
     if any(c in table.columns for c in optional):
         table = table.drop(columns=["Progression"])
@@ -223,6 +224,7 @@ def show_global_view():
             "Rot. D (°)": st.column_config.NumberColumn(format="%d"),
             "Abd. max (°)": st.column_config.NumberColumn(format="%d"),
             "Séq. max": st.column_config.NumberColumn(format="%d"),
+            "Statues (%)": st.column_config.NumberColumn(format="%d"),
             "Douleur (/5)": st.column_config.NumberColumn(format="%d"),
         },
     )

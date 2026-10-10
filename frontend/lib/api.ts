@@ -47,6 +47,10 @@ export type GameConfig = {
   hand_mode?: "R" | "L" | "any" | "alt";
   level?: "easy" | "mid" | "hard";
   target_size?: "big" | "mid" | "small";
+  // Le Gardien du Château (attention, ergothérapie)
+  gestures?: string[];
+  trials?: number;
+  go_percent?: number;
   // Le Gardien des Lucioles (abduction de l'épaule)
   affected_arm?: "R" | "L" | "BI";
   mode?: "hemi" | "bi";

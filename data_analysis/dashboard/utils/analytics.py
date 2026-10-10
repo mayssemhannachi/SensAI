@@ -30,6 +30,9 @@ ABDUCTION_GAIN = 5.0        # gain du pic d'abduction moyen (°) considéré com
 COMPENSATION_HIGH = 3.0     # compensations par séance (moyenne des 3 dernières) à surveiller
 SEQUENCE_GAIN = 1.0         # +1 fleur de séquence moyenne = progression (Danse des Lucioles)
 SEQUENCE_ERRORS_HIGH = 4.0  # erreurs d'ordre par séance (moyenne des 3 dernières) à surveiller
+INHIBITION_LOW = 60.0       # % de statues réussies (moyenne des 3 dernières) sous lequel l'impulsivité est signalée — Gardien du Château
+ATTENTION_FADE = 20.0       # points de réussite perdus entre le début et la fin de la partie (fatigue attentionnelle)
+INHIBITION_GAIN = 10.0      # +10 points de statues réussies = progression
 
 STATUS_ORDER = ["À surveiller", "En progression", "Stable", "Nouveau"]
 
@@ -201,6 +204,22 @@ def sequence_series(history: pd.DataFrame) -> pd.Series:
     return pd.to_numeric(history["max_sequence"], errors="coerce").dropna()
 
 
+def inhibition_series(history: pd.DataFrame) -> pd.Series:
+    """% de statues réussies devant l'ogre par séance (Gardien du Château), vide sinon."""
+    if "nogo_success_rate" not in history.columns:
+        return pd.Series(dtype=float)
+    return pd.to_numeric(history["nogo_success_rate"], errors="coerce").dropna()
+
+
+def attention_fade(history: pd.DataFrame) -> pd.Series:
+    """Réussite du début moins réussite de la fin de partie, par séance (Gardien du Château)."""
+    if not {"accuracy_start", "accuracy_end"} <= set(history.columns):
+        return pd.Series(dtype=float)
+    start = pd.to_numeric(history["accuracy_start"], errors="coerce")
+    end = pd.to_numeric(history["accuracy_end"], errors="coerce")
+    return (start - end).dropna()
+
+
 def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert]:
     """Signaux d'attention pour un patient (historique trié par date)."""
     alerts: list[Alert] = []
@@ -259,6 +278,22 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
                 f"{fr(errs.mean(), 1)} erreurs d’ordre par séance en moyenne : niveau peut-être trop élevé.",
             ))
 
+    inhibition = inhibition_series(history).tail(3)
+    if len(inhibition) >= 2 and inhibition.mean() < INHIBITION_LOW:
+        alerts.append(Alert(
+            "Impulsivité", "warning",
+            f"{fr(inhibition.mean(), 0)} % de statues réussies devant l’ogre en moyenne : "
+            "l’enfant a du mal à retenir son geste.",
+        ))
+
+    fade = attention_fade(history).tail(3)
+    if len(fade) >= 2 and fade.mean() >= ATTENTION_FADE:
+        alerts.append(Alert(
+            "Attention qui baisse", "info",
+            f"La réussite chute de {fr(fade.mean(), 0)} points entre le début et la fin de la partie : "
+            "partie peut-être trop longue.",
+        ))
+
     last_date = latest.get("session_date")
     if pd.notna(last_date):
         idle = (reference.normalize() - pd.Timestamp(last_date).normalize()).days
@@ -279,7 +314,8 @@ def patient_status(history: pd.DataFrame, alerts: list[Alert]) -> str:
     amplitude_gain = recent_change(amplitude_series(history))
     abduction_gain = recent_change(abduction_series(history))
     sequence_gain = recent_change(sequence_series(history))
-    if (slope is not None and slope >= TREND_SIGNIFICANT) or (
+    inhibition_gain = recent_change(inhibition_series(history))
+    if (inhibition_gain is not None and inhibition_gain >= INHIBITION_GAIN) or (slope is not None and slope >= TREND_SIGNIFICANT) or (
         amplitude_gain is not None and amplitude_gain >= AMPLITUDE_GAIN
     ) or (abduction_gain is not None and abduction_gain >= ABDUCTION_GAIN) or (
         sequence_gain is not None and sequence_gain >= SEQUENCE_GAIN
@@ -495,6 +531,28 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
                 + (f", {', '.join(details)}" if details else "") + f".{gain}",
                 "positive" if gain and change > 0 else "neutral",
                 "✿",
+            ))
+
+    # 2 quinquies. Attention et contrôle des gestes (Gardien du Château)
+    if "nogo_success_rate" in history.columns:
+        castle = history.dropna(subset=["nogo_success_rate"])
+        if not castle.empty:
+            last_c = castle.iloc[-1]
+            parts = [f"défis réussis {fr(last_c.get('go_success_rate'), 0)} %",
+                     f"statues réussies {fr(last_c['nogo_success_rate'], 0)} %"]
+            rt = last_c.get("rt_mean_ms")
+            if rt is not None and pd.notna(rt):
+                parts.append(f"réaction {fr(rt, 0)} ms")
+            gain = ""
+            change = 0.0
+            if len(castle) >= 2:
+                change = float(last_c["nogo_success_rate"]) - float(castle.iloc[0]["nogo_success_rate"])
+                gain = f" Contrôle {fr(change, 0, True)} points depuis le début."
+            insights.append(Insight(
+                "Attention et contrôle des gestes",
+                f"Dernière partie : {', '.join(parts)}.{gain}",
+                "positive" if change > 0 else "neutral",
+                "♜",
             ))
 
     # 3. Meilleur / plus difficile jeu

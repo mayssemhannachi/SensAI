@@ -304,6 +304,40 @@ def errors_hints_chart(history: pd.DataFrame) -> go.Figure:
     return _layout(fig, height=330)
 
 
+def attention_chart(history: pd.DataFrame) -> go.Figure:
+    """Le Gardien du Château : défis réussis (attention) et statues réussies (inhibition) par séance."""
+    data = history.dropna(subset=["session_date", "nogo_success_rate"]).sort_values("session_date")
+    fig = go.Figure()
+    for column, label in [("go_success_rate", "Défis réussis"), ("nogo_success_rate", "Statues réussies (ogre)")]:
+        color = METRIC_COLORS[column]
+        fig.add_trace(go.Scatter(
+            x=data["session_date"], y=data[column], name=label, mode="lines+markers",
+            line=dict(color=color, width=2.5),
+            marker=dict(size=8, color="#FFFFFF", line=dict(color=color, width=2)),
+            hovertemplate=f"<b>%{{x|%d/%m/%Y}}</b><br>{label} : %{{y:.0f}} %<extra></extra>",
+        ))
+    fig.update_yaxes(range=[0, 105], ticksuffix=" %")
+    fig.update_xaxes(tickformat="%d/%m")
+    return _layout(fig, height=330)
+
+
+def castle_errors_chart(history: pd.DataFrame) -> go.Figure:
+    """Le Gardien du Château : types d'erreurs par séance (impulsivité, oublis, mauvais geste)."""
+    data = history.dropna(subset=["session_date", "nogo_success_rate"]).sort_values("session_date").tail(15)
+    labels = data["session_date"].dt.strftime("%d/%m")
+    fig = go.Figure()
+    for column, label in [("false_alarms", "A bougé devant l’ogre"), ("omissions", "Défi oublié"),
+                          ("wrong_gestures", "Mauvais geste")]:
+        fig.add_trace(go.Bar(
+            x=labels, y=data[column].fillna(0), name=label,
+            marker=dict(color=METRIC_COLORS[column], cornerradius=3),
+            hovertemplate=f"<b>%{{x}}</b><br>{label} : %{{y:.0f}}<extra></extra>",
+        ))
+    fig.update_yaxes(rangemode="tozero", dtick=1)
+    fig.update_layout(barmode="stack", bargap=0.35)
+    return _layout(fig, height=330)
+
+
 def pain_effort_chart(history: pd.DataFrame) -> go.Figure:
     """Douleur et effort déclarés par l'enfant après chaque séance (0-5)."""
     data = history.dropna(subset=["session_date"]).sort_values("session_date")

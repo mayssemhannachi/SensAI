@@ -53,6 +53,9 @@ SESSION_COLUMNS = [
     "abduction_max", "abduction_mean_peak", "compensations", "affected_arm",
     # Mesures du jeu La Danse des Lucioles (mémoire de séquence, ergothérapie)
     "max_sequence", "sequence_errors", "hints_used", "mean_step_sec",
+    # Mesures du jeu Le Gardien du Château (attention et inhibition, ergothérapie)
+    "go_success_rate", "nogo_success_rate", "false_alarms", "omissions", "wrong_gestures",
+    "rt_mean_ms", "rt_sd_ms", "agitation", "accuracy_start", "accuracy_end",
     "game_slug", "first_name", "last_name", "patient_name",
 ]
 
@@ -82,6 +85,8 @@ NUMERIC_SESSION_COLUMNS = [
     "pain_level", "effort", "target_angle",
     "abduction_max", "abduction_mean_peak", "compensations",
     "max_sequence", "sequence_errors", "hints_used", "mean_step_sec",
+    "go_success_rate", "nogo_success_rate", "false_alarms", "omissions", "wrong_gestures",
+    "rt_mean_ms", "rt_sd_ms", "agitation", "accuracy_start", "accuracy_end",
 ]
 
 # Le Gardien des Lucioles (abduction de l'épaule, jeu de Maram) :
@@ -107,14 +112,31 @@ DANSE_SETTINGS_DEFAULTS = {
     "active": True,
 }
 
+# Le Gardien du Château (attention et contrôle des gestes, ergothérapie, jeu de Chahed) :
+CHATEAU_GESTURES = {
+    "fairy_r": "Fée bleue : bras droit",
+    "fairy_l": "Fée rose : bras gauche",
+    "star": "Étoile : les deux bras",
+    "crown": "Couronne : main sur la tête",
+    "dragon": "Dragon : se baisser",
+}
+CHATEAU_SETTINGS_DEFAULTS = {
+    "gestures": ["fairy_r", "fairy_l", "star"],  # les 3 défis prescrits
+    "trials": 40,            # essais de la vraie partie
+    "go_percent": 80,        # % de défis ; le reste : l'ogre, il faut se figer
+    "difficulty": "moyenne",
+    "active": True,
+}
+
 SETTINGS_DEFAULTS_BY_SLUG = {
     "le-hibou": GAME_SETTINGS_DEFAULTS,
     "gardien-lucioles": LUCIOLES_SETTINGS_DEFAULTS,
     "danse-lucioles": DANSE_SETTINGS_DEFAULTS,
+    "gardien-chateau": CHATEAU_SETTINGS_DEFAULTS,
 }
 
 # Jeux réellement jouables dans l'espace patient du site (les autres arriveront plus tard).
-PLAYABLE_GAME_SLUGS = {"le-hibou", "gardien-lucioles", "danse-lucioles"}
+PLAYABLE_GAME_SLUGS = {"le-hibou", "gardien-lucioles", "danse-lucioles", "gardien-chateau"}
 
 
 def settings_defaults(slug: str | None) -> dict:
@@ -304,6 +326,16 @@ def api_session_to_row(session: dict, patient_id: int, patient_game_id: int,
         "sequence_errors": _metric(metrics, "sequence_errors"),
         "hints_used": _metric(metrics, "hints_used"),
         "mean_step_sec": _metric(metrics, "mean_step_sec"),
+        "go_success_rate": _metric(metrics, "go_success_rate"),
+        "nogo_success_rate": _metric(metrics, "nogo_success_rate"),
+        "false_alarms": _metric(metrics, "false_alarms"),
+        "omissions": _metric(metrics, "omissions"),
+        "wrong_gestures": _metric(metrics, "wrong_gestures"),
+        "rt_mean_ms": _metric(metrics, "rt_mean_ms"),
+        "rt_sd_ms": _metric(metrics, "rt_sd_ms"),
+        "agitation": _metric(metrics, "agitation"),
+        "accuracy_start": _metric(metrics, "accuracy_start"),
+        "accuracy_end": _metric(metrics, "accuracy_end"),
         "game_slug": game.get("slug"),
     }
 

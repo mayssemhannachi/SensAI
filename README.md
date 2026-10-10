@@ -133,7 +133,7 @@ d'activation, espace enfant, analyses et alertes.
 | Spécialité | Jeux jouables | Ce qui est travaillé |
 |------------|---------------|----------------------|
 | **Kinésithérapeute** | Le Hibou, Le Gardien des Lucioles | mobilité (rotation du cou, élévation du bras / épaule) |
-| **Ergothérapeute** | La Danse des Lucioles | mémoire de séquence, planification, coordination œil-main et des deux mains |
+| **Ergothérapeute** | La Danse des Lucioles, Le Gardien du Château | mémoire de séquence, planification, coordination œil-main et des deux mains ; attention, contrôle de l'impulsivité, latéralité |
 
 Chaque compte ne voit que ses propres patients. La spécialité est enregistrée avec le compte
 (champ `specialty`, table `users`) et chaque jeu appartient à une spécialité (table `games`) ;
@@ -148,8 +148,9 @@ avant cette évolution sont dans l'espace kinésithérapeute.
 | **Le Hibou** | rotation cervicale (tête) | angle cible, maintien, répétitions, vitesse, limite de sécurité, sensibilité caméra, inversion du sens | rotation gauche / droite, symétrie, maintien, fluidité, compensations (tête penchée) |
 | **Le Gardien des Lucioles** | abduction de l'épaule (bras) | bras atteint, mode hémiplégie / bilatéral, seuil d'abduction, extension du coude, tolérance de l'autre bras, nombre de lucioles, maintien | abduction max, pic moyen, compensations (autre bras levé) |
 | **La Danse des Lucioles** (ergothérapie) | l'enfant refait avec ses mains la séquence de fleurs montrée par Léo | main (droite, gauche, au choix, à tour de rôle), niveau de départ, nombre de danses, taille des fleurs | plus longue séquence, erreurs d'ordre, aides de Léo, temps par fleur |
+| **Le Gardien du Château** (ergothérapie) | debout, l'enfant fait le geste de chaque personnage (fée bleue : bras droit, fée rose : bras gauche, étoile, couronne, dragon) et se fige comme une statue devant l'ogre | les 3 défis, nombre d'essais, part des défis (le reste : l'ogre) | défis réussis (attention), statues réussies (impulsivité), temps de réaction et variabilité, oublis, mauvais gestes, réussite début / fin de partie |
 
-Les deux jeux enregistrent aussi le score, le taux de réussite, la durée, la **douleur** et
+Tous les jeux enregistrent aussi le score, le taux de réussite, la durée, la **douleur** et
 l'**effort** déclarés par l'enfant. Le bouton **« J'ai mal / Stop »** arrête la séance à tout moment.
 
 ---
@@ -194,7 +195,8 @@ SensAI/
 ├── data_analysis/                 # dashboard thérapeute, analyses, notebooks, tests
 │   └── scripts/seed_backend.py    # données de démonstration
 ├── frontend/                      # site SensAI (Next.js) + jeux
-│   └── public/games/gardien-lucioles/   # jeu Le Gardien des Lucioles
+│   └── public/games/              # jeux HTML : gardien-lucioles, danse-lucioles, gardien-chateau (compilé)
+├── games-src/gardien-chateau/     # sources du Gardien du Château (TypeScript, Vite) — voir ci-dessous
 └── docs/README_backend.md         # documentation détaillée du backend
 ```
 
@@ -265,6 +267,17 @@ cd data_analysis; python scripts/seed_backend.py --register
 
 Le détail des mesures attendues est dans [`data_analysis/README.md`](data_analysis/README.md).
 
+**Le Gardien du Château** est écrit en TypeScript : ses sources sont dans
+`games-src/gardien-chateau/` et la version compilée est déjà dans
+`frontend/public/games/gardien-chateau/` (rien à faire pour jouer). Pour modifier le jeu :
+
+```bash
+cd games-src/gardien-chateau
+npm install
+npm test          # tests de la logique (gestes, mesures, difficulté)
+npm run build     # recompile dans frontend/public/games/gardien-chateau/
+```
+
 ---
 
 ## 10. Équipe
@@ -275,6 +288,7 @@ Le détail des mesures attendues est dans [`data_analysis/README.md`](data_analy
 | Backend FastAPI | branche `backend-fastapi` |
 | Jeux Le Gardien des Lucioles et La Danse des Lucioles | Maram — branche `maram-game` |
 | Jeu Le Hibou (prototype Python / OpenCV) | Chahed — branche `feature/game-hibou` |
+| Jeu Le Gardien du Château (Phaser + MediaPipe) | Chahed — branche `feature/gardien-du-chateau` |
 | Data Analysis & dashboard thérapeute, intégration de la plateforme | branche `feature/dashboard-analytics` |
 
 Cette branche (`integration/plateforme-complete`) rassemble toutes les parties connectées.
