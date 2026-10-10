@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.ai.chat_router import router as chat_router
 from app.routers.auth import router as auth_router
 from app.routers.consultation import router as consultation_router
 from app.routers.patient import router as patient_router
@@ -29,6 +30,7 @@ app = FastAPI(
         {"name": "Session Events", "description": "Événements détaillés enregistrés pendant une session."},
         {"name": "Activation Codes", "description": "Codes d’activation des patients."},
         {"name": "Patient Transfers", "description": "Transfert de patient vers le thérapeute authentifié."},
+        {"name": "AI Chat", "description": "Analyse des données structurées et notes thérapeutiques d’un patient."},
         {"name": "Health", "description": "État de disponibilité de l’API."},
     ],
 )
@@ -69,4 +71,5 @@ app.include_router(session_router)
 app.include_router(
     session_event_router
 )
+app.include_router(chat_router)
 
