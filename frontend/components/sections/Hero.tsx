@@ -55,10 +55,10 @@ export default function Hero() {
 
           <div className="space-y-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
             <p>
-              SensAI transforme les exercices de rééducation pédiatrique en expériences interactives et engageantes, grâce à la vision par ordinateur.
+              SensAI explore comment enrichir la rééducation motrice par la stimulation cognitive et le jeu partagé, pour les enfants présentant des troubles neuromoteurs.
             </p>
             <p className="text-sm sm:text-base text-slate-500">
-              L'enfant interagit naturellement avec les activités grâce à sa caméra, tandis que SensAI transforme ses mouvements en interactions et données de session.
+              L&apos;enfant interagit naturellement avec les activités grâce à sa caméra, tandis que SensAI transforme ses mouvements en interactions et données de session.
             </p>
           </div>
 
@@ -67,7 +67,7 @@ export default function Hero() {
               href="#enfants" 
               className="bg-[#18212F] hover:bg-black text-white px-7 py-3.5 rounded-full text-sm font-bold flex items-center gap-2.5 transition-all shadow-md hover:translate-y-[-1px]"
             >
-              Commencer l'aventure <ArrowRight size={16} />
+              Commencer l&apos;aventure <ArrowRight size={16} />
             </Link>
             <Link 
               href="#comment-ca-marche" 

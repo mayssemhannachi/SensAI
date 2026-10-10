@@ -8,7 +8,7 @@ const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
 
 export const metadata: Metadata = {
   title: 'SensAI — La rééducation devient une aventure',
-  description: 'SensAI transforme les exercices de rééducation pédiatrique en expériences interactives et engageantes grâce à la vision par ordinateur.',
+  description: 'SensAI explore comment enrichir la rééducation motrice par la stimulation cognitive et le jeu partagé pour les enfants présentant des troubles neuromoteurs.',
 };
 
 export default function RootLayout({

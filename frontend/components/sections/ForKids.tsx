@@ -52,14 +52,20 @@ export default function ForKids() {
               </Badge>
 
               <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-                Une expérience créée autour de l'exploration et du mouvement.
+                Une expérience créée autour de l&apos;exploration et du mouvement.
               </h2>
 
               <div className="space-y-3 text-sm text-slate-600 leading-relaxed max-w-lg">
                 <p>SensAI ne commence pas avec des tableaux de données.</p>
                 <p className="font-semibold text-slate-800">Il commence avec une aventure.</p>
                 <p>
-                  Une interface colorée, des interactions simples et des objectifs adaptés permettant à l'enfant d'explorer, bouger et participer activement à son expérience.
+                  Une interface colorée, des interactions simples et des objectifs adaptés permettant à l&apos;enfant d&apos;explorer, bouger et participer activement à son expérience.
+                </p>
+              </div>
+              <div className="max-w-lg rounded-2xl border border-purple-100 bg-white/80 p-5">
+                <h3 className="font-outfit font-extrabold text-slate-900">Pour les enfants concernés par des troubles neuromoteurs</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  La paralysie cérébrale, la dyspraxie (TDC) ou les lésions cérébrales acquises font partie des situations visées. Le choix des activités et de leurs réglages doit être adapté avec le professionnel qui accompagne l&apos;enfant.
                 </p>
               </div>
             </div>

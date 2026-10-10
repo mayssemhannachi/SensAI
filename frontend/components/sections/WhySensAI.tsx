@@ -22,7 +22,17 @@ const reasons = [
     icon: "/Assets/Landing Page/pourquoi/intelligent.png",
     title: "Intelligent",
     desc: "Exploiter la vision par ordinateur pour rendre l'interaction plus naturelle.",
-  }
+  },
+  {
+    icon: "/Assets/Landing Page/pourquoi/cognitive.png",
+    title: "Stimulation cognitive",
+    desc: "Associer le mouvement à l'attention, la mémoire, la prise de décision et le repérage spatial.",
+  },
+  {
+    icon: "/Assets/Landing Page/pourquoi/social.png",
+    title: "Jeu partagé",
+    desc: "Placer le lien social au cœur du jeu, avec des expériences à partager en duo, en famille ou entre pairs.",
+  },
 ];
 
 export default function WhySensAI() {
@@ -55,8 +65,8 @@ export default function WhySensAI() {
           </Badge>
         </div>
 
-        {/* 4 Feature Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 pt-4">
+        {/* 6 Feature Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 pt-4">
           {reasons.map((r) => (
             <div key={r.title} className="flex flex-col items-center text-center group">
               <div className="w-40 h-24 sm:w-48 sm:h-28 mb-4 flex items-center justify-center hover:scale-105 transition-transform duration-300">
