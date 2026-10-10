@@ -83,20 +83,15 @@ export class MainScene extends Phaser.Scene {
   private cnt = 0;
   private audioPlaying = false;
   private audioEndAt: number | null = null;
-  private posture: Posture = 'standing';
   private zoneG!: Phaser.GameObjects.Graphics;
-  private postureBadge!: Phaser.GameObjects.Text;
   private inZone = false;
   private inZoneSince = 0;
 
   constructor() { super('main'); }
 
-  init(data?: { kinds?: Kind[]; posture?: Posture }) {
+  init(data?: { kinds?: Kind[] }) {
     if (data?.kinds && data.kinds.length === 3) {
       this.cfg.kinds = data.kinds;
-    }
-    if (data?.posture) {
-      this.posture = data.posture;
     }
   }
 
@@ -112,42 +107,10 @@ export class MainScene extends Phaser.Scene {
     this.tag = this.add.text(24, 24, '', { fontSize: '28px', color: '#fff', backgroundColor: '#6c4ad6', padding: { x: 12, y: 6 } }).setVisible(false);
     this.starTxt = this.add.text(w - 24, 24, '', { fontSize: '40px', color: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(1, 0);
 
-    // Zone guide caméra (silhouette debout / assis)
+    // Zone guide caméra (silhouette debout)
     this.zoneG = this.add.graphics();
 
-    // Badge interactif pour voir et basculer la posture (debout / assis)
-    this.postureBadge = this.add.text(24, 68, '', {
-      fontSize: '20px',
-      color: '#fff',
-      backgroundColor: '#1d2b53dd',
-      padding: { x: 10, y: 5 },
-    })
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.togglePosture());
-    this.updatePostureBadge();
-
     void this.startCamera();
-  }
-
-  private togglePosture() {
-    this.posture = this.posture === 'standing' ? 'sitting' : 'standing';
-    this.updatePostureBadge();
-    if (this.phase === 'calib') {
-      drawInitialZone(this.zoneG, this.scale.width / 2, 380, this.posture, this.inZone);
-      this.inZoneSince = 0;
-      this.noise = [];
-      this.noseS = [];
-      this.say(
-        this.posture === 'standing'
-          ? 'Place-toi debout dans le cadre guide…'
-          : 'Place-toi assis face à la caméra…'
-      );
-    }
-  }
-
-  private updatePostureBadge() {
-    const isStand = this.posture === 'standing';
-    this.postureBadge.setText(isStand ? '🧍 Debout (clic: 🪑 Assis)' : '🪑 Assis (clic: 🧍 Debout)');
   }
 
   private isPoseInInitialZone(p: Pose): boolean {
@@ -203,12 +166,8 @@ export class MainScene extends Phaser.Scene {
     this.inZoneSince = 0;
     this.noise = [];
     this.noseS = [];
-    drawInitialZone(this.zoneG, this.scale.width / 2, 380, this.posture, false);
-    this.say(
-      this.posture === 'standing'
-        ? 'Place-toi debout dans le cadre guide…'
-        : 'Place-toi assis face à la caméra…'
-    );
+    drawInitialZone(this.zoneG, this.scale.width / 2, 380, 'standing', false);
+    this.say('Place-toi debout dans le cadre guide…');
   }
 
   update() {
@@ -221,7 +180,7 @@ export class MainScene extends Phaser.Scene {
       if (p) { this.prevPose = p; this.prevT = now; }
       this.pose = p;
     }
-    this.step(now, classifyGesture(this.pose, this.base, this.posture));
+    this.step(now, classifyGesture(this.pose, this.base, 'standing'));
   }
 
   private step(now: number, g: Gesture) {
@@ -230,16 +189,14 @@ export class MainScene extends Phaser.Scene {
         const inZone = this.pose ? this.isPoseInInitialZone(this.pose) : false;
         if (inZone !== this.inZone) {
           this.inZone = inZone;
-          drawInitialZone(this.zoneG, this.scale.width / 2, 380, this.posture, inZone);
+          drawInitialZone(this.zoneG, this.scale.width / 2, 380, 'standing', inZone);
         }
 
         if (!inZone) {
-          // L'enfant n'est pas encore en place : réinitialiser le compte de calibration
           this.inZoneSince = 0;
           this.noise = [];
           this.noseS = [];
         } else {
-          // L'enfant est bien dans la zone guide
           if (!this.inZoneSince) {
             this.inZoneSince = now;
             this.say('Parfait ! Reste immobile comme une statue…');
@@ -260,10 +217,8 @@ export class MainScene extends Phaser.Scene {
         break;
       }
       case 'gap':
-        if (now >= this.until) {
-          if (g === 'neutral' || now > this.until + 3000) this.begin(now);
-          else this.say('Bras le long du corps…');
-        }
+        // Enchaînement direct et fluide : ne bloque plus sur "Bras le long du corps"
+        if (now >= this.until) this.begin(now);
         break;
       case 'stim': this.stim(now, g); break;
       case 'fb': if (now >= this.until) this.next(now); break;
@@ -439,7 +394,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.phase = 'fb';
-    this.until = now + 800;
+    this.until = now + 650;
   }
 
   private next(now: number) {
@@ -449,7 +404,7 @@ export class MainScene extends Phaser.Scene {
     this.msg.setVisible(false);
     stopSpeech();
     this.phase = 'gap';
-    this.until = now + 1000 + Math.random() * 1000;
+    this.until = now + 600 + Math.random() * 300;
   }
 
   private showResult() {
