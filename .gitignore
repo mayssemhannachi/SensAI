@@ -1,24 +1,19 @@
-# Virtual environment
+# Dependencies & Build
+node_modules/
+dist/
+*.log
+
+# Python / Backend
 .venv/
-
-# Secrets
 .env
-
-# Python
 __pycache__/
 *.pyc
 *.pyo
-
-# Tests
 .pytest_cache/
+test_db.py
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db
-
-
-test_db.py
