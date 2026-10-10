@@ -20,7 +20,7 @@ import { DIFFICULTY_LEVEL, SPEED_LABELS, withDefaults } from "@/lib/games";
 import { useRequireAuth } from "@/lib/useAuth";
 import RatingRow from "./RatingRow";
 
-type Phase = "loading" | "intro" | "calibrating" | "playing" | "rating" | "saving" | "done" | "error";
+type Phase = "loading" | "intro" | "framing" | "calibrating" | "playing" | "rating" | "saving" | "done" | "error";
 type Step = "turn" | "hold" | "return";
 type InputMode = "camera" | "keyboard";
 
@@ -30,6 +30,55 @@ const CENTER_ZONE = 8; // ° : zone considérée comme « au centre »
 const DEFAULT_CAMERA_GAIN = 1.25; // gain du ratio nez / visage (hibou.py)
 const TILT_LIMIT = 15; // ° d'inclinaison de la tête au-delà desquels on parle de compensation
 const COMPENSATION_DELAY = 0.35; // s de confirmation avant d'afficher l'alerte (hibou.py)
+const FRAMING_HOLD = 1.2; // s à rester bien cadré avant le calibrage (écran de cadrage de hibou.py)
+
+type FaceBox = { cx: number; cy: number; width: number };
+
+/** Position et taille du visage dans l'image (0 à 1), pour l'écran de cadrage. */
+function faceBox(points: Landmark[]): FaceBox | null {
+  const left = points[234];
+  const right = points[454];
+  const top = points[10];
+  const chin = points[152];
+  if (!left || !right || !top || !chin) return null;
+  return { cx: (left.x + right.x) / 2, cy: (top.y + chin.y) / 2, width: Math.abs(right.x - left.x) };
+}
+
+/** Consigne de cadrage, ou null si le visage est bien placé. */
+function framingHint(box: FaceBox | null, yaw: number | null): string | null {
+  if (!box) return "Je ne vois pas ton visage : place-toi face à la caméra";
+  if (box.width < 0.18) return "Approche-toi un peu de l'écran";
+  if (box.width > 0.5) return "Recule un peu";
+  if (Math.abs(box.cx - 0.5) > 0.12) return "Place ton visage au milieu du cadre";
+  if (Math.abs(box.cy - 0.5) > 0.16) return box.cy < 0.5 ? "Baisse un peu la caméra ou descends" : "Monte un peu";
+  if (yaw !== null && Math.abs(yaw) > 12) return "Regarde bien droit devant toi";
+  return null;
+}
+
+// ─── Sons (biofeedback, comme hibou.py — ici en Web Audio, donc aussi sous Windows) ──
+type Tone = "ping" | "success" | "warning";
+function playTone(ctx: AudioContext | null, tone: Tone) {
+  if (!ctx) return;
+  const notes: Record<Tone, [number, number][]> = {
+    ping: [[880, 0.12]],
+    success: [[660, 0.12], [990, 0.2]],
+    warning: [[220, 0.25]],
+  };
+  let at = ctx.currentTime;
+  for (const [freq, duration] of notes[tone]) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = tone === "warning" ? "square" : "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(tone === "warning" ? 0.05 : 0.18, at + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(at);
+    osc.stop(at + duration + 0.02);
+    at += duration;
+  }
+}
 
 type Landmark = { x: number; y: number; z: number };
 type FaceMeshResults = { multiFaceLandmarks?: Landmark[][] };
@@ -125,7 +174,15 @@ export default function LeHibouGame() {
   const [faceVisible, setFaceVisible] = useState(true);
 
   // Valeurs affichées (rafraîchies ~15 fois / s)
-  const [view, setView] = useState({ yaw: 0, rep: 0, step: "turn" as Step, hold: 0, successes: 0, tooFast: false, tooFar: false, tilted: false });
+  const [view, setView] = useState({
+    yaw: 0, rep: 0, step: "turn" as Step, hold: 0, successes: 0, tooFast: false, tooFar: false, tilted: false,
+    framingHint: null as string | null, framing: 0,
+  });
+  const [soundOn, setSoundOn] = useState(true);
+  const audioRef = useRef<AudioContext | null>(null);
+  const soundOnRef = useRef(true);
+  const faceBoxRef = useRef<FaceBox | null>(null);
+  const framingRef = useRef(0);
   const [result, setResult] = useState<{ metrics: SessionMetrics; duration: number } | null>(null);
   const [pain, setPain] = useState<number | null>(null);
   const [effort, setEffort] = useState<number | null>(null);
@@ -217,6 +274,7 @@ export default function LeHibouGame() {
         const yaw = raw === null ? null : c.invert_direction ? -raw : raw;
         rawYawRef.current = yaw;
         rawRollRef.current = landmarks ? rollFromLandmarks(landmarks) : null;
+        faceBoxRef.current = landmarks ? faceBox(landmarks) : null;
         setFaceVisible(yaw !== null);
       });
       const camera = new window.Camera(videoRef.current, {
@@ -321,6 +379,23 @@ export default function LeHibouGame() {
         yawRef.current += (target - yawRef.current) * 0.5; // lissage léger
       }
 
+      const beep = (tone: Tone) => soundOnRef.current && playTone(audioRef.current, tone);
+
+      // 1 bis. Cadrage (caméra) : visage centré, à bonne distance, face à l'écran
+      let hint: string | null = null;
+      if (p === "framing") {
+        hint = framingHint(faceBoxRef.current, rawYawRef.current);
+        framingRef.current = hint ? Math.max(0, framingRef.current - dt * 2) : framingRef.current + dt;
+        if (framingRef.current >= FRAMING_HOLD) {
+          framingRef.current = 0;
+          calibrationRef.current = [];
+          rollCalibrationRef.current = [];
+          phaseRef.current = "calibrating";
+          beep("ping");
+          setPhase("calibrating");
+        }
+      }
+
       // 2. Calibrage (caméra) : position neutre = moyenne de ~1,5 s
       if (p === "calibrating" && calibrationRef.current.length >= 25) {
         const sorted = [...calibrationRef.current].sort((a, b) => a - b);
@@ -372,11 +447,13 @@ export default function LeHibouGame() {
 
         tooFar = Math.abs(yaw) > c.safety_limit;
         if (tooFar && !t.overshooting) t.overshoots += 1;
-        t.overshooting = tooFar;
 
+        if (tooFar && !t.overshooting) beep("warning");
+        t.overshooting = tooFar;
         if (t.step === "turn" && toward >= c.target_angle) {
           t.step = "hold";
           t.holdStart = now;
+          beep("ping"); // cible atteinte
         } else if (t.step === "hold") {
           if (toward < c.target_angle - 3) {
             t.step = "turn"; // maintien interrompu
@@ -384,6 +461,7 @@ export default function LeHibouGame() {
             t.successes += 1;
             t.holds.push((now - t.holdStart) / 1000);
             t.step = "return";
+            beep("success"); // répétition réussie
           }
         } else if (t.step === "return" && Math.abs(yaw) <= CENTER_ZONE) {
           t.rep += 1;
@@ -407,6 +485,8 @@ export default function LeHibouGame() {
           tooFast,
           tooFar,
           tilted,
+          framingHint: hint,
+          framing: Math.min(1, framingRef.current / FRAMING_HOLD),
         });
       }
       frame = requestAnimationFrame(loop);
@@ -417,6 +497,11 @@ export default function LeHibouGame() {
 
   // ── Actions ─────────────────────────────────────────────────────────────────
   const start = async (selected: InputMode) => {
+    // Les navigateurs n'autorisent le son qu'après un clic : on crée le contexte audio ici.
+    if (!audioRef.current && typeof window !== "undefined" && "AudioContext" in window) {
+      audioRef.current = new AudioContext();
+    }
+    void audioRef.current?.resume();
     setMode(selected);
     modeRef.current = selected;
     yawRef.current = 0;
@@ -431,7 +516,8 @@ export default function LeHibouGame() {
         setPhase("playing");
         return;
       }
-      setPhase("calibrating");
+      framingRef.current = 0;
+      setPhase("framing");
     } else {
       trackerRef.current = { ...newTracker(), startedAt: performance.now() };
       setPhase("playing");
@@ -519,6 +605,17 @@ export default function LeHibouGame() {
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/50 rounded-full border border-indigo-100 text-[10px] font-bold text-indigo-600">
             🛡️ Zone sûre
           </div>
+          <button
+            onClick={() => {
+              soundOnRef.current = !soundOn;
+              setSoundOn(!soundOn);
+            }}
+            className="px-3 py-1.5 bg-white rounded-full border border-slate-200 text-[11px] font-bold text-slate-600"
+            aria-label={soundOn ? "Couper le son" : "Activer le son"}
+            title={soundOn ? "Couper le son" : "Activer le son"}
+          >
+            {soundOn ? "🔊 Son" : "🔇 Muet"}
+          </button>
           <div className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100 text-[11px] font-extrabold text-emerald-600 ml-2">
             {mode === "keyboard" ? <><Keyboard size={14} /> Mode clavier</> : <><Camera size={14} /> {cameraState === "on" ? "Caméra active" : "Caméra en pause"}</>}
           </div>
@@ -544,7 +641,7 @@ export default function LeHibouGame() {
 
             {/* Hibou qui suit l'angle de la tête */}
             <div
-              className="relative z-10 transition-transform duration-75"
+              className={`relative z-10 transition-transform duration-75 ${phase === "framing" ? "hidden" : ""}`}
               style={{ transform: `translateX(${Math.max(-1, Math.min(1, view.yaw / 45)) * 22}vw)` }}
             >
               <Image src="/Assets/dashboard/Magical Owl Valley Adventure.png" width={260} height={260} alt="Hibou" className="drop-shadow-2xl rounded-full" />
@@ -581,6 +678,25 @@ export default function LeHibouGame() {
                   {cameraState === "failed" && (
                     <p className="text-xs font-bold text-amber-600 mt-3">Caméra indisponible : le mode clavier a été activé.</p>
                   )}
+                </div>
+              </Overlay>
+            )}
+            {phase === "framing" && (
+              <Overlay transparent>
+                <div className="flex flex-col items-center gap-4" data-testid="framing">
+                  <div
+                    className={`w-[220px] h-[290px] rounded-[50%] border-[5px] border-dashed transition-colors ${view.framingHint ? "border-white/80" : "border-emerald-400"}`}
+                    aria-hidden
+                  />
+                  <div className="bg-black/50 px-5 py-3 rounded-2xl text-center">
+                    <p className="text-white font-black text-lg">
+                      {view.framingHint ?? "Parfait ! Ne bouge plus…"}
+                    </p>
+                    <div className="mt-2 h-2 w-56 bg-white/30 rounded-full overflow-hidden mx-auto">
+                      <div className="h-full bg-emerald-400 transition-all" style={{ width: `${Math.round(view.framing * 100)}%` }} />
+                    </div>
+                    <p className="text-white/70 text-[11px] font-bold mt-1">Place ton visage dans l’ovale, face à la caméra</p>
+                  </div>
                 </div>
               </Overlay>
             )}
