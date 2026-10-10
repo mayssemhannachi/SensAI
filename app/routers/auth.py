@@ -52,7 +52,8 @@ def register(
             db,
             request.full_name,
             request.email,
-            request.password
+            request.password,
+            request.specialty,
         )
 
         return {
@@ -118,7 +119,11 @@ def get_me(
     from app.models.user import User
 
     user = db.query(User).filter(User.id == current_user["user_id"]).first()
-    return {**current_user, "full_name": user.full_name if user else None}
+    return {
+        **current_user,
+        "full_name": user.full_name if user else None,
+        "specialty": user.specialty if user and user.role == "therapist" else None,
+    }
 
 
 

@@ -10,9 +10,17 @@ const TOKEN_KEY = "sensai_token";
 const ROLE_KEY = "sensai_role";
 
 export type Role = "therapist" | "patient";
+export type TherapistSpecialty = "kinesitherapist" | "ergotherapist";
 
 // ─── Types renvoyés par l'API ────────────────────────────────────────────────
-export type Me = { user_id: number; sub: string; role: Role; full_name?: string | null; patient_id?: number | null };
+export type Me = {
+  user_id: number;
+  sub: string;
+  role: Role;
+  full_name?: string | null;
+  patient_id?: number | null;
+  specialty?: TherapistSpecialty | null;
+};
 export type Patient = {
   id: number;
   first_name: string;
@@ -217,9 +225,14 @@ export async function login(email: string, password: string): Promise<Role> {
   }
 }
 
-export async function registerTherapist(fullName: string, email: string, password: string) {
+export async function registerTherapist(
+  fullName: string,
+  email: string,
+  password: string,
+  specialty: TherapistSpecialty,
+) {
   try {
-    await request("POST", "/auth/register", { full_name: fullName, email, password }, false);
+    await request("POST", "/auth/register", { full_name: fullName, email, password, specialty }, false);
   } catch (error) {
     if (error instanceof ApiError && error.status === 400) {
       throw new ApiError("Cette adresse e-mail est déjà utilisée.", 400);

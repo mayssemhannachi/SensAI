@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from app.models.game import Game
 from app.models.patient import Patient
 from app.models.patient_game import PatientGame
+from app.models.user import User
 
 from app.repositories.patient_game_repository import (
     save_patient_game,
@@ -22,6 +23,9 @@ def assign_game(
     game = db.query(Game).filter(Game.id == request.game_id).first()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
+    therapist = db.query(User).filter(User.id == therapist_id).first()
+    if not therapist or game.specialty != therapist.specialty:
+        raise HTTPException(status_code=403, detail="Game not available in this therapist space")
 
     patient_game = PatientGame(
         patient_id=request.patient_id,

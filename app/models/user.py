@@ -17,6 +17,12 @@ class User(Base):
 
     role: Mapped[str] = mapped_column(String(50))
 
+    specialty: Mapped[str] = mapped_column(
+        String(40),
+        nullable=False,
+        default="kinesitherapist",
+    )
+
     patients: Mapped[list["Patient"]] = relationship(
         "Patient",
         back_populates="therapist",

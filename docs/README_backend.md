@@ -168,7 +168,7 @@ Toutes les routes listées, sauf `GET /health`, nécessitent le jeton Bearer.
 
 | Méthode | Route | Corps de requête | Réponse principale |
 | --- | --- | --- | --- |
-| `POST` | `/auth/register` | `full_name`, `email`, `password` | `UserRegistrationResponse` (`201`) |
+| `POST` | `/auth/register` | `full_name`, `email`, `password`, `specialty` (`kinesitherapist` ou `ergotherapist`, optionnel — kinésithérapeute par défaut) | `UserRegistrationResponse` (`201`) |
 | `POST` | `/auth/login` | `email`, `password` | `TokenResponse` |
 | `GET` | `/auth/me` | Aucun | `CurrentUserResponse` |
 | `POST` | `/patients/` | `first_name`, `last_name`, `age` | `PatientResponse` |
@@ -182,7 +182,7 @@ Toutes les routes listées, sauf `GET /health`, nécessitent le jeton Bearer.
 | `POST` | `/consultation-notes/` | `consultation_id`, `note` | `ConsultationNoteResponse` |
 | `POST` | `/activation-codes/` | `patient_id` | `ActivationCodeResponse` |
 | `POST` | `/patient-transfers/` | `patient_code` | `PatientTransferResponse` |
-| `GET` | `/games/` | Aucun | `GameResponse[]` |
+| `GET` | `/games/` | Aucun | `GameResponse[]` du catalogue correspondant à la spécialité du thérapeute |
 | `POST` | `/games/` | `name`, `slug`, `description` optionnel | `GameResponse` |
 | `POST` | `/patient-games/` | `patient_id`, `game_id`, `configuration` | `PatientGameResponse` |
 | `GET` | `/patient-games/patient/{patient_id}` | Aucun | `PatientGameResponse[]` |

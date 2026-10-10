@@ -108,7 +108,12 @@ consume_site_token()
 
 def render_sidebar(current_key: str | None, authenticated: bool) -> None:
     with st.sidebar:
-        render_html(logo_html("Espace thérapeute"))
+        user = state.current_user() if authenticated else {}
+        specialty = user.get("specialty", "kinesitherapist")
+        specialty_label = (
+            "Ergothérapeute" if specialty == "ergotherapist" else "Kinésithérapeute"
+        )
+        render_html(logo_html(f"Espace {specialty_label}"))
 
         if authenticated:
             render_html('<div class="kk-side-label">Navigation</div>')
@@ -123,7 +128,6 @@ def render_sidebar(current_key: str | None, authenticated: bool) -> None:
 
             render_html('<div class="kk-side-label">Mon compte</div>')
             if state.api_mode_enabled():
-                user = state.current_user()
                 name = esc(user.get("full_name") or "Thérapeute")
                 email = esc(user.get("sub") or "")
                 render_html(

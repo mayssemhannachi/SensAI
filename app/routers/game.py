@@ -40,7 +40,8 @@ def create_new_game(
 ):
     return create_game(
         db,
-        request
+        request,
+        current_user.get("specialty", "kinesitherapist"),
     )
 
 
@@ -56,4 +57,4 @@ def get_all_games_route(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_therapist)
 ):
-    return get_games(db)
+    return get_games(db, current_user.get("specialty", "kinesitherapist"))

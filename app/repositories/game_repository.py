@@ -15,6 +15,7 @@ def save_game(
 
 
 def get_all_games(
-    db: Session
+    db: Session,
+    specialty: str,
 ):
-    return db.query(Game).all()
+    return db.query(Game).filter(Game.specialty == specialty).all()

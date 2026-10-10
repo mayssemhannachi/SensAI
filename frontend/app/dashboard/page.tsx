@@ -182,10 +182,14 @@ export default function DashboardPage() {
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm relative flex-shrink-0"
             >
               <Image
-                src="/Assets/dashboard/Playful Character Face Sticker Sheet.png"
+                src={
+                  firstName.toLowerCase() === "salma"
+                    ? "/Assets/dashboard/Joyful Girl with Curly Puff Buns.png"
+                    : "/Assets/dashboard/Playful Character Face Sticker Sheet.png"
+                }
                 alt={`Avatar de ${firstName}`}
                 fill
-                className="object-cover scale-[2.5] origin-top-left"
+                className="object-cover"
               />
             </div>
             <span className="font-bold text-[13px] text-slate-800">{firstName}</span>

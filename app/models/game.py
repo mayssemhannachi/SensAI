@@ -26,6 +26,12 @@ class Game(Base):
         nullable=True,
     )
 
+    specialty: Mapped[str] = mapped_column(
+        String(40),
+        nullable=False,
+        default="kinesitherapist",
+    )
+
     patient_games: Mapped[list["PatientGame"]] = relationship(
         "PatientGame",
     )

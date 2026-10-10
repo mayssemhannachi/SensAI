@@ -119,7 +119,14 @@ def show_add_patient():
             if backend:
                 render_html('<div class="kk-card-title" style="margin-top:10px">3 · Jeu prescrit et réglages</div>')
                 if games is None or games.empty:
-                    st.caption("Aucun jeu disponible pour le moment.")
+                    if state.current_user().get("specialty") == "ergotherapist":
+                        st.caption(
+                            "Le catalogue ergothérapeute est prévu pour les jeux cognitifs et de "
+                            "coordination. Ces jeux ne sont pas encore jouables ; vous pouvez "
+                            "créer le dossier patient et générer son code d’activation."
+                        )
+                    else:
+                        st.caption("Aucun jeu disponible pour le moment.")
                 else:
                     by_id = games.set_index("id")
                     game_id = st.segmented_control(

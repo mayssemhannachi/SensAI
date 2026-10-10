@@ -22,7 +22,8 @@ def register_user(
         db: Session,
         full_name: str,
         email: str,
-        password: str
+        password: str,
+        specialty: str = "kinesitherapist",
 ):
 
     existing = find_by_email(
@@ -39,7 +40,8 @@ def register_user(
         full_name=full_name,
         email=email,
         password=hash_password(password),
-        role="therapist"
+        role="therapist",
+        specialty=specialty,
     )
 
     return save_user(
@@ -76,6 +78,8 @@ def login_user(
         "sub": user.email,
         "role": user.role
     }
+    if user.role == "therapist":
+        claims["specialty"] = user.specialty
     if user.role == "patient":
         from app.models.patient import Patient
         patient = db.query(Patient).filter(Patient.user_id == user.id).first()

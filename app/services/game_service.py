@@ -8,12 +8,14 @@ from app.repositories.game_repository import (
 
 def create_game(
     db,
-    request
+    request,
+    specialty: str = "kinesitherapist",
 ):
     game = Game(
         name=request.name,
         slug=request.slug,
-        description=request.description
+        description=request.description,
+        specialty=specialty,
     )
 
     return save_game(
@@ -22,5 +24,5 @@ def create_game(
     )
 
 
-def get_games(db):
-    return get_all_games(db)
+def get_games(db, specialty: str):
+    return get_all_games(db, specialty)

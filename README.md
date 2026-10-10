@@ -121,6 +121,16 @@ On n'ouvre qu'**une seule adresse : http://localhost:3000**. Le site envoie chac
 5. **Le thérapeute** retrouve la séance et ses analyses dans le dashboard, et peut modifier les
    réglages à tout moment.
 
+### Espaces par spécialité
+
+À l'inscription, le professionnel choisit **kinésithérapeute** ou **ergothérapeute**.
+Chaque compte conserve sa propre liste de patients ; le catalogue de jeux affiché dépend de la
+spécialité. L'espace kinésithérapeute propose les jeux jouables **Le Hibou** et **Le Gardien des
+Lucioles**. L'espace ergothérapeute est destiné aux jeux cognitifs et de coordination, encore en
+cours de développement : ses patients et leurs codes peuvent être créés, mais aucun de ces jeux
+n'est encore jouable dans la démo. Les comptes thérapeutes existants restent dans l'espace
+kinésithérapeute.
+
 ### Les jeux disponibles
 
 | Jeu | Mouvement | Réglages du thérapeute | Mesures analysées |
