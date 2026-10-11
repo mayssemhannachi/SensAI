@@ -331,7 +331,8 @@ export class IntroScene extends Phaser.Scene {
       btnW,
       'Discover my 3 challenges  ▶',
       () => {
-        this.step = 1;
+        // SensAI : défis prescrits par l'ergothérapeute → pas d'écran de choix
+        this.step = this.prescribed ? 2 : 1;
         this.render();
       },
     );
@@ -646,7 +647,7 @@ export class IntroScene extends Phaser.Scene {
 
     // Navigation buttons
     this.button(210, 620, 200, '◀  Previous', () => {
-      this.step = this.step === 2 ? 1 : this.step - 1;
+      this.step = this.step === 2 ? (this.prescribed ? 0 : 1) : this.step - 1;
       this.render();
     }, 0x8c83b5);
     this.drawButtonAccents(210, 620, 200);
