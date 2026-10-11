@@ -24,7 +24,7 @@ from dashboard.utils.data import refresh_data  # noqa: E402
 from dashboard.utils.theme import apply_theme, logo_html  # noqa: E402
 
 st.set_page_config(
-    page_title="SensAI · Espace thérapeute",
+    page_title="SensAI · Therapist space",
     page_icon=str(Path(__file__).resolve().parent / "assets" / "sensai-mascot.png"),
     layout="wide",
     initial_sidebar_state="expanded",
@@ -111,9 +111,9 @@ def render_sidebar(current_key: str | None, authenticated: bool) -> None:
         user = state.current_user() if authenticated else {}
         specialty = user.get("specialty", "kinesitherapist")
         specialty_label = (
-            "Ergothérapeute" if specialty == "ergotherapist" else "Kinésithérapeute"
+            "Occupational Therapist" if specialty == "ergotherapist" else "Physiotherapist"
         )
-        render_html(logo_html(f"Espace {specialty_label}"))
+        render_html(logo_html(f"{specialty_label} space"))
 
         if authenticated:
             render_html('<div class="kk-side-label">Navigation</div>')
@@ -126,9 +126,9 @@ def render_sidebar(current_key: str | None, authenticated: bool) -> None:
                 ):
                     navigation.go(key)
 
-            render_html('<div class="kk-side-label">Mon compte</div>')
+            render_html('<div class="kk-side-label">My account</div>')
             if state.api_mode_enabled():
-                name = esc(user.get("full_name") or "Thérapeute")
+                name = esc(user.get("full_name") or "Therapist")
                 email = esc(user.get("sub") or "")
                 render_html(
                     f"""
@@ -140,24 +140,24 @@ def render_sidebar(current_key: str | None, authenticated: bool) -> None:
                 render_html(
                     """
                     <div class="kk-conn"><span class="kk-dot demo"></span>
-                      <div>Mode hors-ligne<small>Données de démonstration</small></div></div>
+                      <div>Offline mode<small>Demo data</small></div></div>
                     """
                 )
             col_refresh, col_logout = st.columns(2)
             with col_refresh:
-                if st.button("↻ Actualiser", key="refresh_data", width="stretch",
-                             help="Recharger les données"):
+                if st.button("↻ Refresh", key="refresh_data", width="stretch",
+                             help="Reload data"):
                     refresh_data()
                     st.rerun()
             with col_logout:
                 if state.api_mode_enabled() and st.button(
-                    "Déconnexion", key="backend_logout", width="stretch"
+                    "Sign out", key="backend_logout", width="stretch"
                 ):
                     state.sign_out(site_path="/logout?reason=logout")
                     st.rerun()
-            st.link_button("↗ Plateforme SensAI", api_client.site_url(), width="stretch")
+            st.link_button("↗ SensAI platform", api_client.site_url(), width="stretch")
 
-        render_html('<div class="kk-side-foot">SensAI · Rééducation pédiatrique</div>')
+        render_html('<div class="kk-side-foot">SensAI · Pediatric rehabilitation</div>')
 
 
 # ==========================================================
@@ -167,15 +167,15 @@ def render_sidebar(current_key: str | None, authenticated: bool) -> None:
 def render_api_error(error: ApiError) -> None:
     from dashboard.components.ui import empty_state
 
-    empty_state("⚠️", "Les données n’ont pas pu être chargées", str(error))
+    empty_state("⚠️", "Data could not be loaded", str(error))
     st.write("")
     _, col_retry, col_login, _ = st.columns([1, 1, 1, 1])
     with col_retry:
-        if st.button("Réessayer", type="primary", width="stretch", key="err_retry"):
+        if st.button("Retry", type="primary", width="stretch", key="err_retry"):
             refresh_data()
             st.rerun()
     with col_login:
-        st.link_button("Se reconnecter", f"{api_client.site_url()}/login", width="stretch")
+        st.link_button("Sign in again", f"{api_client.site_url()}/login", width="stretch")
 
 
 # ==========================================================
@@ -190,7 +190,7 @@ if authenticated:
         for key, (title, _, url) in navigation.PAGES.items()
     }
 else:
-    pages = {"login": st.Page(_login, title="Connexion", url_path="connexion", default=True)}
+    pages = {"login": st.Page(_login, title="Sign in", url_path="connexion", default=True)}
 
 navigation.register(pages)
 current = st.navigation(list(pages.values()), position="hidden")
@@ -202,7 +202,7 @@ try:
     current.run()
 except ApiError as error:
     if error.status_code == 401:
-        state.sign_out(notice="Votre session a expiré. Reconnectez-vous.",
+        state.sign_out(notice="Your session has expired. Please sign in again.",
                        site_path="/logout?reason=expired")
         st.rerun()
     render_api_error(error)

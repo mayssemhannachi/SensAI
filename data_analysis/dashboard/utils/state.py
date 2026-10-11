@@ -12,7 +12,7 @@ USER_KEY = "api_user"
 NOTICE_KEY = "api_auth_notice"
 PATIENT_KEY = "selected_patient_id"
 
-SOURCE_LABELS = {"demo": "Démo", "api": "Backend"}
+SOURCE_LABELS = {"demo": "Demo", "api": "Backend"}
 
 
 def get_data_source() -> str:

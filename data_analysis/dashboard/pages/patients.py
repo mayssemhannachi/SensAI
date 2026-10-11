@@ -8,11 +8,11 @@ from dashboard.utils import analytics
 from dashboard.utils.data import load_dataset
 
 SORTS = {
-    "Priorité (à surveiller d’abord)": (["status_rank", "last_session"], [True, False]),
-    "Dernière séance": (["last_session"], [False]),
-    "Nom": (["last_name", "first_name"], [True, True]),
-    "Réussite (croissante)": (["recent_success"], [True]),
-    "Nombre de séances": (["sessions"], [False]),
+    "Priority (needs attention first)": (["status_rank", "last_session"], [True, False]),
+    "Last session": (["last_session"], [False]),
+    "Name": (["last_name", "first_name"], [True, True]),
+    "Success (ascending)": (["recent_success"], [True]),
+    "Number of sessions": (["sessions"], [False]),
 }
 
 COLUMNS_PER_ROW = 3
@@ -23,15 +23,15 @@ def show_patients():
     reference = data.reference_date
 
     page_header(
-        "Suivi thérapeutique",
-        "Mes patients",
-        "Retrouvez les enfants suivis, leur statut et leurs dernières performances.",
+        "Therapeutic follow-up",
+        "My patients",
+        "Find the children you follow, their status and their latest performance.",
         meta=f"{len(data.patients)} patient(s)",
     )
 
     if data.patients.empty:
-        empty_state("👤", "Aucun patient enregistré", "Créez un premier profil pour démarrer le suivi.")
-        if st.button("＋ Ajouter un patient", type="primary"):
+        empty_state("👤", "No patients registered", "Create a first profile to start follow-up.")
+        if st.button("＋ Add a patient", type="primary"):
             navigation.go("add_patient")
         return
 
@@ -43,15 +43,15 @@ def show_patients():
     search_col, status_col, sort_col = st.columns([2, 1.6, 1.3], vertical_alignment="bottom")
     with search_col:
         query = st.text_input(
-            "Rechercher", placeholder="🔎  Nom, prénom ou code patient…", key="patients_search"
+            "Search", placeholder="🔎  Name or patient code…", key="patients_search"
         )
     with status_col:
         statuses = [s for s in analytics.STATUS_ORDER if s in set(overview["status"])]
         selected_status = st.multiselect(
-            "Statut", statuses, key="patients_status_filter", placeholder="Tous les statuts"
+            "Status", statuses, key="patients_status_filter", placeholder="All statuses"
         )
     with sort_col:
-        sort_label = st.selectbox("Trier par", list(SORTS), key="patients_sort")
+        sort_label = st.selectbox("Sort by", list(SORTS), key="patients_sort")
 
     filtered = overview
     if query.strip():
@@ -69,19 +69,19 @@ def show_patients():
     counts = overview["status"].value_counts()
     chips = " ".join(
         f"<span class='kk-badge {tone}'>{status} · {counts.get(status, 0)}</span>"
-        for status, tone in [("À surveiller", "warning"), ("En progression", "good"),
-                             ("Stable", "info"), ("Nouveau", "neutral")]
+        for status, tone in [("Needs attention", "warning"), ("Improving", "good"),
+                             ("Stable", "info"), ("New", "neutral")]
         if counts.get(status, 0)
     )
     render_html(
         f"<div style='display:flex;justify-content:space-between;align-items:center;"
         f"gap:10px;flex-wrap:wrap;margin:6px 0 14px'>"
         f"<div style='display:flex;gap:6px;flex-wrap:wrap'>{chips}</div>"
-        f"<div style='font-size:12.5px;color:#667085'>{len(filtered)} résultat(s)</div></div>"
+        f"<div style='font-size:12.5px;color:#667085'>{len(filtered)} result(s)</div></div>"
     )
 
     if filtered.empty:
-        empty_state("🔎", "Aucun patient ne correspond", "Modifiez la recherche ou les filtres.")
+        empty_state("🔎", "No matching patients", "Change the search or filters.")
         return
 
     # --------------------------------------------------------
@@ -95,7 +95,7 @@ def show_patients():
             with column:
                 with card(f"patient-{record['id']}"):
                     render_html(patient_card_html(record, reference))
-                    if st.button("Voir la fiche →", key=f"open_patient_{record['id']}", width="stretch"):
+                    if st.button("View record →", key=f"open_patient_{record['id']}", width="stretch"):
                         navigation.open_patient(record["id"])
 
     # --------------------------------------------------------
@@ -105,13 +105,13 @@ def show_patients():
         "patient_code", "full_name", "age", "status", "sessions", "last_session",
         "last_score", "recent_success", "trend",
     ]].rename(columns={
-        "patient_code": "code", "full_name": "patient", "age": "age", "status": "statut",
-        "sessions": "seances", "last_session": "derniere_seance", "last_score": "dernier_score",
-        "recent_success": "reussite_recente", "trend": "tendance_score_par_seance",
+        "patient_code": "code", "full_name": "patient", "age": "age", "status": "status",
+        "sessions": "sessions", "last_session": "last_session", "last_score": "last_score",
+        "recent_success": "recent_success", "trend": "score_trend_per_session",
     })
     st.write("")
     st.download_button(
-        "⤓ Exporter la liste (CSV)",
+        "⤓ Export list (CSV)",
         export.to_csv(index=False).encode("utf-8-sig"),
         file_name="sensai_patients.csv",
         mime="text/csv",

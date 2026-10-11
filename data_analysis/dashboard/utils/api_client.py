@@ -63,12 +63,12 @@ def default_data_source() -> str:
 
 
 _ERROR_MESSAGES = {
-    400: "La requête est invalide.",
-    401: "Session expirée ou identifiants invalides. Reconnectez-vous.",
-    403: "Vous n’êtes pas autorisé à accéder à cette donnée.",
-    404: "La ressource demandée est introuvable.",
-    422: "Les données envoyées ne correspondent pas au contrat de l’API.",
-    500: "Erreur interne du backend.",
+    400: "The request is invalid.",
+    401: "Session expired or invalid credentials. Please sign in again.",
+    403: "You are not authorized to access this data.",
+    404: "The requested resource was not found.",
+    422: "The data sent does not match the API contract.",
+    500: "Internal backend error.",
 }
 
 
@@ -83,8 +83,8 @@ def _extract_detail(response: requests.Response) -> str:
         for item in detail:
             if isinstance(item, dict):
                 location = ".".join(str(p) for p in item.get("loc", [])[1:])
-                parts.append(f"{location} : {item.get('msg', '')}".strip(" :"))
-        return " ; ".join(p for p in parts if p)
+                parts.append(f"{location}: {item.get('msg', '')}".strip(" :"))
+        return "; ".join(p for p in parts if p)
     return str(detail) if detail else ""
 
 
@@ -108,22 +108,22 @@ def request(
             timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
         )
     except requests.Timeout as exc:
-        raise ApiError("Le backend ne répond pas dans le délai prévu.") from exc
+        raise ApiError("The backend did not respond in time.") from exc
     except requests.ConnectionError as exc:
         raise ApiError(
-            f"Impossible de joindre le backend ({api_base_url()}). "
-            "Vérifiez qu’il est démarré."
+            f"Unable to reach the backend ({api_base_url()}). "
+            "Check that it is running."
         ) from exc
     except requests.RequestException as exc:
-        raise ApiError("Erreur réseau lors de l’appel au backend.") from exc
+        raise ApiError("Network error while calling the backend.") from exc
 
     if not response.ok:
         message = _ERROR_MESSAGES.get(
-            response.status_code, f"Le backend a répondu {response.status_code}."
+            response.status_code, f"The backend responded with {response.status_code}."
         )
         detail = _extract_detail(response)
         if detail and response.status_code in {400, 404, 422}:
-            message = f"{message} Détail : {detail}"
+            message = f"{message} Details: {detail}"
         raise ApiError(message, response.status_code)
 
     if response.status_code == 204 or not response.content:
@@ -132,7 +132,7 @@ def request(
         return response.json()
     except ValueError as exc:
         raise ApiError(
-            "Le backend a renvoyé une réponse JSON invalide.", response.status_code
+            "The backend returned an invalid JSON response.", response.status_code
         ) from exc
 
 
@@ -147,16 +147,16 @@ def health() -> bool:
 
 def login(email: str, password: str) -> str:
     if not email or not password:
-        raise ApiError("Renseignez l’adresse e-mail et le mot de passe.")
+        raise ApiError("Enter your email address and password.")
     try:
         result = request("POST", "/auth/login", payload={"email": email, "password": password})
     except ApiError as error:
         if error.status_code in {400, 401, 403, 422}:
-            raise ApiError("Adresse e-mail ou mot de passe incorrect.", error.status_code) from error
+            raise ApiError("Incorrect email address or password.", error.status_code) from error
         raise
     token = result.get("access_token") if isinstance(result, dict) else None
     if not token:
-        raise ApiError("La réponse de connexion ne contient pas de jeton valide.")
+        raise ApiError("The sign-in response does not contain a valid token.")
     return token
 
 

@@ -21,21 +21,21 @@ def test_slope_needs_three_points():
 def test_declining_patient_is_flagged():
     history = _history([70, 66, 62, 58, 54])
     alerts = a.patient_alerts(history, history["session_date"].max())
-    assert [x.label for x in alerts] == ["Score en baisse"]
-    assert a.patient_status(history, alerts) == "À surveiller"
+    assert [x.label for x in alerts] == ["Declining score"]
+    assert a.patient_status(history, alerts) == "Needs attention"
 
 
 def test_low_success_and_inactivity():
     history = _history([60, 60, 60], success=[50, 45, 30])
     reference = history["session_date"].max() + pd.Timedelta(days=30)
     labels = {x.label for x in a.patient_alerts(history, reference)}
-    assert labels == {"Réussite faible", "Inactif"}
+    assert labels == {"Low success", "Inactive"}
 
 
 def test_progressing_and_new_status():
     history = _history([50, 55, 60, 65])
-    assert a.patient_status(history, []) == "En progression"
-    assert a.patient_status(history.iloc[0:0], []) == "Nouveau"
+    assert a.patient_status(history, []) == "Improving"
+    assert a.patient_status(history.iloc[0:0], []) == "New"
 
 
 def test_period_filters_and_previous_period():
@@ -66,7 +66,7 @@ def test_insights_are_generated():
     insights = a.patient_insights(history, history["session_date"].max())
     assert 3 <= len(insights) <= 4
     import re
-    assert not any(re.search(r"\d\.\d", i.text) for i in insights)  # format FR (virgule)
+    assert not any(re.search(r"\d,\d", i.text) for i in insights)  # English format (decimal point)
 
 
 def test_shoulder_abduction_signals():
@@ -78,13 +78,13 @@ def test_shoulder_abduction_signals():
     history["target_angle"] = 80
     reference = history["session_date"].max()
     assert a.patient_alerts(history, reference) == []
-    assert a.patient_status(history, []) == "En progression"
-    assert any(i.title == "Abduction de l’épaule" for i in a.patient_insights(history, reference))
+    assert a.patient_status(history, []) == "Improving"
+    assert any(i.title == "Shoulder abduction" for i in a.patient_insights(history, reference))
 
     history["abduction_mean_peak"] = [90, 90, 90, 90, 90, 80, 80, 80]
     history["compensations"] = [0, 0, 0, 0, 0, 4, 3, 5]
     labels = {x.label for x in a.patient_alerts(history, reference)}
-    assert labels == {"Abduction en baisse", "Compensations"}
+    assert labels == {"Declining abduction", "Compensations"}
 
 
 def test_sequence_memory_signals():
@@ -95,10 +95,10 @@ def test_sequence_memory_signals():
     history["hints_used"] = [1, 1, 0, 0, 0, 0, 0, 0]
     reference = history["session_date"].max()
     assert a.patient_alerts(history, reference) == []
-    assert a.patient_status(history, []) == "En progression"
-    assert any(i.title == "Mémoire et coordination" for i in a.patient_insights(history, reference))
+    assert a.patient_status(history, []) == "Improving"
+    assert any(i.title == "Memory and coordination" for i in a.patient_insights(history, reference))
     history["sequence_errors"] = [0, 0, 0, 0, 0, 5, 4, 6]
-    assert {x.label for x in a.patient_alerts(history, reference)} == {"Erreurs de séquence"}
+    assert {x.label for x in a.patient_alerts(history, reference)} == {"Sequence errors"}
 
 
 def test_castle_attention_signals():
@@ -111,8 +111,8 @@ def test_castle_attention_signals():
     history["accuracy_end"] = [75] * 8
     reference = history["session_date"].max()
     assert a.patient_alerts(history, reference) == []
-    assert a.patient_status(history, []) == "En progression"
-    assert any(i.title == "Attention et contrôle des gestes" for i in a.patient_insights(history, reference))
+    assert a.patient_status(history, []) == "Improving"
+    assert any(i.title == "Attention and movement control" for i in a.patient_insights(history, reference))
     history["nogo_success_rate"] = [70, 70, 70, 70, 70, 50, 40, 45]
     history["accuracy_end"] = [75, 75, 75, 75, 75, 55, 50, 52]
-    assert {x.label for x in a.patient_alerts(history, reference)} == {"Impulsivité", "Attention qui baisse"}
+    assert {x.label for x in a.patient_alerts(history, reference)} == {"Impulsivity", "Fading attention"}

@@ -361,7 +361,7 @@ export default function LeHibouGame() {
       repetitions: t.successes,
       repetitions_target: reps,
       level_number: DIFFICULTY_LEVEL[c.difficulty] ?? 1,
-      exercise_name: "Rotation cervicale",
+      exercise_name: "Neck rotation",
       played_at: new Date().toISOString(),
       rotation_left: Math.round(t.maxLeft),
       rotation_right: Math.round(t.maxRight),

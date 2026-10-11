@@ -34,13 +34,12 @@ INHIBITION_LOW = 60.0       # % de statues réussies (moyenne des 3 dernières) 
 ATTENTION_FADE = 20.0       # points de réussite perdus entre le début et la fin de la partie (fatigue attentionnelle)
 INHIBITION_GAIN = 10.0      # +10 points de statues réussies = progression
 
-STATUS_ORDER = ["À surveiller", "En progression", "Stable", "Nouveau"]
+STATUS_ORDER = ["Needs attention", "Improving", "Stable", "New"]
 
 
 def fr(value: float, decimals: int = 1, signed: bool = False) -> str:
-    """Nombre au format français (virgule décimale)."""
-    text = f"{value:{'+' if signed else ''}.{decimals}f}"
-    return text.replace(".", ",")
+    """Number in English format (decimal point)."""
+    return f"{value:{'+' if signed else ''}.{decimals}f}"
 
 
 # ==========================================================
@@ -48,10 +47,10 @@ def fr(value: float, decimals: int = 1, signed: bool = False) -> str:
 # ==========================================================
 
 PERIODS = {
-    "7 jours": 7,
-    "30 jours": 30,
-    "90 jours": 90,
-    "Tout": None,
+    "7 days": 7,
+    "30 days": 30,
+    "90 days": 90,
+    "All": None,
 }
 
 
@@ -230,36 +229,36 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
     pain = latest.get("pain_level")
     if pain is not None and pd.notna(pain) and pain >= HIGH_PAIN:
         alerts.append(Alert(
-            "Douleur élevée", "critical",
-            f"Douleur déclarée {fr(pain, 0)}/5 à la dernière séance : vérifier l’amplitude et la limite.",
+            "High pain", "critical",
+            f"Reported pain {fr(pain, 0)}/5 at the last session: check range of motion and limit.",
         ))
 
     success = latest.get("success_rate")
     if pd.notna(success) and success < LOW_SUCCESS:
         alerts.append(Alert(
-            "Réussite faible", "critical",
-            f"{fr(success, 0)} % de réussite à la dernière séance (seuil {fr(LOW_SUCCESS, 0)} %).",
+            "Low success", "critical",
+            f"{fr(success, 0)}% success at the last session (threshold {fr(LOW_SUCCESS, 0)}%).",
         ))
 
     score_drop = recent_change(history["score"])
     if score_drop is not None and score_drop <= -SCORE_DROP:
         alerts.append(Alert(
-            "Score en baisse", "warning",
-            f"Score moyen des 3 dernières séances {fr(score_drop, 0, True)} pts par rapport aux précédentes.",
+            "Declining score", "warning",
+            f"Average score over the last 3 sessions {fr(score_drop, 0, True)} pts vs previous sessions.",
         ))
 
     amplitude_drop = recent_change(amplitude_series(history))
     if amplitude_drop is not None and amplitude_drop <= -AMPLITUDE_DROP:
         alerts.append(Alert(
-            "Amplitude en baisse", "warning",
-            f"Rotation moyenne {fr(amplitude_drop, 0, True)}° sur les 3 dernières séances.",
+            "Declining range of motion", "warning",
+            f"Average rotation {fr(amplitude_drop, 0, True)}° over the last 3 sessions.",
         ))
 
     abduction_drop = recent_change(abduction_series(history))
     if abduction_drop is not None and abduction_drop <= -ABDUCTION_DROP:
         alerts.append(Alert(
-            "Abduction en baisse", "warning",
-            f"Pic d’abduction moyen {fr(abduction_drop, 0, True)}° sur les 3 dernières séances.",
+            "Declining abduction", "warning",
+            f"Mean abduction peak {fr(abduction_drop, 0, True)}° over the last 3 sessions.",
         ))
 
     if "compensations" in history.columns:
@@ -267,31 +266,31 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
         if len(comp) >= 2 and comp.mean() >= COMPENSATION_HIGH:
             alerts.append(Alert(
                 "Compensations", "warning",
-                f"{fr(comp.mean(), 1)} compensations par séance en moyenne (autre bras levé ou tête penchée).",
+                f"{fr(comp.mean(), 1)} compensations per session on average (other arm raised or head tilted).",
             ))
 
     if "sequence_errors" in history.columns:
         errs = pd.to_numeric(history["sequence_errors"], errors="coerce").dropna().tail(3)
         if len(errs) >= 2 and errs.mean() >= SEQUENCE_ERRORS_HIGH:
             alerts.append(Alert(
-                "Erreurs de séquence", "warning",
-                f"{fr(errs.mean(), 1)} erreurs d’ordre par séance en moyenne : niveau peut-être trop élevé.",
+                "Sequence errors", "warning",
+                f"{fr(errs.mean(), 1)} order errors per session on average: level may be too high.",
             ))
 
     inhibition = inhibition_series(history).tail(3)
     if len(inhibition) >= 2 and inhibition.mean() < INHIBITION_LOW:
         alerts.append(Alert(
-            "Impulsivité", "warning",
-            f"{fr(inhibition.mean(), 0)} % de statues réussies devant l’ogre en moyenne : "
-            "l’enfant a du mal à retenir son geste.",
+            "Impulsivity", "warning",
+            f"{fr(inhibition.mean(), 0)}% of statues held in front of the ogre on average: "
+            "the child struggles to hold back movement.",
         ))
 
     fade = attention_fade(history).tail(3)
     if len(fade) >= 2 and fade.mean() >= ATTENTION_FADE:
         alerts.append(Alert(
-            "Attention qui baisse", "info",
-            f"La réussite chute de {fr(fade.mean(), 0)} points entre le début et la fin de la partie : "
-            "partie peut-être trop longue.",
+            "Fading attention", "info",
+            f"Success drops by {fr(fade.mean(), 0)} points between the start and end of the game: "
+            "the game may be too long.",
         ))
 
     last_date = latest.get("session_date")
@@ -299,17 +298,17 @@ def patient_alerts(history: pd.DataFrame, reference: pd.Timestamp) -> list[Alert
         idle = (reference.normalize() - pd.Timestamp(last_date).normalize()).days
         if idle > INACTIVE_DAYS:
             alerts.append(Alert(
-                "Inactif", "info",
-                f"Aucune séance depuis {idle} jours.",
+                "Inactive", "info",
+                f"No session for {idle} days.",
             ))
     return alerts
 
 
 def patient_status(history: pd.DataFrame, alerts: list[Alert]) -> str:
     if history.empty:
-        return "Nouveau"
+        return "New"
     if any(a.level in {"critical", "warning"} for a in alerts):
-        return "À surveiller"
+        return "Needs attention"
     slope = score_slope(history["score"].tail(TREND_WINDOW))
     amplitude_gain = recent_change(amplitude_series(history))
     abduction_gain = recent_change(abduction_series(history))
@@ -320,7 +319,7 @@ def patient_status(history: pd.DataFrame, alerts: list[Alert]) -> str:
     ) or (abduction_gain is not None and abduction_gain >= ABDUCTION_GAIN) or (
         sequence_gain is not None and sequence_gain >= SEQUENCE_GAIN
     ):
-        return "En progression"
+        return "Improving"
     return "Stable"
 
 
@@ -427,28 +426,28 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
     slope = score_slope(history["score"].tail(TREND_WINDOW))
     if slope is None:
         insights.append(Insight(
-            "Historique en construction",
-            f"{len(history)} séance(s) enregistrée(s) : la tendance sera calculée "
-            f"à partir de {MIN_SESSIONS_FOR_TREND} séances.",
+            "History still building",
+            f"{len(history)} session(s) recorded: the trend will be calculated "
+            f"from {MIN_SESSIONS_FOR_TREND} sessions.",
             "neutral", "◔",
         ))
     elif slope >= TREND_SIGNIFICANT:
         insights.append(Insight(
-            "Score en progression",
-            f"{fr(slope, 1, True)} pt par séance en moyenne sur les dernières séances.",
+            "Improving score",
+            f"{fr(slope, 1, True)} pt per session on average over recent sessions.",
             "positive", "↗",
         ))
     elif slope <= -TREND_SIGNIFICANT:
         insights.append(Insight(
-            "Score en baisse",
-            f"{fr(slope, 1, True)} pt par séance sur les dernières séances : "
-            "envisager d’adapter la difficulté.",
+            "Declining score",
+            f"{fr(slope, 1, True)} pt per session over recent sessions: "
+            "consider adjusting the difficulty.",
             "warning", "↘",
         ))
     else:
         insights.append(Insight(
-            "Score stable",
-            "Pas de variation marquée du score sur les dernières séances.",
+            "Stable score",
+            "No marked change in score over recent sessions.",
             "neutral", "→",
         ))
 
@@ -458,8 +457,8 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
         change = last["success_rate"] - first["success_rate"]
         tone = "positive" if change > 2 else "warning" if change < -2 else "neutral"
         insights.append(Insight(
-            "Depuis la première séance",
-            f"Réussite {fr(first['success_rate'], 0)} % → {fr(last['success_rate'], 0)} % "
+            "Since the first session",
+            f"Success {fr(first['success_rate'], 0)}% → {fr(last['success_rate'], 0)}% "
             f"({fr(change, 1, True)} pts).",
             tone, "◎",
         ))
@@ -472,16 +471,16 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
             left, right = float(last_rot["rotation_left"]), float(last_rot["rotation_right"])
             target = last_rot.get("target_angle")
             sym = symmetry(left, right)
-            goal = f" (objectif {fr(target, 0)}°)" if target is not None and pd.notna(target) else ""
+            goal = f" (target {fr(target, 0)}°)" if target is not None and pd.notna(target) else ""
             reached = target is not None and pd.notna(target) and min(left, right) >= target
             gain = ""
             if len(rot) >= 2:
                 first_rot = rot.iloc[0]
                 change = (left + right) / 2 - (float(first_rot["rotation_left"]) + float(first_rot["rotation_right"])) / 2
-                gain = f" Amplitude moyenne {fr(change, 0, True)}° depuis le début."
+                gain = f" Average range {fr(change, 0, True)}° since the start."
             insights.append(Insight(
-                "Amplitude cervicale",
-                f"Gauche {fr(left, 0)}° · droite {fr(right, 0)}°{goal}, symétrie {fr(sym, 0)} %.{gain}",
+                "Cervical range of motion",
+                f"Left {fr(left, 0)}° · right {fr(right, 0)}°{goal}, symmetry {fr(sym, 0)}%.{gain}",
                 "positive" if reached and sym >= 80 else "warning" if sym < 70 else "neutral",
                 "↔",
             ))
@@ -493,17 +492,17 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
             last_abd = abd.iloc[-1]
             peak, best = last_abd.get("abduction_mean_peak"), float(last_abd["abduction_max"])
             threshold = last_abd.get("target_angle")
-            goal = f" (seuil {fr(threshold, 0)}°)" if threshold is not None and pd.notna(threshold) else ""
+            goal = f" (threshold {fr(threshold, 0)}°)" if threshold is not None and pd.notna(threshold) else ""
             reached = threshold is not None and pd.notna(threshold) and pd.notna(peak) and peak >= threshold
             gain = ""
             if len(abd) >= 2 and pd.notna(peak) and pd.notna(abd.iloc[0].get("abduction_mean_peak")):
                 change = float(peak) - float(abd.iloc[0]["abduction_mean_peak"])
-                gain = f" Pic moyen {fr(change, 0, True)}° depuis le début."
+                gain = f" Mean peak {fr(change, 0, True)}° since the start."
             comp = last_abd.get("compensations")
             comp_text = f", {fr(comp, 0)} compensation(s)" if comp is not None and pd.notna(comp) else ""
             insights.append(Insight(
-                "Abduction de l’épaule",
-                f"Bras levé jusqu’à {fr(best, 0)}°{goal}{comp_text}.{gain}",
+                "Shoulder abduction",
+                f"Arm raised up to {fr(best, 0)}°{goal}{comp_text}.{gain}",
                 "positive" if reached and not (pd.notna(comp) and comp >= COMPENSATION_HIGH) else "neutral",
                 "↑",
             ))
@@ -519,15 +518,15 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
             gain = ""
             if len(seq) >= 2:
                 change = float(last_seq["max_sequence"]) - float(seq.iloc[0]["max_sequence"])
-                gain = f" Séquence {fr(change, 0, True)} fleur(s) depuis le début."
+                gain = f" Sequence {fr(change, 0, True)} flower(s) since the start."
             details = []
             if errs is not None and pd.notna(errs):
-                details.append(f"{fr(errs, 0)} erreur(s)")
+                details.append(f"{fr(errs, 0)} error(s)")
             if hints is not None and pd.notna(hints):
-                details.append(f"{fr(hints, 0)} aide(s)")
+                details.append(f"{fr(hints, 0)} hint(s)")
             insights.append(Insight(
-                "Mémoire et coordination",
-                f"Plus longue danse : {fr(last_seq['max_sequence'], 0)} fleurs (record {fr(best, 0)})"
+                "Memory and coordination",
+                f"Longest dance: {fr(last_seq['max_sequence'], 0)} flowers (best {fr(best, 0)})"
                 + (f", {', '.join(details)}" if details else "") + f".{gain}",
                 "positive" if gain and change > 0 else "neutral",
                 "✿",
@@ -538,19 +537,19 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
         castle = history.dropna(subset=["nogo_success_rate"])
         if not castle.empty:
             last_c = castle.iloc[-1]
-            parts = [f"défis réussis {fr(last_c.get('go_success_rate'), 0)} %",
-                     f"statues réussies {fr(last_c['nogo_success_rate'], 0)} %"]
+            parts = [f"challenges completed {fr(last_c.get('go_success_rate'), 0)}%",
+                     f"statues held {fr(last_c['nogo_success_rate'], 0)}%"]
             rt = last_c.get("rt_mean_ms")
             if rt is not None and pd.notna(rt):
-                parts.append(f"réaction {fr(rt, 0)} ms")
+                parts.append(f"reaction {fr(rt, 0)} ms")
             gain = ""
             change = 0.0
             if len(castle) >= 2:
                 change = float(last_c["nogo_success_rate"]) - float(castle.iloc[0]["nogo_success_rate"])
-                gain = f" Contrôle {fr(change, 0, True)} points depuis le début."
+                gain = f" Control {fr(change, 0, True)} points since the start."
             insights.append(Insight(
-                "Attention et contrôle des gestes",
-                f"Dernière partie : {', '.join(parts)}.{gain}",
+                "Attention and movement control",
+                f"Last game: {', '.join(parts)}.{gain}",
                 "positive" if change > 0 else "neutral",
                 "♜",
             ))
@@ -560,9 +559,9 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
     if len(games) >= 2:
         best, hardest = games.idxmax(), games.idxmin()
         insights.append(Insight(
-            "Points forts et axes de travail",
-            f"Meilleure réussite sur « {best} » ({fr(games[best], 0)} %), "
-            f"plus difficile sur « {hardest} » ({fr(games[hardest], 0)} %).",
+            "Strengths and areas to work on",
+            f"Best success on “{best}” ({fr(games[best], 0)}%), "
+            f"hardest on “{hardest}” ({fr(games[hardest], 0)}%).",
             "neutral", "◆",
         ))
 
@@ -574,14 +573,14 @@ def patient_insights(history: pd.DataFrame, reference: pd.Timestamp) -> list[Ins
     idle = (reference.normalize() - last_date).days if last_date is not None else None
     if idle is not None and idle > INACTIVE_DAYS:
         insights.append(Insight(
-            "Assiduité à relancer",
-            f"Dernière séance il y a {idle} jours.",
+            "Attendance needs follow-up",
+            f"Last session {idle} days ago.",
             "warning", "◷",
         ))
     else:
         insights.append(Insight(
-            "Assiduité",
-            f"{fr(per_week, 1)} séance(s) par semaine sur les 4 dernières semaines.",
+            "Attendance",
+            f"{fr(per_week, 1)} session(s) per week over the last 4 weeks.",
             "positive" if per_week >= 2 else "neutral", "◷",
         ))
     return insights

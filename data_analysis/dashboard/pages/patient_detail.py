@@ -43,7 +43,7 @@ def _patient_selector(patients: pd.DataFrame):
     labels = patients.set_index("id")
     back_col, select_col = st.columns([1, 4], vertical_alignment="bottom")
     with back_col:
-        if st.button("← Tous les patients", width="stretch"):
+        if st.button("← All patients", width="stretch"):
             navigation.go("patients")
     with select_col:
         chosen = st.selectbox(
@@ -63,13 +63,13 @@ def _patient_selector(patients: pd.DataFrame):
 
 
 def _hero(patient: pd.Series, history: pd.DataFrame, status: str, alerts, reference) -> None:
-    age = f"{int(patient['age'])} ans" if pd.notna(patient["age"]) else "Âge non renseigné"
+    age = f"{int(patient['age'])} years old" if pd.notna(patient["age"]) else "Age not provided"
     code = patient["patient_code"] or f"#{patient['id']}"
     since = fmt_date(history["session_date"].min()) if not history.empty else "—"
     diagnosis = patient["diagnosis"] or ""
     dx_html = (
-        f"<div class='kk-hero-dx'><b>Diagnostic :</b> {esc(diagnosis)}</div>" if diagnosis
-        else "<div class='kk-hero-dx'><b>Diagnostic :</b> <i>non renseigné</i></div>"
+        f"<div class='kk-hero-dx'><b>Diagnosis:</b> {esc(diagnosis)}</div>" if diagnosis
+        else "<div class='kk-hero-dx'><b>Diagnosis:</b> <i>not provided</i></div>"
     )
     render_html(
         f"""
@@ -77,13 +77,13 @@ def _hero(patient: pd.Series, history: pd.DataFrame, status: str, alerts, refere
           <div class="kk-hero-row">
             {avatar(patient['first_name'], patient['last_name'], seed=patient['id'], large=True)}
             <div style="flex:1;min-width:240px">
-              <div class="kk-kicker">Fiche patient</div>
+              <div class="kk-kicker">Patient record</div>
               <div class="kk-hero-name">{esc(patient['full_name'])}</div>
               <div class="kk-hero-meta">
                 {badge(code, 'brand')}{badge(age)}
-                {(badge('Compte patient activé', 'good', '✓') if patient.get('has_account') else badge('Compte patient non activé', 'warning', '!')) if 'has_account' in patient.index else ''}
-                {badge('Suivi depuis le ' + since, 'neutral') if not history.empty else ''}
-                {badge('Dernière séance : ' + days_ago(history['session_date'].max(), reference).lower(), 'neutral') if not history.empty else badge('Aucune séance pour l’instant', 'neutral')}
+                {(badge('Patient account activated', 'good', '✓') if patient.get('has_account') else badge('Patient account not activated', 'warning', '!')) if 'has_account' in patient.index else ''}
+                {badge('Followed since ' + since, 'neutral') if not history.empty else ''}
+                {badge('Last session: ' + days_ago(history['session_date'].max(), reference).lower(), 'neutral') if not history.empty else badge('No sessions yet', 'neutral')}
               </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -98,42 +98,42 @@ def _hero(patient: pd.Series, history: pd.DataFrame, status: str, alerts, refere
 
 
 def _diagnosis_editor(data, patient) -> None:
-    label = "Mettre à jour le diagnostic" if patient["diagnosis"] else "Ajouter un diagnostic"
+    label = "Update diagnosis" if patient["diagnosis"] else "Add a diagnosis"
     with st.expander(f"✎ {label}"):
         if data.is_demo:
-            st.caption("Mode démo : la modification est conservée jusqu’à la fermeture du dashboard.")
+            st.caption("Demo mode: the change is kept until the dashboard is closed.")
         elif data.diagnosis_readable:
-            st.caption("Le diagnostic est enregistré comme nouvelle consultation dans le backend.")
+            st.caption("The diagnosis is saved as a new consultation in the backend.")
         else:
             st.caption(
-                "Le diagnostic est enregistré comme nouvelle consultation. Cette version du "
-                "backend ne permet pas de relire les consultations : seul le diagnostic saisi "
-                "pendant cette session est affiché."
+                "The diagnosis is saved as a new consultation. This backend version cannot "
+                "read consultations back: only the diagnosis entered during this session "
+                "is shown."
             )
         with st.form(f"diagnosis_form_{patient['id']}", clear_on_submit=False):
-            text = st.text_area("Diagnostic", value=patient["diagnosis"],
-                                placeholder="Ex. : trouble développemental de la coordination…")
-            submitted = st.form_submit_button("Enregistrer", type="primary")
+            text = st.text_area("Diagnosis", value=patient["diagnosis"],
+                                placeholder="e.g. developmental coordination disorder…")
+            submitted = st.form_submit_button("Save", type="primary")
         if submitted:
             try:
                 save_patient_diagnosis(patient["id"], text)
-                st.toast("Diagnostic enregistré", icon="✅")
+                st.toast("Diagnosis saved", icon="✅")
                 st.rerun()
             except ValueError as error:
                 st.error(str(error))
             except ApiError as error:
                 if error.status_code == 401:
                     raise
-                st.error(f"Le backend a refusé l’enregistrement : {error}")
+                st.error(f"The backend rejected the save: {error}")
 
 
 def _settings_form(key: str, slug: str | None, current: dict) -> dict | None:
     """Formulaire des réglages d'un jeu ; renvoie la configuration si validé."""
     with st.form(key):
         config = game_settings.settings_fields(slug, current, key)
-        active = st.toggle("Jeu visible pour le patient", value=bool((current or {}).get("active", True)),
+        active = st.toggle("Game visible to the patient", value=bool((current or {}).get("active", True)),
                            key=f"{key}_active")
-        if st.form_submit_button("Enregistrer les réglages", type="primary"):
+        if st.form_submit_button("Save settings", type="primary"):
             problem = game_settings.validate(slug, config)
             if problem:
                 st.error(problem)
@@ -147,18 +147,18 @@ def _game_assignment(data, patient) -> None:
     if data.is_demo:
         return
     assigned = data.patient_games[data.patient_games["patient_id"] == patient["id"]]
-    with st.expander(f"🎮 Jeux et réglages ({len(assigned)})"):
-        st.caption("Les jeux visibles apparaissent dans l’espace du patient sur le site, "
-                   "avec ces réglages.")
+    with st.expander(f"🎮 Games and settings ({len(assigned)})"):
+        st.caption("Visible games appear in the patient's space on the website, "
+                   "with these settings.")
         for row in assigned.itertuples(index=False):
             config = row.configuration if isinstance(row.configuration, dict) else {}
-            state_label = "visible" if config.get("active", True) else "masqué"
+            state_label = "visible" if config.get("active", True) else "hidden"
             st.markdown(f"**{row.game_name}** · {state_label}")
             updated = _settings_form(f"settings_{row.patient_game_id}", getattr(row, "game_slug", None), config)
             if updated is not None:
                 try:
                     update_game_settings(row.patient_game_id, updated)
-                    st.toast("Réglages enregistrés", icon="✅")
+                    st.toast("Settings saved", icon="✅")
                     st.rerun()
                 except ApiError as error:
                     if error.status_code == 401:
@@ -169,9 +169,9 @@ def _game_assignment(data, patient) -> None:
         available = playable_games(data.games)
         available = available[~available["id"].isin(assigned_ids)]
         if not available.empty:
-            st.markdown("**Assigner un nouveau jeu**")
+            st.markdown("**Assign a new game**")
             game_id = st.selectbox(
-                "Jeu", available["id"].tolist(), key=f"new_game_{patient['id']}",
+                "Game", available["id"].tolist(), key=f"new_game_{patient['id']}",
                 format_func=lambda gid: data.games.set_index("id").loc[gid, "name"],
             )
             slug = data.games.set_index("id").loc[game_id, "slug"]
@@ -180,18 +180,18 @@ def _game_assignment(data, patient) -> None:
             if config is not None:
                 try:
                     assign_game(patient["id"], game_id, config)
-                    st.toast("Jeu assigné", icon="✅")
+                    st.toast("Game assigned", icon="✅")
                     st.rerun()
                 except ApiError as error:
                     if error.status_code == 401:
                         raise
                     st.error(str(error))
 
-    with st.expander("🔑 Code d’activation du compte patient"):
-        st.caption("Le patient (ou son parent) saisit ce code sur la page « Activer mon compte » "
-                   "du site pour créer ses identifiants. Valable 30 jours, utilisable une fois.")
+    with st.expander("🔑 Patient account activation code"):
+        st.caption("The patient (or their parent) enters this code on the “Activate my account” page "
+                   "of the website to create their login. Valid for 30 days, single use.")
         code_key = f"activation_code_{patient['id']}"
-        if st.button("Générer un code", key=f"gen_code_{patient['id']}"):
+        if st.button("Generate a code", key=f"gen_code_{patient['id']}"):
             try:
                 st.session_state[code_key] = create_activation_code(patient["id"])["code"]
             except ApiError as error:
@@ -207,8 +207,8 @@ def show_patient_detail():
     reference = data.reference_date
 
     if data.patients.empty:
-        empty_state("👤", "Aucun patient enregistré", "Créez un profil pour accéder à une fiche.")
-        if st.button("＋ Ajouter un patient", type="primary"):
+        empty_state("👤", "No patients registered", "Create a profile to open a patient record.")
+        if st.button("＋ Add a patient", type="primary"):
             navigation.go("add_patient")
         return
 
@@ -227,8 +227,8 @@ def show_patient_detail():
 
     if history.empty:
         st.write("")
-        empty_state("🎮", "Aucune séance enregistrée",
-                    "Les performances apparaîtront ici dès la première séance de jeu.")
+        empty_state("🎮", "No sessions recorded",
+                    "Performance will appear here after the first game session.")
         return
 
     # --------------------------------------------------------
@@ -237,25 +237,25 @@ def show_patient_detail():
     first, last = history.iloc[0], history.iloc[-1]
     recent = history.tail(analytics.TREND_WINDOW)
     level = last["level"]
-    section("Situation actuelle", "Dernière séance comparée à la première séance du suivi.")
+    section("Current status", "Latest session compared with the first session of follow-up.")
     kpi_row([
-        kpi_card("Séances", fmt_number(len(history)), "▶", "tone-violet",
-                 foot=f"{history['game_name'].nunique()} jeu(x) · {fmt_number(history['duration_min'].sum(), 0)} min au total"),
-        kpi_card("Dernier score", fmt_number(last["score"], 1), "★", "tone-orange",
-                 foot="depuis la 1re séance",
+        kpi_card("Sessions", fmt_number(len(history)), "▶", "tone-violet",
+                 foot=f"{history['game_name'].nunique()} game(s) · {fmt_number(history['duration_min'].sum(), 0)} min in total"),
+        kpi_card("Latest score", fmt_number(last["score"], 1), "★", "tone-orange",
+                 foot="since 1st session",
                  delta_html=delta_chip(analytics.delta(last["score"], first["score"]), " pt")),
-        kpi_card("Réussite (5 dern.)", fmt_number(recent["success_rate"].mean(), 1), "✓", "tone-green",
-                 unit=" %", foot="depuis la 1re séance",
+        kpi_card("Success (last 5)", fmt_number(recent["success_rate"].mean(), 1), "✓", "tone-green",
+                 unit="%", foot="since 1st session",
                  delta_html=delta_chip(analytics.delta(last["success_rate"], first["success_rate"]), " pts")),
-        kpi_card("Niveau actuel", f"{int(level)}" if pd.notna(level) else "—", "◆", "tone-blue",
+        kpi_card("Current level", f"{int(level)}" if pd.notna(level) else "—", "◆", "tone-blue",
                  foot=f"{last['game_name']}"
-                 + (f" · départ niveau {int(first['level'])}" if pd.notna(first["level"]) else "")),
+                 + (f" · started at level {int(first['level'])}" if pd.notna(first["level"]) else "")),
     ])
 
     # --------------------------------------------------------
     # INSIGHTS
     # --------------------------------------------------------
-    section("SensAI Intelligence", "Lecture automatique de l’historique — à confronter au jugement clinique.")
+    section("SensAI Intelligence", "Automated reading of the history — to be weighed against clinical judgment.")
     insights = analytics.patient_insights(history, reference)
     per_row = 3 if len(insights) > 4 else max(len(insights), 1)
     for start in range(0, len(insights), per_row):
@@ -274,33 +274,33 @@ def show_patient_detail():
         left, right = last_rot["rotation_left"], last_rot["rotation_right"]
         target = last_rot["target_angle"]
         sym = analytics.symmetry(left, right)
-        section("Amplitude cervicale & symétrie",
-                "Rotation maximale atteinte à chaque séance du Hibou, comparée à l’angle cible prescrit.")
-        target_text = f"objectif {fmt_number(target)}°" if pd.notna(target) else "objectif n.c."
+        section("Cervical range of motion & symmetry",
+                "Maximum rotation reached in each The Owl session, compared with the prescribed target angle.")
+        target_text = f"target {fmt_number(target)}°" if pd.notna(target) else "target n/a"
         kpi_row([
-            kpi_card("Rotation gauche", fmt_number(left), "←", "tone-violet", unit="°", foot=target_text,
+            kpi_card("Left rotation", fmt_number(left), "←", "tone-violet", unit="°", foot=target_text,
                      delta_html=delta_chip(analytics.delta(left, first_rot["rotation_left"]), "°", 0)),
-            kpi_card("Rotation droite", fmt_number(right), "→", "tone-blue", unit="°", foot=target_text,
+            kpi_card("Right rotation", fmt_number(right), "→", "tone-blue", unit="°", foot=target_text,
                      delta_html=delta_chip(analytics.delta(right, first_rot["rotation_right"]), "°", 0)),
-            kpi_card("Symétrie", fmt_number(sym), "⇄", "tone-green", unit=" %",
-                     foot="symétrique" if sym >= 80 else "asymétrie à surveiller"),
-            kpi_card("Maintien moyen", fmt_number(last_rot["hold_seconds_avg"], 1), "⏱", "tone-orange", unit=" s",
-                     foot=f"fluidité {fmt_number(last_rot['smoothness'])}/100"
-                     if pd.notna(last_rot["smoothness"]) else "dernière séance"),
+            kpi_card("Symmetry", fmt_number(sym), "⇄", "tone-green", unit="%",
+                     foot="symmetric" if sym >= 80 else "asymmetry to monitor"),
+            kpi_card("Average hold", fmt_number(last_rot["hold_seconds_avg"], 1), "⏱", "tone-orange", unit=" s",
+                     foot=f"smoothness {fmt_number(last_rot['smoothness'])}/100"
+                     if pd.notna(last_rot["smoothness"]) else "last session"),
         ])
         st.write("")
         left_col, right_col = st.columns([1.5, 1], gap="medium")
         with left_col:
             with card("amplitude"):
-                card_title("Évolution de l’amplitude", "Degrés atteints à gauche et à droite, et angle cible.")
+                card_title("Range of motion over time", "Degrees reached left and right, and target angle.")
                 st.plotly_chart(charts.amplitude_chart(history), config=charts.CHART_CONFIG, key="patient_amplitude")
         with right_col:
             with card("pain"):
-                card_title("Douleur & effort", "Auto-évaluation de l’enfant après chaque séance (0 à 5).")
+                card_title("Pain & effort", "Child's self-assessment after each session (0 to 5).")
                 if history[["pain_level", "effort"]].notna().any().any():
                     st.plotly_chart(charts.pain_effort_chart(history), config=charts.CHART_CONFIG, key="patient_pain")
                 else:
-                    st.info("Pas encore d’auto-évaluation.")
+                    st.info("No self-assessment yet.")
 
     # --------------------------------------------------------
     # ABDUCTION DE L'ÉPAULE (Le Gardien des Lucioles)
@@ -309,40 +309,40 @@ def show_patient_detail():
     if not abduction.empty:
         last_abd, first_abd = abduction.iloc[-1], abduction.iloc[0]
         threshold = last_abd["target_angle"]
-        arm = {"R": "bras droit", "L": "bras gauche", "BI": "des deux bras", "both": "des deux bras"}.get(
-            last_abd["affected_arm"], "bras entraîné")
+        arm = {"R": "right arm", "L": "left arm", "BI": "both arms", "both": "both arms"}.get(
+            last_abd["affected_arm"], "trained arm")
         recent_comp = abduction.tail(3)["compensations"].mean()
-        section("Élévation du bras (épaule)",
-                f"Élévation du {arm} à chaque séance du Gardien des Lucioles, comparée à la hauteur prescrite.")
+        section("Arm elevation (shoulder)",
+                f"Elevation ({arm}) in each Firefly Guardian session, compared with the prescribed height.")
         kpi_row([
-            kpi_card("Abduction max", fmt_number(last_abd["abduction_max"]), "↑", "tone-violet", unit="°",
-                     foot=f"seuil {fmt_number(threshold)}°" if pd.notna(threshold) else "dernière séance",
+            kpi_card("Max abduction", fmt_number(last_abd["abduction_max"]), "↑", "tone-violet", unit="°",
+                     foot=f"threshold {fmt_number(threshold)}°" if pd.notna(threshold) else "last session",
                      delta_html=delta_chip(analytics.delta(last_abd["abduction_max"], first_abd["abduction_max"]), "°", 0)),
-            kpi_card("Pic moyen", fmt_number(last_abd["abduction_mean_peak"]), "◠", "tone-blue", unit="°",
-                     foot="moyenne des répétitions validées",
+            kpi_card("Mean peak", fmt_number(last_abd["abduction_mean_peak"]), "◠", "tone-blue", unit="°",
+                     foot="average of validated repetitions",
                      delta_html=delta_chip(analytics.delta(last_abd["abduction_mean_peak"],
                                                            first_abd["abduction_mean_peak"]), "°", 0)),
             kpi_card("Compensations", fmt_number(recent_comp, 1), "⚠", "tone-orange",
-                     foot="moyenne des 3 dernières séances"
-                     if pd.notna(recent_comp) else "non mesuré"),
-            kpi_card("Lucioles", fmt_number(last_abd["repetitions"]), "✨", "tone-green",
-                     foot="ramenées à la dernière séance"),
+                     foot="average of the last 3 sessions"
+                     if pd.notna(recent_comp) else "not measured"),
+            kpi_card("Fireflies", fmt_number(last_abd["repetitions"]), "✨", "tone-green",
+                     foot="brought back in the last session"),
         ])
         st.write("")
         abd_col, comp_col = st.columns([1.5, 1], gap="medium")
         with abd_col:
             with card("abduction"):
-                card_title("Évolution de l’abduction", "Amplitude maximale et pic moyen, avec le seuil prescrit.")
+                card_title("Abduction over time", "Maximum range and mean peak, with the prescribed threshold.")
                 st.plotly_chart(charts.abduction_chart(abduction), config=charts.CHART_CONFIG,
                                 key="patient_abduction")
         with comp_col:
             with card("compensations"):
-                card_title("Compensations", "Fois où l’autre bras s’est levé pendant la séance.")
+                card_title("Compensations", "Times the other arm was raised during the session.")
                 st.plotly_chart(charts.compensation_chart(abduction), config=charts.CHART_CONFIG,
                                 key="patient_compensations")
         if rotation.empty and history[["pain_level", "effort"]].notna().any().any():
             with card("pain-lucioles"):
-                card_title("Douleur & effort", "Auto-évaluation de l’enfant après chaque séance (0 à 5).")
+                card_title("Pain & effort", "Child's self-assessment after each session (0 to 5).")
                 st.plotly_chart(charts.pain_effort_chart(history), config=charts.CHART_CONFIG,
                                 key="patient_pain_lucioles")
 
@@ -353,33 +353,33 @@ def show_patient_detail():
     if not sequence.empty:
         last_seq, first_seq = sequence.iloc[-1], sequence.iloc[0]
         recent = sequence.tail(3)
-        section("Mémoire et coordination",
-                "Séquences de fleurs reproduites avec les mains à chaque séance de La Danse des Lucioles.")
+        section("Memory and coordination",
+                "Flower sequences reproduced with the hands in each Firefly Dance session.")
         kpi_row([
-            kpi_card("Plus longue séquence", fmt_number(last_seq["max_sequence"]), "✿", "tone-violet",
-                     unit=" fleurs", foot=f"record {fmt_number(sequence['max_sequence'].max())} fleurs",
+            kpi_card("Longest sequence", fmt_number(last_seq["max_sequence"]), "✿", "tone-violet",
+                     unit=" flowers", foot=f"best {fmt_number(sequence['max_sequence'].max())} flowers",
                      delta_html=delta_chip(analytics.delta(last_seq["max_sequence"], first_seq["max_sequence"]), "", 0)),
-            kpi_card("Erreurs d’ordre", fmt_number(recent["sequence_errors"].mean(), 1), "✗", "tone-orange",
-                     foot="moyenne des 3 dernières séances"),
-            kpi_card("Aides de Léo", fmt_number(recent["hints_used"].mean(), 1), "?", "tone-blue",
-                     foot="moyenne des 3 dernières séances"),
-            kpi_card("Temps par fleur", fmt_number(last_seq["mean_step_sec"], 1), "⏱", "tone-green", unit=" s",
-                     foot="vitesse de planification du geste"),
+            kpi_card("Order errors", fmt_number(recent["sequence_errors"].mean(), 1), "✗", "tone-orange",
+                     foot="average of the last 3 sessions"),
+            kpi_card("Hints from Léo", fmt_number(recent["hints_used"].mean(), 1), "?", "tone-blue",
+                     foot="average of the last 3 sessions"),
+            kpi_card("Time per flower", fmt_number(last_seq["mean_step_sec"], 1), "⏱", "tone-green", unit=" s",
+                     foot="movement planning speed"),
         ])
         st.write("")
         seq_col, err_col = st.columns([1.5, 1], gap="medium")
         with seq_col:
             with card("sequence"):
-                card_title("Longueur des séquences", "Plus longue danse réussie à chaque séance (mémoire de travail).")
+                card_title("Sequence length", "Longest successful dance in each session (working memory).")
                 st.plotly_chart(charts.sequence_chart(sequence), config=charts.CHART_CONFIG, key="patient_sequence")
         with err_col:
             with card("seq-errors"):
-                card_title("Erreurs et aides", "Fleurs touchées dans le mauvais ordre et aides données par Léo.")
+                card_title("Errors and hints", "Flowers touched in the wrong order and hints given by Léo.")
                 st.plotly_chart(charts.errors_hints_chart(sequence), config=charts.CHART_CONFIG,
                                 key="patient_seq_errors")
         if rotation.empty and abduction.empty and history[["pain_level", "effort"]].notna().any().any():
             with card("pain-danse"):
-                card_title("Douleur & effort", "Auto-évaluation de l’enfant après chaque séance (0 à 5).")
+                card_title("Pain & effort", "Child's self-assessment after each session (0 to 5).")
                 st.plotly_chart(charts.pain_effort_chart(history), config=charts.CHART_CONFIG,
                                 key="patient_pain_danse")
 
@@ -389,43 +389,43 @@ def show_patient_detail():
     castle = history.dropna(subset=["nogo_success_rate"])
     if not castle.empty:
         last_c, first_c = castle.iloc[-1], castle.iloc[0]
-        section("Attention et contrôle des gestes",
-                "Défis faits au bon moment et statues tenues devant l’ogre, à chaque partie du Gardien du Château.")
+        section("Attention and movement control",
+                "Challenges done at the right time and statues held in front of the ogre, in each Guardian of the Castle game.")
         fade = last_c.get("accuracy_start") - last_c.get("accuracy_end") \
             if pd.notna(last_c.get("accuracy_start")) and pd.notna(last_c.get("accuracy_end")) else None
         kpi_row([
-            kpi_card("Défis réussis", fmt_number(last_c["go_success_rate"]), "✦", "tone-blue", unit=" %",
-                     foot="attention : bon geste au bon moment",
+            kpi_card("Challenges completed", fmt_number(last_c["go_success_rate"]), "✦", "tone-blue", unit="%",
+                     foot="attention: right movement at the right time",
                      delta_html=delta_chip(analytics.delta(last_c["go_success_rate"], first_c["go_success_rate"]), "", 0)),
-            kpi_card("Statues réussies", fmt_number(last_c["nogo_success_rate"]), "♜", "tone-violet", unit=" %",
-                     foot="contrôle de l’impulsivité devant l’ogre",
+            kpi_card("Statues held", fmt_number(last_c["nogo_success_rate"]), "♜", "tone-violet", unit="%",
+                     foot="impulse control in front of the ogre",
                      delta_html=delta_chip(analytics.delta(last_c["nogo_success_rate"], first_c["nogo_success_rate"]), "", 0)),
-            kpi_card("Temps de réaction", fmt_number(last_c["rt_mean_ms"]), "⏱", "tone-green", unit=" ms",
-                     foot=f"variabilité ± {fmt_number(last_c['rt_sd_ms'])} ms"),
-            kpi_card("Fin de partie", fmt_number(last_c["accuracy_end"]), "◔", "tone-orange", unit=" %",
-                     foot=(f"{fmt_number(fade)} points de moins qu’au début" if fade is not None and fade > 0
-                           else "réussite tenue jusqu’au bout")),
+            kpi_card("Reaction time", fmt_number(last_c["rt_mean_ms"]), "⏱", "tone-green", unit=" ms",
+                     foot=f"variability ± {fmt_number(last_c['rt_sd_ms'])} ms"),
+            kpi_card("End of game", fmt_number(last_c["accuracy_end"]), "◔", "tone-orange", unit="%",
+                     foot=(f"{fmt_number(fade)} points lower than at the start" if fade is not None and fade > 0
+                           else "success maintained to the end")),
         ])
         st.write("")
         att_col, castle_err_col = st.columns([1.5, 1], gap="medium")
         with att_col:
             with card("attention"):
-                card_title("Attention et inhibition", "Défis réussis et statues tenues devant l’ogre, par séance.")
+                card_title("Attention and inhibition", "Challenges completed and statues held in front of the ogre, per session.")
                 st.plotly_chart(charts.attention_chart(castle), config=charts.CHART_CONFIG, key="patient_attention")
         with castle_err_col:
             with card("castle-errors"):
-                card_title("Types d’erreurs", "Bouger devant l’ogre (impulsivité), oublier un défi, se tromper de geste.")
+                card_title("Error types", "Moving in front of the ogre (impulsivity), missing a challenge, wrong movement.")
                 st.plotly_chart(charts.castle_errors_chart(castle), config=charts.CHART_CONFIG,
                                 key="patient_castle_errors")
 
     # --------------------------------------------------------
     # ÉVOLUTION
     # --------------------------------------------------------
-    section("Évolution des performances", "Chaque point est une séance, coloré par jeu.")
+    section("Performance over time", "Each point is a session, colored by game.")
     colors = charts.game_colors(data.sessions["game_name"])
     with card("patient-evolution"):
         tab_success, tab_score, tab_progress, tab_games = st.tabs(
-            ["Réussite", "Score", "Progression", "Par jeu"]
+            ["Success", "Score", "Progression", "By game"]
         )
         with tab_success:
             st.plotly_chart(charts.patient_metric_chart(history, "success_rate", colors),
@@ -438,7 +438,7 @@ def show_patient_detail():
                 st.plotly_chart(charts.progression_chart(history), config=charts.CHART_CONFIG,
                                 key="patient_progression")
             else:
-                st.info("Pas encore de variation calculable (une seule séance par exercice).")
+                st.info("No change can be calculated yet (only one session per exercise).")
         with tab_games:
             st.plotly_chart(charts.patient_games_chart(history, colors), config=charts.CHART_CONFIG,
                             key="patient_games")
@@ -446,7 +446,7 @@ def show_patient_detail():
     # --------------------------------------------------------
     # PREMIÈRE vs DERNIÈRE SÉANCE PAR JEU
     # --------------------------------------------------------
-    section("Avant / maintenant, par jeu", "Première et dernière séance de chaque jeu pratiqué.")
+    section("Before / now, by game", "First and last session of each game played.")
     comparison = analytics.first_vs_last(history)
     columns = st.columns(min(3, len(comparison)) or 1, gap="medium")
     for index, row in enumerate(comparison.itertuples(index=False)):
@@ -454,8 +454,8 @@ def show_patient_detail():
             score_delta = analytics.delta(row.last_score, row.first_score)
             success_delta = analytics.delta(row.last_success, row.first_success)
             level_text = (
-                f"Niveau {int(row.first_level)} → {int(row.last_level)}"
-                if pd.notna(row.first_level) and pd.notna(row.last_level) else "Niveau n.c."
+                f"Level {int(row.first_level)} → {int(row.last_level)}"
+                if pd.notna(row.first_level) and pd.notna(row.last_level) else "Level n/a"
             )
             color = colors.get(row.game_name, "#5B5BD6")
             render_html(
@@ -464,11 +464,11 @@ def show_patient_detail():
                   <div class="kk-kpi-top">
                     <span style="width:10px;height:10px;border-radius:3px;background:{color}"></span>
                     <div class="kk-card-title">{esc(row.game_name)}</div>
-                    <span style="margin-left:auto">{badge(f'{row.sessions} séance(s)')}</span>
+                    <span style="margin-left:auto">{badge(f'{row.sessions} session(s)')}</span>
                   </div>
                   <div class="kk-pcard-stats" style="grid-template-columns:repeat(2,1fr)">
-                    <div class="kk-stat"><div class="kk-stat-label">Réussite</div>
-                      <div class="kk-stat-value">{fmt_number(row.first_success)} → {fmt_number(row.last_success, suffix=' %')}</div>
+                    <div class="kk-stat"><div class="kk-stat-label">Success</div>
+                      <div class="kk-stat-value">{fmt_number(row.first_success)} → {fmt_number(row.last_success, suffix='%')}</div>
                       {delta_chip(success_delta, ' pts')}</div>
                     <div class="kk-stat"><div class="kk-stat-label">Score</div>
                       <div class="kk-stat-value">{fmt_number(row.first_score)} → {fmt_number(row.last_score)}</div>
@@ -482,37 +482,37 @@ def show_patient_detail():
     # --------------------------------------------------------
     # HISTORIQUE
     # --------------------------------------------------------
-    section("Historique des séances", f"{len(history)} séance(s), de la plus récente à la plus ancienne.")
+    section("Session history", f"{len(history)} session(s), most recent first.")
     table = history.sort_values("session_date", ascending=False)
     display = pd.DataFrame({
         "Date": table["session_date"],
-        "Jeu": table["game_name"],
-        "Exercice": table["exercise_name"],
-        "Niveau": table["level"],
+        "Game": table["game_name"],
+        "Exercise": table["exercise_name"],
+        "Level": table["level"],
         "Score": table["score"],
-        "Réussite": table["success_rate"],
-        "Répétitions": table["repetitions"],
-        "Durée (min)": table["duration_min"],
+        "Success": table["success_rate"],
+        "Repetitions": table["repetitions"],
+        "Duration (min)": table["duration_min"],
         "Progression": table["progression"],
     })
     extra = {
-        "Rot. gauche (°)": "rotation_left",
-        "Rot. droite (°)": "rotation_right",
-        "Abduction max (°)": "abduction_max",
+        "Left rot. (°)": "rotation_left",
+        "Right rot. (°)": "rotation_right",
+        "Max abduction (°)": "abduction_max",
         "Compensations": "compensations",
-        "Séquence max": "max_sequence",
-        "Erreurs d’ordre": "sequence_errors",
+        "Max sequence": "max_sequence",
+        "Order errors": "sequence_errors",
         "Statues (%)": "nogo_success_rate",
-        "Réaction (ms)": "rt_mean_ms",
-        "Douleur (/5)": "pain_level",
+        "Reaction (ms)": "rt_mean_ms",
+        "Pain (/5)": "pain_level",
         "Effort (/5)": "effort",
     }
     for label, column in extra.items():
         if table[column].notna().any():
             display[label] = table[column].to_numpy()
-    if display["Exercice"].nunique(dropna=True) <= 1:
-        display = display.drop(columns="Exercice")
-    if display["Progression"].isna().all() or {"Rot. gauche (°)", "Abduction max (°)", "Séquence max", "Statues (%)"} & set(display.columns):
+    if display["Exercise"].nunique(dropna=True) <= 1:
+        display = display.drop(columns="Exercise")
+    if display["Progression"].isna().all() or {"Left rot. (°)", "Max abduction (°)", "Max sequence", "Statues (%)"} & set(display.columns):
         display = display.drop(columns="Progression")
     st.dataframe(
         display,
@@ -521,27 +521,27 @@ def show_patient_detail():
         height=min(420, 38 * len(display) + 40),
         column_config={
             "Date": st.column_config.DatetimeColumn(format="DD/MM/YYYY HH:mm"),
-            "Niveau": st.column_config.NumberColumn(format="%d"),
+            "Level": st.column_config.NumberColumn(format="%d"),
             "Score": st.column_config.NumberColumn(format="%.1f"),
-            "Réussite": st.column_config.ProgressColumn(format="%.0f %%", min_value=0, max_value=100),
-            "Répétitions": st.column_config.NumberColumn(format="%d"),
-            "Durée (min)": st.column_config.NumberColumn(format="%.1f"),
-            "Progression": st.column_config.NumberColumn(format="%+.1f %%"),
-            "Rot. gauche (°)": st.column_config.NumberColumn(format="%d"),
-            "Rot. droite (°)": st.column_config.NumberColumn(format="%d"),
-            "Abduction max (°)": st.column_config.NumberColumn(format="%d"),
+            "Success": st.column_config.ProgressColumn(format="%.0f%%", min_value=0, max_value=100),
+            "Repetitions": st.column_config.NumberColumn(format="%d"),
+            "Duration (min)": st.column_config.NumberColumn(format="%.1f"),
+            "Progression": st.column_config.NumberColumn(format="%+.1f%%"),
+            "Left rot. (°)": st.column_config.NumberColumn(format="%d"),
+            "Right rot. (°)": st.column_config.NumberColumn(format="%d"),
+            "Max abduction (°)": st.column_config.NumberColumn(format="%d"),
             "Compensations": st.column_config.NumberColumn(format="%d"),
-            "Séquence max": st.column_config.NumberColumn(format="%d"),
-            "Erreurs d’ordre": st.column_config.NumberColumn(format="%d"),
-            "Douleur (/5)": st.column_config.NumberColumn(format="%d"),
+            "Max sequence": st.column_config.NumberColumn(format="%d"),
+            "Order errors": st.column_config.NumberColumn(format="%d"),
+            "Pain (/5)": st.column_config.NumberColumn(format="%d"),
             "Effort (/5)": st.column_config.NumberColumn(format="%d"),
         },
     )
     st.download_button(
-        "⤓ Exporter l’historique (CSV)",
+        "⤓ Export history (CSV)",
         display.to_csv(index=False).encode("utf-8-sig"),
-        file_name=f"sensai_{patient['patient_code'] or patient['id']}_seances.csv",
+        file_name=f"sensai_{patient['patient_code'] or patient['id']}_sessions.csv",
         mime="text/csv",
     )
-    note("la « progression » est la variation du score par rapport à la séance précédente "
-         "du même exercice.", title="Définition")
+    note("“progression” is the change in score compared with the previous session "
+         "of the same exercise.", title="Definition")

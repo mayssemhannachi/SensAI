@@ -51,7 +51,7 @@ def test_every_patient_sheet_renders():
         assert not at.exception, (patient_id, at.exception)
 
 
-@pytest.mark.parametrize("period", ["7 jours", "30 jours", "90 jours", "Tout"])
+@pytest.mark.parametrize("period", ["7 days", "30 days", "90 days", "All"])
 def test_overview_all_periods(period):
     at = _app("dashboard.pages.global_view", "show_global_view")
     at.session_state["data_source"] = "demo"
@@ -87,7 +87,7 @@ def test_full_app_backend_mode_shows_login(monkeypatch):
     at.run()
     assert not at.exception, at.exception
     # Sans session : renvoi vers la connexion unique du site SensAI
-    assert "Redirection vers SensAI" in " ".join(m.value for m in at.markdown)
+    assert "Redirecting to SensAI" in " ".join(m.value for m in at.markdown)
 
     # Connexion directe de secours (?direct=1)
     at = AppTest.from_file("../dashboard/app.py", default_timeout=30)
@@ -95,4 +95,4 @@ def test_full_app_backend_mode_shows_login(monkeypatch):
     at.query_params["direct"] = "1"
     at.run()
     assert not at.exception, at.exception
-    assert any("Connexion directe" in e.label for e in at.expander)
+    assert any("Direct sign-in" in e.label for e in at.expander)

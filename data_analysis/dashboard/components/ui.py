@@ -13,10 +13,10 @@ from dashboard.utils.theme import COLORS
 AVATAR_TONES = ["tone-violet", "tone-blue", "tone-green", "tone-orange", "tone-pink"]
 
 STATUS_TONES = {
-    "À surveiller": ("warning", "!"),
-    "En progression": ("good", "↗"),
+    "Needs attention": ("warning", "!"),
+    "Improving": ("good", "↗"),
     "Stable": ("info", "→"),
-    "Nouveau": ("neutral", "✦"),
+    "New": ("neutral", "✦"),
 }
 
 ALERT_TONES = {"critical": "critical", "warning": "warning", "info": "neutral"}
@@ -48,7 +48,7 @@ def fmt_number(value, decimals: int = 0, suffix: str = "", signed: bool = False)
     if value is None or pd.isna(value):
         return "—"
     sign = "+" if signed else ""
-    text = f"{float(value):{sign},.{decimals}f}".replace(",", " ").replace(".", ",")
+    text = f"{float(value):{sign},.{decimals}f}"
     return f"{text}{suffix}"
 
 
@@ -60,13 +60,13 @@ def fmt_date(value, pattern: str = "%d/%m/%Y") -> str:
 
 def days_ago(value, reference: pd.Timestamp) -> str:
     if value is None or pd.isna(value):
-        return "Aucune séance"
+        return "No sessions"
     days = (reference.normalize() - pd.Timestamp(value).normalize()).days
     if days <= 0:
-        return "Aujourd’hui"
+        return "Today"
     if days == 1:
-        return "Hier"
-    return f"Il y a {days} j"
+        return "Yesterday"
+    return f"{days} days ago"
 
 
 def initials(first_name, last_name) -> str:
@@ -152,8 +152,8 @@ def empty_state(icon: str, title: str, text: str = "") -> None:
     )
 
 
-def note(text: str, title: str = "À noter") -> None:
-    render_html(f'<div class="kk-note"><b>ⓘ</b><div><b>{esc(title)} :</b> {esc(text)}</div></div>')
+def note(text: str, title: str = "Note") -> None:
+    render_html(f'<div class="kk-note"><b>ⓘ</b><div><b>{esc(title)}:</b> {esc(text)}</div></div>')
 
 
 # ============================================================
@@ -202,7 +202,7 @@ def sparkline(values, color: str | None = None, width: int = 120, height: int = 
     last_x, last_y = coords[-1]
     return (
         f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" '
-        f'aria-label="Évolution du score">'
+        f'aria-label="Score trend">'
         f'<path d="{path}" fill="none" stroke="{color}" stroke-width="2" '
         f'stroke-linecap="round" stroke-linejoin="round"/>'
         f'<circle cx="{last_x:.1f}" cy="{last_y:.1f}" r="3.5" fill="#fff" stroke="{color}" stroke-width="2"/>'

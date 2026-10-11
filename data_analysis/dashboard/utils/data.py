@@ -114,11 +114,11 @@ DANSE_SETTINGS_DEFAULTS = {
 
 # Le Gardien du Château (attention et contrôle des gestes, ergothérapie, jeu de Chahed) :
 CHATEAU_GESTURES = {
-    "fairy_r": "Fée bleue : bras droit",
-    "fairy_l": "Fée rose : bras gauche",
-    "star": "Étoile : les deux bras",
-    "crown": "Couronne : main sur la tête",
-    "dragon": "Dragon : se baisser",
+    "fairy_r": "Blue fairy: right arm",
+    "fairy_l": "Pink fairy: left arm",
+    "star": "Star: both arms",
+    "crown": "Crown: hand on head",
+    "dragon": "Dragon: crouch down",
 }
 CHATEAU_SETTINGS_DEFAULTS = {
     "gestures": ["fairy_r", "fairy_l", "star"],  # les 3 défis prescrits
@@ -260,7 +260,7 @@ def normalize_sessions(df: pd.DataFrame, patients: pd.DataFrame | None = None,
 
     df["game_name"] = df["game_name"].astype("object").where(df["game_name"].notna(), None)
     missing_game = df["game_name"].isna()
-    df.loc[missing_game, "game_name"] = "Jeu " + df.loc[missing_game, "game_id"].astype("Int64").astype(str)
+    df.loc[missing_game, "game_name"] = "Game " + df.loc[missing_game, "game_id"].astype("Int64").astype(str)
 
     if fill_progression:
         df["progression"] = df["progression"].fillna(derive_progression(df))
@@ -440,7 +440,7 @@ def load_demo_dataset() -> Dataset:
 def _require_token() -> str:
     token = state.get_token()
     if not token:
-        raise ApiError("Connectez-vous pour accéder aux données du backend.", 401)
+        raise ApiError("Sign in to access backend data.", 401)
     return token
 
 
@@ -475,7 +475,7 @@ def fetch_api_payload(token: str) -> dict:
             "patient_game_id": pg["id"],
             "patient_id": pg["patient_id"],
             "game_id": pg["game_id"],
-            "game_name": game.get("name") or f"Jeu {pg['game_id']}",
+            "game_name": game.get("name") or f"Game {pg['game_id']}",
             "game_slug": game.get("slug"),
             "configuration": pg.get("configuration") or {},
         })
@@ -578,9 +578,9 @@ def save_patient(first_name: str, last_name: str, age: int | None = None,
     first_name, last_name = first_name.strip(), last_name.strip()
     diagnosis = (diagnosis or "").strip()
     if not first_name or not last_name:
-        raise ValueError("Le prénom et le nom sont obligatoires.")
+        raise ValueError("First name and last name are required.")
     if age is None:
-        raise ValueError("L’âge du patient est obligatoire.")
+        raise ValueError("The patient's age is required.")
 
     if state.api_mode_enabled():
         patient = api_post(
@@ -594,7 +594,7 @@ def save_patient(first_name: str, last_name: str, age: int | None = None,
             except (ApiError, ValueError) as exc:
                 raise ApiPartialSuccessError(
                     patient,
-                    f"Patient créé, mais le diagnostic n’a pas été enregistré : {exc}",
+                    f"Patient created, but the diagnosis was not saved: {exc}",
                     status_code=getattr(exc, "status_code", None),
                 ) from exc
         refresh_data()
@@ -621,7 +621,7 @@ def save_patient(first_name: str, last_name: str, age: int | None = None,
 def save_patient_diagnosis(patient_id: int, diagnosis: str) -> None:
     diagnosis = (diagnosis or "").strip()
     if not diagnosis:
-        raise ValueError("Le diagnostic ne peut pas être vide.")
+        raise ValueError("The diagnosis cannot be empty.")
     if state.api_mode_enabled():
         api_post(
             "/consultations/",
@@ -641,7 +641,7 @@ def save_patient_diagnosis(patient_id: int, diagnosis: str) -> None:
 def assign_game(patient_id: int, game_id: int, configuration: dict | None = None) -> dict:
     """Associe un jeu à un patient avec ses réglages (backend uniquement)."""
     if not state.api_mode_enabled():
-        raise ValueError("L’association de jeux est disponible en mode Backend.")
+        raise ValueError("Game assignment is available in Backend mode.")
     result = api_post(
         "/patient-games/",
         _require_token(),
@@ -662,7 +662,7 @@ def _defaults_for_game(game_id: int) -> dict:
 def update_game_settings(patient_game_id: int, configuration: dict) -> dict:
     """Modifie les réglages d'un jeu assigné (backend uniquement)."""
     if not state.api_mode_enabled():
-        raise ValueError("La modification des réglages est disponible en mode Backend.")
+        raise ValueError("Editing settings is available in Backend mode.")
     result = api_put(f"/patient-games/{int(patient_game_id)}", _require_token(),
                      {"configuration": configuration})
     refresh_data()
@@ -672,7 +672,7 @@ def update_game_settings(patient_game_id: int, configuration: dict) -> dict:
 def create_activation_code(patient_id: int) -> dict:
     """Génère le code à 6 caractères que le patient saisit sur le site pour créer son compte."""
     if not state.api_mode_enabled():
-        raise ValueError("Les codes d’activation sont disponibles en mode Backend.")
+        raise ValueError("Activation codes are available in Backend mode.")
     return api_post("/activation-codes/", _require_token(), {"patient_id": int(patient_id)})
 
 

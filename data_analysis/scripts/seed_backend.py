@@ -34,25 +34,25 @@ DIFFICULTY_LEVEL = {"faible": 1, "moyenne": 2, "elevee": 3}
 
 # prénom, nom, âge, diagnostic, profil
 PATIENTS = [
-    ("Salma", "Ben Ali", 8, "Torticolis post-traumatique", "progress"),
-    ("Adam", "Trabelsi", 10, "Raideur cervicale après immobilisation", "progress"),
-    ("Yasmine", "Bouzid", 12, "Cervicalgie posturale", "stable"),
-    ("Rayan", "Mansouri", 7, "Torticolis musculaire congénital (suivi)", "pain"),
-    ("Lina", "Chaouch", 9, "Rééducation après entorse cervicale", "progress"),
-    ("Omar", "Dridi", 11, "Plagiocéphalie avec limitation de rotation", "asym"),
-    ("Nour", "Zouari", 6, "Torticolis post-traumatique", "progress"),
-    ("Eya", "Haddad", 13, "Cervicalgie posturale", "decline"),
-    ("Malek", "Hamdi", 9, "Raideur cervicale après immobilisation", "inactive"),
-    ("Hiba", "Khelifi", 8, "Torticolis musculaire congénital (suivi)", "stable"),
-    ("Zied", "Gharbi", 14, "Rééducation après entorse cervicale", "progress"),
-    ("Amira", "Jebali", 7, "Torticolis post-traumatique", "new"),
+    ("Salma", "Ben Ali", 8, "Post-traumatic torticollis", "progress"),
+    ("Adam", "Trabelsi", 10, "Neck stiffness after immobilization", "progress"),
+    ("Yasmine", "Bouzid", 12, "Postural neck pain", "stable"),
+    ("Rayan", "Mansouri", 7, "Congenital muscular torticollis (follow-up)", "pain"),
+    ("Lina", "Chaouch", 9, "Rehabilitation after neck sprain", "progress"),
+    ("Omar", "Dridi", 11, "Plagiocephaly with limited rotation", "asym"),
+    ("Nour", "Zouari", 6, "Post-traumatic torticollis", "progress"),
+    ("Eya", "Haddad", 13, "Postural neck pain", "decline"),
+    ("Malek", "Hamdi", 9, "Neck stiffness after immobilization", "inactive"),
+    ("Hiba", "Khelifi", 8, "Congenital muscular torticollis (follow-up)", "stable"),
+    ("Zied", "Gharbi", 14, "Rehabilitation after neck sprain", "progress"),
+    ("Amira", "Jebali", 7, "Post-traumatic torticollis", "new"),
 ]
 
 # Patients suivis au Gardien des Lucioles : prénom, nom, âge, diagnostic, profil, bras
 LUCIOLES_PATIENTS = [
-    ("Youssef", "Ayari", 9, "Hémiplégie droite (paralysie cérébrale)", "abd_progress", "R"),
-    ("Mariem", "Saidi", 11, "Raideur de l'épaule après fracture de l'humérus", "abd_stable", "L"),
-    ("Ilyes", "Ferchichi", 8, "Paralysie obstétricale du plexus brachial", "abd_comp", "R"),
+    ("Youssef", "Ayari", 9, "Right hemiplegia (cerebral palsy)", "abd_progress", "R"),
+    ("Mariem", "Saidi", 11, "Shoulder stiffness after humerus fracture", "abd_stable", "L"),
+    ("Ilyes", "Ferchichi", 8, "Obstetric brachial plexus palsy", "abd_comp", "R"),
 ]
 
 LUCIOLES_PROFILES = {
@@ -139,7 +139,7 @@ def simulate_sessions(profile: str, weeks: int, rng: random.Random, now: datetim
                 "repetitions": reached,
                 "repetitions_target": reps,
                 "level_number": DIFFICULTY_LEVEL[difficulty],
-                "exercise_name": "Rotation cervicale",
+                "exercise_name": "Neck rotation",
                 "played_at": played.isoformat(),
                 "rotation_left": round(left),
                 "rotation_right": round(right),
@@ -188,7 +188,7 @@ def simulate_lucioles(profile: str, arm: str, weeks: int, rng: random.Random, no
                 "repetitions": len(valid),
                 "repetitions_target": target_reps,
                 "level_number": DIFFICULTY_LEVEL[difficulty],
-                "exercise_name": "Abduction de l'épaule",
+                "exercise_name": "Shoulder abduction",
                 "played_at": played.isoformat(),
                 "abduction_max": round(max(peaks)),
                 "abduction_mean_peak": mean_peak,
@@ -212,11 +212,11 @@ def simulate_lucioles(profile: str, arm: str, weeks: int, rng: random.Random, no
 
 # Patients suivis en ergothérapie (La Danse des Lucioles) : prénom, nom, âge, diagnostic, profil, main
 ERGO_PATIENTS = [
-    ("Ines", "Mabrouk", 7, "Trouble développemental de la coordination (dyspraxie)", "seq_progress", "any"),
-    ("Aziz", "Kammoun", 9, "TDAH : difficultés de planification et d'attention", "seq_errors", "any"),
-    ("Sarra", "Sassi", 8, "Hémiplégie cérébrale infantile : coordination des deux mains", "seq_progress", "alt"),
-    ("Mehdi", "Toumi", 10, "Retard de développement : autonomie dans les gestes du quotidien", "seq_stable", "R"),
-    ("Lyna", "Belhadj", 6, "Trouble développemental de la coordination (dyspraxie)", "new", "any"),
+    ("Ines", "Mabrouk", 7, "Developmental coordination disorder (dyspraxia)", "seq_progress", "any"),
+    ("Aziz", "Kammoun", 9, "ADHD: planning and attention difficulties", "seq_errors", "any"),
+    ("Sarra", "Sassi", 8, "Childhood hemiplegia: two-hand coordination", "seq_progress", "alt"),
+    ("Mehdi", "Toumi", 10, "Developmental delay: independence in daily activities", "seq_stable", "R"),
+    ("Lyna", "Belhadj", 6, "Developmental coordination disorder (dyspraxia)", "new", "any"),
 ]
 
 SEQ_PROFILES = {
@@ -259,7 +259,7 @@ def simulate_danse(profile: str, weeks: int, rng: random.Random, now: datetime):
                 "repetitions": done,
                 "repetitions_target": target,
                 "level_number": {"easy": 1, "mid": 2, "hard": 3}[level],
-                "exercise_name": "Séquence de fleurs (mémoire et coordination)",
+                "exercise_name": "Flower sequence (memory and coordination)",
                 "played_at": played.isoformat(),
                 "max_sequence": max_seq,
                 "sequence_errors": errors,
@@ -278,8 +278,8 @@ def simulate_danse(profile: str, weeks: int, rng: random.Random, now: datetime):
 
 # Patients suivis en ergothérapie sur Le Gardien du Château (attention et contrôle des gestes)
 CHATEAU_PATIENTS = [
-    ("Rayen", "Jlassi", 8, "TDAH : impulsivité et difficultés d'attention", "impulsive_progress"),
-    ("Yasmine", "Ferchichi", 7, "Trouble de l'attention : fatigabilité en fin d'activité", "attention_fade"),
+    ("Rayen", "Jlassi", 8, "ADHD: impulsivity and attention difficulties", "impulsive_progress"),
+    ("Yasmine", "Ferchichi", 7, "Attention disorder: fatigue at the end of activities", "attention_fade"),
 ]
 
 CASTLE_PROFILES = {
@@ -321,7 +321,7 @@ def simulate_chateau(profile: str, weeks: int, rng: random.Random, now: datetime
                 "repetitions": go_n + nogo_n,
                 "repetitions_target": go_n + nogo_n,
                 "level_number": 2,
-                "exercise_name": "Attention et contrôle des gestes (le château)",
+                "exercise_name": "Attention and gesture control (the castle)",
                 "played_at": played.isoformat(),
                 "go_success_rate": round(go_ok / go_n * 100, 1),
                 "nogo_success_rate": round(nogo_ok / nogo_n * 100, 1),

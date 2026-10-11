@@ -339,7 +339,7 @@ def _mascot_data_uri() -> str:
 MASCOT_URI = _mascot_data_uri()
 
 
-def logo_html(subtitle: str = "Espace thérapeute") -> str:
+def logo_html(subtitle: str = "Therapist space") -> str:
     """Logo SensAI identique au site : mascotte + « Sens » / « A » rose / « I » violet."""
     image = f'<img src="{MASCOT_URI}" alt="SensAI"/>' if MASCOT_URI else "✦"
     sub = f'<div class="kk-brand-sub">{subtitle}</div>' if subtitle else ""

@@ -8,11 +8,11 @@ from dashboard.utils import state
 
 # clé → (titre, icône du menu, chemin d'URL)
 PAGES = {
-    "overview": ("Vue globale", "◈", "vue-globale"),
+    "overview": ("Overview", "◈", "vue-globale"),
     "patients": ("Patients", "◉", "patients"),
-    "patient": ("Fiche patient", "◇", "fiche-patient"),
-    "games": ("Jeux", "▲", "jeux"),
-    "add_patient": ("Nouveau patient", "＋", "nouveau-patient"),
+    "patient": ("Patient record", "◇", "fiche-patient"),
+    "games": ("Games", "▲", "jeux"),
+    "add_patient": ("New patient", "＋", "nouveau-patient"),
 }
 
 _REGISTRY: dict[str, st.Page] = {}

@@ -25,7 +25,7 @@ from dashboard.utils.data import load_dataset
 
 
 def _period_label(days):
-    return "tout l’historique" if days is None else f"les {days} derniers jours"
+    return "the full history" if days is None else f"the last {days} days"
 
 
 def show_global_view():
@@ -35,22 +35,22 @@ def show_global_view():
 
     last_data = sessions_all["session_date"].max() if not sessions_all.empty else None
     page_header(
-        "Espace thérapeute · suivi pédiatrique",
-        "Vue d’ensemble",
-        "L’activité, les performances et les patients qui demandent votre attention, en un coup d’œil.",
-        meta=f"<span class='kk-dot on'></span>Dernière séance : {fmt_date(last_data)}",
+        "Therapist space · pediatric follow-up",
+        "Overview",
+        "Activity, performance and the patients who need your attention, at a glance.",
+        meta=f"<span class='kk-dot on'></span>Last session: {fmt_date(last_data)}",
     )
 
     if data.patients.empty:
-        empty_state("👋", "Aucun patient pour le moment",
-                    "Ajoutez un premier patient pour commencer le suivi.")
-        if st.button("＋ Ajouter un patient", type="primary"):
+        empty_state("👋", "No patients yet",
+                    "Add a first patient to start follow-up.")
+        if st.button("＋ Add a patient", type="primary"):
             navigation.go("add_patient")
         return
 
     if sessions_all.empty:
-        empty_state("🎮", "Aucune séance enregistrée",
-                    "Les indicateurs apparaîtront dès que les jeux enverront leurs premières séances.")
+        empty_state("🎮", "No sessions recorded",
+                    "Indicators will appear as soon as the games send their first sessions.")
         return
 
     # --------------------------------------------------------
@@ -59,11 +59,11 @@ def show_global_view():
     period_col, info_col = st.columns([1.3, 2], vertical_alignment="bottom")
     with period_col:
         period = st.segmented_control(
-            "Période d’analyse",
+            "Analysis period",
             list(analytics.PERIODS),
-            default="30 jours",
+            default="30 days",
             key="overview_period",
-        ) or "30 jours"
+        ) or "30 days"
     days = analytics.PERIODS[period]
     current = analytics.filter_period(sessions_all, days, reference)
     previous = analytics.previous_period(sessions_all, days, reference)
@@ -71,53 +71,53 @@ def show_global_view():
     with info_col:
         render_html(
             f"<div style='text-align:right;font-size:12.5px;color:#667085;padding-bottom:6px'>"
-            f"Du <b>{fmt_date(start)}</b> au <b>{fmt_date(reference)}</b>"
-            f"{' · comparé à la période précédente' if days else ''}</div>"
+            f"From <b>{fmt_date(start)}</b> to <b>{fmt_date(reference)}</b>"
+            f"{' · compared with the previous period' if days else ''}</div>"
         )
 
     overview = analytics.patient_overview(data.patients, sessions_all, reference)
-    watch = overview[overview["status"] == "À surveiller"] if not overview.empty else overview
+    watch = overview[overview["status"] == "Needs attention"] if not overview.empty else overview
 
     # --------------------------------------------------------
     # KPI
     # --------------------------------------------------------
     k = analytics.global_kpis(current, previous)
-    vs = "vs période précédente" if days else "sur tout l’historique"
+    vs = "vs previous period" if days else "over the full history"
     kpi_row([
-        kpi_card("Patients actifs", fmt_number(k["patients"]["value"]), "◉", "tone-violet",
-                 foot=f"sur {len(data.patients)} suivis",
+        kpi_card("Active patients", fmt_number(k["patients"]["value"]), "◉", "tone-violet",
+                 foot=f"of {len(data.patients)} followed",
                  delta_html=delta_chip(k["patients"]["delta"], decimals=0)),
-        kpi_card("Séances réalisées", fmt_number(k["sessions"]["value"]), "▶", "tone-blue",
+        kpi_card("Sessions completed", fmt_number(k["sessions"]["value"]), "▶", "tone-blue",
                  foot=vs, delta_html=delta_chip(k["sessions"]["delta"], decimals=0)),
-        kpi_card("Réussite moyenne", fmt_number(k["success"]["value"], 1), "✓", "tone-green",
-                 unit=" %", foot=vs, delta_html=delta_chip(k["success"]["delta"], " pts")),
-        kpi_card("Score moyen", fmt_number(k["score"]["value"], 1), "★", "tone-orange",
+        kpi_card("Average success", fmt_number(k["success"]["value"], 1), "✓", "tone-green",
+                 unit="%", foot=vs, delta_html=delta_chip(k["success"]["delta"], " pts")),
+        kpi_card("Average score", fmt_number(k["score"]["value"], 1), "★", "tone-orange",
                  foot=vs, delta_html=delta_chip(k["score"]["delta"], " pt")),
-        kpi_card("À surveiller", fmt_number(len(watch)), "!", "tone-pink",
-                 foot="patients avec un signal actif"),
+        kpi_card("Needs attention", fmt_number(len(watch)), "!", "tone-pink",
+                 foot="patients with an active signal"),
     ])
 
     if current.empty:
         st.write("")
-        empty_state("🗓️", "Aucune séance sur cette période",
-                    "Élargissez la période d’analyse pour voir les tendances.")
+        empty_state("🗓️", "No sessions in this period",
+                    "Widen the analysis period to see trends.")
         return
 
     # --------------------------------------------------------
     # TENDANCES
     # --------------------------------------------------------
-    section("Tendances", f"Évolution hebdomadaire sur {_period_label(days)}.")
+    section("Trends", f"Weekly trend over {_period_label(days)}.")
     left, right = st.columns([1.7, 1], gap="medium")
     with left:
         with card("trend"):
-            card_title("Score et réussite par semaine",
-                       "Moyenne de toutes les séances de la semaine (échelle 0–100).")
+            card_title("Score and success by week",
+                       "Average of all sessions in the week (0–100 scale).")
             weekly = analytics.weekly_trend(current)
             st.plotly_chart(charts.weekly_trend_chart(weekly), config=charts.CHART_CONFIG,
                             key="overview_weekly")
     with right:
         with card("distribution"):
-            card_title("Répartition des taux de réussite", "Nombre de séances par tranche.")
+            card_title("Success rate distribution", "Number of sessions per range.")
             st.plotly_chart(
                 charts.success_distribution_chart(analytics.success_distribution(current)),
                 config=charts.CHART_CONFIG, key="overview_distribution",
@@ -126,33 +126,33 @@ def show_global_view():
     # --------------------------------------------------------
     # JEUX + PATIENTS À SURVEILLER
     # --------------------------------------------------------
-    section("Jeux et vigilance", "Comparer les activités et repérer les patients à revoir.")
+    section("Games and watchlist", "Compare activities and spot patients to review.")
     left, right = st.columns([1.15, 1], gap="medium")
     colors = charts.game_colors(sessions_all["game_name"])
     with left:
         with card("games"):
             has_rotation = current[["rotation_left", "rotation_right"]].notna().any().any()
             if current["game_name"].nunique() <= 1 and has_rotation:
-                card_title("Amplitude cervicale moyenne",
-                           "Rotation moyenne atteinte par semaine (tous patients), et angle cible moyen.")
+                card_title("Average cervical range of motion",
+                           "Average rotation reached per week (all patients), and mean target angle.")
                 st.plotly_chart(charts.weekly_amplitude_chart(current), config=charts.CHART_CONFIG,
                                 key="overview_amplitude")
             else:
-                card_title("Réussite moyenne par jeu", "Survolez une barre pour le détail.")
+                card_title("Average success by game", "Hover over a bar for details.")
                 summary = analytics.game_summary(current)
                 st.plotly_chart(charts.game_comparison_chart(summary, colors), config=charts.CHART_CONFIG,
                                 key="overview_games")
-            if st.button("Voir l’analyse par jeu →", key="overview_to_games"):
+            if st.button("See game analysis →", key="overview_to_games"):
                 navigation.go("games")
     with right:
         with card("watch"):
-            card_title(f"Patients à surveiller ({len(watch)})",
-                       "Signaux calculés sur l’historique complet de chaque patient.")
+            card_title(f"Patients needing attention ({len(watch)})",
+                       "Signals calculated from each patient's full history.")
             if watch.empty:
                 render_html(
                     "<div class='kk-watch'><span class='kk-badge good'>✓</span>"
-                    "<div class='kk-watch-detail'>Aucun signal d’alerte : tous les patients "
-                    "suivent une trajectoire stable ou en progression.</div></div>"
+                    "<div class='kk-watch-detail'>No alert signals: all patients "
+                    "are on a stable or improving trajectory.</div></div>"
                 )
             else:
                 ordered = watch.assign(
@@ -175,37 +175,37 @@ def show_global_view():
                             """
                         )
                     with action:
-                        if st.button("Fiche", key=f"watch_{row.id}", width="stretch"):
+                        if st.button("Open", key=f"watch_{row.id}", width="stretch"):
                             navigation.open_patient(row.id)
                 if len(watch) > 6:
-                    if st.button(f"Voir les {len(watch)} patients à surveiller →", key="watch_all"):
-                        st.session_state["patients_status_filter"] = ["À surveiller"]
+                    if st.button(f"See all {len(watch)} patients needing attention →", key="watch_all"):
+                        st.session_state["patients_status_filter"] = ["Needs attention"]
                         navigation.go("patients")
-            note("ces signaux sont une aide à la décision et doivent être interprétés "
-                 "dans leur contexte clinique.", title="Aide à la décision")
+            note("these signals support decision-making and must be interpreted "
+                 "in their clinical context.", title="Decision support")
 
     # --------------------------------------------------------
     # DERNIÈRES SÉANCES
     # --------------------------------------------------------
-    section("Dernières séances", "Les 10 séances les plus récentes de la période.")
+    section("Latest sessions", "The 10 most recent sessions in the period.")
     recent = current.sort_values("session_date", ascending=False).head(10)
     table = pd.DataFrame({
         "Date": recent["session_date"],
         "Patient": recent["patient_name"],
-        "Jeu": recent["game_name"],
-        "Niveau": recent["level"],
+        "Game": recent["game_name"],
+        "Level": recent["level"],
         "Score": recent["score"],
-        "Réussite": recent["success_rate"],
+        "Success": recent["success_rate"],
         "Progression": recent["progression"],
-        "Rot. G (°)": recent["rotation_left"],
-        "Rot. D (°)": recent["rotation_right"],
-        "Abd. max (°)": recent["abduction_max"],
-        "Séq. max": recent["max_sequence"],
+        "Left rot. (°)": recent["rotation_left"],
+        "Right rot. (°)": recent["rotation_right"],
+        "Max abd. (°)": recent["abduction_max"],
+        "Max seq.": recent["max_sequence"],
         "Statues (%)": recent["nogo_success_rate"],
-        "Douleur (/5)": recent["pain_level"],
-        "Durée": recent["duration_min"],
+        "Pain (/5)": recent["pain_level"],
+        "Duration": recent["duration_min"],
     })
-    optional = ["Rot. G (°)", "Rot. D (°)", "Abd. max (°)", "Séq. max", "Statues (%)", "Douleur (/5)"]
+    optional = ["Left rot. (°)", "Right rot. (°)", "Max abd. (°)", "Max seq.", "Statues (%)", "Pain (/5)"]
     table = table.drop(columns=[c for c in optional if table[c].isna().all()])
     if any(c in table.columns for c in optional):
         table = table.drop(columns=["Progression"])
@@ -215,16 +215,16 @@ def show_global_view():
         width="stretch",
         column_config={
             "Date": st.column_config.DatetimeColumn(format="DD/MM/YYYY HH:mm"),
-            "Niveau": st.column_config.NumberColumn(format="%d"),
+            "Level": st.column_config.NumberColumn(format="%d"),
             "Score": st.column_config.NumberColumn(format="%.1f"),
-            "Réussite": st.column_config.ProgressColumn(format="%.0f %%", min_value=0, max_value=100),
-            "Progression": st.column_config.NumberColumn(format="%+.1f %%"),
-            "Durée": st.column_config.NumberColumn("Durée (min)", format="%.1f"),
-            "Rot. G (°)": st.column_config.NumberColumn(format="%d"),
-            "Rot. D (°)": st.column_config.NumberColumn(format="%d"),
-            "Abd. max (°)": st.column_config.NumberColumn(format="%d"),
-            "Séq. max": st.column_config.NumberColumn(format="%d"),
+            "Success": st.column_config.ProgressColumn(format="%.0f%%", min_value=0, max_value=100),
+            "Progression": st.column_config.NumberColumn(format="%+.1f%%"),
+            "Duration": st.column_config.NumberColumn("Duration (min)", format="%.1f"),
+            "Left rot. (°)": st.column_config.NumberColumn(format="%d"),
+            "Right rot. (°)": st.column_config.NumberColumn(format="%d"),
+            "Max abd. (°)": st.column_config.NumberColumn(format="%d"),
+            "Max seq.": st.column_config.NumberColumn(format="%d"),
             "Statues (%)": st.column_config.NumberColumn(format="%d"),
-            "Douleur (/5)": st.column_config.NumberColumn(format="%d"),
+            "Pain (/5)": st.column_config.NumberColumn(format="%d"),
         },
     )

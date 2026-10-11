@@ -18,8 +18,8 @@ from dashboard.utils.data import load_dataset
 
 
 BODY_PARTS_FR = {
-    "knee": "Genou", "wrist": "Poignet", "shoulder": "Épaule", "elbow": "Coude",
-    "hip": "Hanche", "ankle": "Cheville", "neck": "Cou", "trunk": "Tronc", "hand": "Main",
+    "knee": "Knee", "wrist": "Wrist", "shoulder": "Shoulder", "elbow": "Elbow",
+    "hip": "Hip", "ankle": "Ankle", "neck": "Neck", "trunk": "Trunk", "hand": "Hand",
 }
 
 
@@ -29,25 +29,25 @@ def show_games():
     sessions_all = data.sessions
 
     page_header(
-        "Activité thérapeutique",
-        "Analyse par jeu",
-        "Comparez les jeux SensAI : réussite, difficulté par niveau et patients concernés.",
-        meta=f"{sessions_all['game_name'].nunique()} jeu(x) joué(s) · {len(data.games)} au catalogue",
+        "Therapeutic activity",
+        "Game analysis",
+        "Compare SensAI games: success, difficulty by level and patients involved.",
+        meta=f"{sessions_all['game_name'].nunique()} game(s) played · {len(data.games)} in catalog",
     )
 
     if sessions_all.empty:
-        empty_state("🎮", "Aucune séance enregistrée",
-                    "Les statistiques par jeu apparaîtront dès les premières séances.")
+        empty_state("🎮", "No sessions recorded",
+                    "Game statistics will appear after the first sessions.")
         return
 
     period_col, _ = st.columns([1.3, 2], vertical_alignment="bottom")
     with period_col:
         period = st.segmented_control(
-            "Période", list(analytics.PERIODS), default="Tout", key="games_period"
-        ) or "Tout"
+            "Period", list(analytics.PERIODS), default="All", key="games_period"
+        ) or "All"
     sessions = analytics.filter_period(sessions_all, analytics.PERIODS[period], reference)
     if sessions.empty:
-        empty_state("🗓️", "Aucune séance sur cette période", "Élargissez la période.")
+        empty_state("🗓️", "No sessions in this period", "Widen the period.")
         return
 
     colors = charts.game_colors(sessions_all["game_name"])
@@ -61,7 +61,7 @@ def show_games():
     for index, row in enumerate(summary.itertuples(index=False)):
         part = body_parts.get(row.game_name)
         part = BODY_PARTS_FR.get(str(part).lower(), part) if isinstance(part, str) else None
-        foot = f"{row.patients} patient(s) · {fmt_number(row.duration_min, 1)} min/séance"
+        foot = f"{row.patients} patient(s) · {fmt_number(row.duration_min, 1)} min/session"
         with columns[index % len(columns)]:
             render_html(
                 kpi_card(
@@ -70,25 +70,25 @@ def show_games():
                     icon=f"<span style='width:12px;height:12px;border-radius:4px;"
                          f"background:{colors.get(row.game_name)}'></span>",
                     tone="tone-blue",
-                    unit=" %",
+                    unit="%",
                     foot=(f"{part} · " if isinstance(part, str) else "") + foot,
-                    delta_html=f"<span class='kk-delta flat'>{row.sessions} séances</span>",
+                    delta_html=f"<span class='kk-delta flat'>{row.sessions} sessions</span>",
                 )
             )
 
     # --------------------------------------------------------
     # COMPARAISON & ÉVOLUTION
     # --------------------------------------------------------
-    section("Comparaison", "Réussite moyenne par jeu et son évolution hebdomadaire.")
+    section("Comparison", "Average success by game and its weekly trend.")
     left, right = st.columns([1, 1.5], gap="medium")
     with left:
         with card("games-compare"):
-            card_title("Réussite moyenne", "Toutes séances de la période.")
+            card_title("Average success", "All sessions in the period.")
             st.plotly_chart(charts.game_comparison_chart(summary, colors), config=charts.CHART_CONFIG,
                             key="games_compare")
     with right:
         with card("games-weekly"):
-            card_title("Réussite par semaine", "Moyenne hebdomadaire de chaque jeu.")
+            card_title("Success by week", "Weekly average for each game.")
             st.plotly_chart(charts.game_weekly_chart(sessions, colors), config=charts.CHART_CONFIG,
                             key="games_weekly")
 
@@ -97,7 +97,7 @@ def show_games():
     # --------------------------------------------------------
     levels = analytics.level_summary(sessions)
     if not levels.empty:
-        section("Difficulté par niveau", "Réussite moyenne selon le niveau de l’exercice.")
+        section("Difficulty by level", "Average success by exercise level.")
         games = sorted(levels["game_name"].unique())
         columns = st.columns(min(len(games), 3), gap="medium")
         for index, game in enumerate(games):
@@ -114,32 +114,32 @@ def show_games():
     # --------------------------------------------------------
     matrix = analytics.patient_game_matrix(sessions)
     if not matrix.empty:
-        section("Patients × jeux", "Réussite moyenne de chaque patient sur chaque jeu (case vide = jeu non pratiqué).")
+        section("Patients × games", "Average success of each patient on each game (empty cell = game not played).")
         with card("matrix"):
             st.plotly_chart(charts.heatmap_chart(matrix), config=charts.CHART_CONFIG, key="games_matrix")
 
     # --------------------------------------------------------
     # TABLEAU
     # --------------------------------------------------------
-    section("Détail", "Indicateurs moyens par jeu.")
+    section("Details", "Average indicators by game.")
     table = summary.rename(columns={
-        "game_name": "Jeu", "sessions": "Séances", "patients": "Patients", "score": "Score moyen",
-        "success_rate": "Réussite", "duration_min": "Durée moy. (min)",
-        "repetitions": "Répétitions moy.", "progression": "Progression moy.",
+        "game_name": "Game", "sessions": "Sessions", "patients": "Patients", "score": "Average score",
+        "success_rate": "Success", "duration_min": "Avg. duration (min)",
+        "repetitions": "Avg. repetitions", "progression": "Avg. progression",
     })
     st.dataframe(
         table, hide_index=True, width="stretch",
         column_config={
-            "Score moyen": st.column_config.NumberColumn(format="%.1f"),
-            "Réussite": st.column_config.ProgressColumn(format="%.1f %%", min_value=0, max_value=100),
-            "Durée moy. (min)": st.column_config.NumberColumn(format="%.1f"),
-            "Répétitions moy.": st.column_config.NumberColumn(format="%.1f"),
-            "Progression moy.": st.column_config.NumberColumn(format="%+.1f %%"),
+            "Average score": st.column_config.NumberColumn(format="%.1f"),
+            "Success": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+            "Avg. duration (min)": st.column_config.NumberColumn(format="%.1f"),
+            "Avg. repetitions": st.column_config.NumberColumn(format="%.1f"),
+            "Avg. progression": st.column_config.NumberColumn(format="%+.1f%%"),
         },
     )
     unused = set(data.games["name"].dropna()) - set(sessions_all["game_name"])
     if unused:
         render_html(
-            "<div class='kk-note'><b>ⓘ</b><div>Jeux à venir dans SensAI (pas encore de séance) : "
+            "<div class='kk-note'><b>ⓘ</b><div>Upcoming SensAI games (no sessions yet): "
             + ", ".join(esc(name) for name in sorted(unused)) + ".</div></div>"
         )
