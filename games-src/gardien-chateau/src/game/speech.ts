@@ -3,29 +3,29 @@
  * Aucun fichier audio nécessaire, fonctionne dans tous les navigateurs modernes.
  */
 
-let frVoice: SpeechSynthesisVoice | null = null;
+let enVoice: SpeechSynthesisVoice | null = null;
 let currentUtt: SpeechSynthesisUtterance | null = null;
 let activeEndCallback: (() => void) | null = null;
 let safetyTimeoutId: number | null = null;
 
-/** Charge la voix française dès que les voix sont disponibles. */
-function loadFrVoice() {
+/** Charge la voix anglaise dès que les voix sont disponibles. */
+function loadEnVoice() {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   const pick = () => {
     const voices = speechSynthesis.getVoices();
-    frVoice =
-      voices.find((v) => v.lang.startsWith('fr') && v.localService) ??
-      voices.find((v) => v.lang.startsWith('fr')) ??
+    enVoice =
+      voices.find((v) => v.lang.startsWith('en') && v.localService) ??
+      voices.find((v) => v.lang.startsWith('en')) ??
       voices[0] ??
       null;
   };
   pick();
   speechSynthesis.onvoiceschanged = pick;
 }
-loadFrVoice();
+loadEnVoice();
 
 /**
- * Prononce un texte en français (en supprimant les emoji et les sauts de ligne).
+ * Prononce un texte en anglais (en supprimant les emoji et les sauts de ligne).
  * @param text         Le texte à dire
  * @param onEndOrRate  Callback déclenché dès que la voix se termine, ou vitesse de lecture
  * @param rate         Vitesse de lecture si le 2ème argument est une fonction
@@ -56,10 +56,10 @@ export function speak(
   }
 
   const utt = new SpeechSynthesisUtterance(clean);
-  utt.lang = 'fr-FR';
+  utt.lang = 'en-US';
   utt.rate = actualRate;
   utt.pitch = 1.05;
-  if (frVoice) utt.voice = frVoice;
+  if (enVoice) utt.voice = enVoice;
 
   currentUtt = utt;
   activeEndCallback = onEnd ?? null;

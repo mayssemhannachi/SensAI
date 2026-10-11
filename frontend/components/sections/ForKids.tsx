@@ -5,18 +5,18 @@ import Sticker from "@/components/ui/Sticker";
 const objectives = [
   {
     icon: "/Assets/Landing Page/kids/explorer.png",
-    label: "Explorer",
-    desc: "Découvrir de nouveaux environnements.",
+    label: "Explore",
+    desc: "Discover new playful environments.",
   },
   {
     icon: "/Assets/Landing Page/kids/interagir.png",
-    label: "Interagir",
-    desc: "Utiliser ses mouvements pour agir directement dans l'expérience.",
+    label: "Interact",
+    desc: "Use movement directly to control the experience.",
   },
   {
     icon: "/Assets/Landing Page/kids/progresser.png",
-    label: "Progresser",
-    desc: "Relever des défis et suivre ses performances.",
+    label: "Progress",
+    desc: "Complete challenges and build confidence.",
   },
 ];
 
@@ -48,24 +48,24 @@ export default function ForKids() {
           <div className="lg:col-span-6 space-y-8">
             <div className="space-y-6">
               <Badge className="bg-[#DCFCE7] text-[#15803D]">
-                Pour les enfants
+                For Kids
               </Badge>
 
               <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-                Une expérience créée autour de l&apos;exploration et du mouvement.
+                An experience built around exploration and movement.
               </h2>
 
               <div className="space-y-3 text-sm text-slate-600 leading-relaxed max-w-lg">
-                <p>SensAI ne commence pas avec des tableaux de données.</p>
-                <p className="font-semibold text-slate-800">Il commence avec une aventure.</p>
+                <p>SensAI doesn&apos;t start with spreadsheets or charts.</p>
+                <p className="font-semibold text-slate-800">It starts with an adventure.</p>
                 <p>
-                  Une interface colorée, des interactions simples et des objectifs adaptés permettant à l&apos;enfant d&apos;explorer, bouger et participer activement à son expérience.
+                  A colorful interface, intuitive interactions, and personalized goals that encourage children to explore, move, and actively engage.
                 </p>
               </div>
               <div className="max-w-lg rounded-2xl border border-purple-100 bg-white/80 p-5">
-                <h3 className="font-outfit font-extrabold text-slate-900">Pour les enfants concernés par des troubles neuromoteurs</h3>
+                <h3 className="font-outfit font-extrabold text-slate-900">For children facing neuromotor challenges</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  La paralysie cérébrale, la dyspraxie (TDC) ou les lésions cérébrales acquises font partie des situations visées. Le choix des activités et de leurs réglages doit être adapté avec le professionnel qui accompagne l&apos;enfant.
+                  Cerebral palsy, developmental coordination disorder (DCD), and acquired brain injuries are among the addressed conditions. Activity selection and parameter tuning should always be supervised by the child&apos;s healthcare professional.
                 </p>
               </div>
             </div>
@@ -95,7 +95,7 @@ export default function ForKids() {
             <div className="relative w-full max-w-lg hover:scale-[1.01] transition-transform">
               <Image 
                 src="/Assets/Landing Page/kids-illustrationpic.png" 
-                alt="Aventure magique et univers pour les enfants" 
+                alt="Magical adventure world for children" 
                 width={600} 
                 height={450} 
                 loading="eager"

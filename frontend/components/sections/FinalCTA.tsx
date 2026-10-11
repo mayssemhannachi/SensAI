@@ -30,18 +30,18 @@ export default function FinalCTA() {
 
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10 pt-4 pb-8">
           <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Prêt à entrer dans l'aventure ?
+            Ready to join the adventure?
           </h2>
           <p className="text-slate-300 text-sm sm:text-base max-w-lg mx-auto">
-            Découvrez comment SensAI transforme le mouvement en interaction.
+            Discover how SensAI transforms movement into magical interaction.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4 relative z-20">
             <Link href="/login" className="bg-[#FF5A78] hover:bg-[#F43F5E] text-white px-7 py-3 rounded-full text-xs sm:text-sm font-bold transition-all shadow-lg hover:shadow-pink-500/20">
-              Commencer l'expérience
+              Start the Experience
             </Link>
             <button className="bg-transparent hover:bg-white/10 border border-slate-700 text-slate-200 px-6 py-3 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all">
-              Découvrir SensAI <ArrowDown size={14} />
+              Discover SensAI <ArrowDown size={14} />
             </button>
           </div>
         </div>

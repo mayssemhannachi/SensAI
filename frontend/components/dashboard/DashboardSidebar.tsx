@@ -33,28 +33,28 @@ export default function DashboardSidebar() {
             className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#ECE7FE] text-[#6366F1] font-bold text-xs shadow-sm transition-all"
           >
             <Home size={16} className="text-[#6366F1]" />
-            <span>Accueil</span>
+            <span>Home</span>
           </Link>
           <Link 
             href="#" 
             className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/80 transition-colors font-semibold text-xs"
           >
             <Gamepad2 size={16} className="text-slate-500" />
-            <span>Mes exercices</span>
+            <span>My Exercises</span>
           </Link>
           <Link 
             href="#" 
             className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/80 transition-colors font-semibold text-xs"
           >
             <BarChart2 size={16} className="text-slate-500" />
-            <span>Ma progression</span>
+            <span>My Progress</span>
           </Link>
           <Link 
             href="#" 
             className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/80 transition-colors font-semibold text-xs"
           >
             <User size={16} className="text-slate-500" />
-            <span>Profil</span>
+            <span>Profile</span>
           </Link>
         </nav>
       </div>
@@ -92,9 +92,9 @@ export default function DashboardSidebar() {
           </div>
           
           <p className="text-[10px] font-bold text-slate-600 leading-tight">
-            Tu fais<br />
-            des progrès<br />
-            à chaque étape !
+            You're making<br />
+            progress<br />
+            every single step!
           </p>
           <div className="mt-0.5 text-[#FF6B8B] text-xs font-bold">
             ♡

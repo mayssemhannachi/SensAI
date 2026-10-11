@@ -9,17 +9,17 @@ import { luciolesConfig } from "@/lib/games";
 type Config = ReturnType<typeof luciolesConfig>;
 
 const EXERCISES: Record<string, string> = {
-  side: "Abduction de l’épaule",
-  front: "Flexion de l’épaule",
-  mid: "Flexion-adduction de l’épaule",
-  any: "Élévation du bras",
+  side: "Shoulder Abduction",
+  front: "Shoulder Flexion",
+  mid: "Shoulder Flexion-Adduction",
+  any: "Arm Elevation",
 };
 
 const spec: EmbeddedGameSpec<Config> = {
   slug: "gardien-lucioles",
-  title: "Le Gardien des Lucioles",
+  title: "Firefly Guardian",
   image: "/Assets/dashboard/Chibi Sky Quest to the Star.png",
-  unit: "lucioles",
+  unit: "fireflies",
   config: luciolesConfig,
   params: (c) => ({
     side: c.affected_arm,
@@ -32,12 +32,12 @@ const spec: EmbeddedGameSpec<Config> = {
   }),
   target: (c) => c.repetitions,
   subtitle: (c) =>
-    `${EXERCISES[c.direction] ?? "Élévation du bras"} · ${
-      c.affected_arm === "BI" ? "les deux bras" : c.affected_arm === "L" ? "bras gauche" : "bras droit"}`,
+    `${EXERCISES[c.direction] ?? "Arm Elevation"} · ${
+      c.affected_arm === "BI" ? "both arms" : c.affected_arm === "L" ? "left arm" : "right arm"}`,
   badge: (c) => `🎯 ${c.target_angle}°`,
-  doneTitle: "Bravo, toutes les lucioles sont rentrées ! 🎉",
+  doneTitle: "Great job, all the fireflies are home! 🎉",
   doneLine: (m, c) =>
-    `${m.repetitions} / ${c.repetitions} lucioles · bras levé jusqu’à ${String(m.abduction_max ?? 0)}° · score ${m.score}`,
+    `${m.repetitions} / ${c.repetitions} fireflies · arm raised up to ${String(m.abduction_max ?? 0)}° · score ${m.score}`,
 };
 
 export default function LuciolesGame() {

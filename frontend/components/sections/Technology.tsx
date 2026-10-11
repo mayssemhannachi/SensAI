@@ -7,25 +7,25 @@ const features = [
   {
     icon: "/Assets/Landing Page/technologies/capture-pic.png",
     label: "Capture",
-    desc: "La caméra capte les mouvements en temps réel.",
+    desc: "The camera captures movement in real time.",
     bg: "bg-blue-50",
   },
   {
     icon: "/Assets/Landing Page/technologies/detection.png",
-    label: "Détection",
-    desc: "L'IA analyse et identifie les gestes clés.",
+    label: "Detection",
+    desc: "AI analyzes and identifies key gestures.",
     bg: "bg-purple-50",
   },
   {
     icon: "/Assets/Landing Page/technologies/interaction-pic.png",
     label: "Interaction",
-    desc: "Les mouvements deviennent des actions dans le jeu.",
+    desc: "Movements become interactive gameplay actions.",
     bg: "bg-sky-50",
   },
   {
     icon: "/Assets/Landing Page/technologies/analyze.png",
-    label: "Analyse",
-    desc: "Chaque session génère des données exploitables.",
+    label: "Analysis",
+    desc: "Every session generates actionable insights.",
     bg: "bg-teal-50",
   },
 ];
@@ -57,18 +57,18 @@ export default function Technology() {
           {/* Left Column: Description */}
           <div className="lg:col-span-4 space-y-5">
             <Badge className="bg-[#F3E8FF] text-[#7E22CE]">
-              La technologie
+              The Technology
             </Badge>
             <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-              Votre mouvement devient le contrôleur.
+              Your movement becomes the controller.
             </h2>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Pas besoin de manette. <br />
-              SensAI utilise la caméra pour détecter certains mouvements et transformer les gestes de l'enfant en interactions avec l'environnement.
+              No controllers needed. <br />
+              SensAI uses the camera to detect specific movements and translate the child&apos;s gestures into responsive interactions.
             </p>
             <div className="pt-2">
               <button className="bg-[#18212F] hover:bg-black text-white px-6 py-3 rounded-full text-xs font-bold flex items-center gap-2 transition-all shadow-sm">
-                Découvrir notre technologie <ArrowRight size={14} />
+                Explore our technology <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default function Technology() {
             <div className="relative w-full max-w-sm hover:scale-[1.01] transition-transform">
               <Image
                 src="/Assets/Landing Page/mouvement-features-setup.png"
-                alt="Enfant devant l'écran avec capture de posture"
+                alt="Child in front of the screen with pose tracking"
                 width={420}
                 height={520}
                 loading="eager"

@@ -3,12 +3,12 @@ import Badge from "@/components/ui/Badge";
 import Sticker from "@/components/ui/Sticker";
 
 const steps = [
-  { label: "L'enfant",              src: "/Assets/Landing Page/flow/child icon.png",       color: "text-yellow-600" },
-  { label: "Mouvement",             src: "/Assets/Landing Page/flow/movement icon.png",    color: "text-orange-500" },
-  { label: "Caméra du dispositif",  src: "/Assets/Landing Page/flow/camera icon copy.png",      color: "text-cyan-600" },
-  { label: "Vision par ordinateur", src: "/Assets/Landing Page/flow/vision icon.png",      color: "text-purple-600" },
+  { label: "The Child",             src: "/Assets/Landing Page/flow/child icon.png",       color: "text-yellow-600" },
+  { label: "Movement",              src: "/Assets/Landing Page/flow/movement icon.png",    color: "text-orange-500" },
+  { label: "Device Camera",         src: "/Assets/Landing Page/flow/camera icon copy.png", color: "text-cyan-600" },
+  { label: "Computer Vision",       src: "/Assets/Landing Page/flow/vision icon.png",      color: "text-purple-600" },
   { label: "Interaction",           src: "/Assets/Landing Page/flow/interaction icon.png", color: "text-blue-600" },
-  { label: "Données de session",    src: "/Assets/Landing Page/flow/data icon.png",        color: "text-emerald-600" },
+  { label: "Session Data",          src: "/Assets/Landing Page/flow/data icon.png",        color: "text-emerald-600" },
 ];
 
 export default function HowItWorks() {
@@ -35,14 +35,14 @@ export default function HowItWorks() {
       <div className="relative mx-auto max-w-6xl">
         {/* Header: stacked, left-aligned */}
         <div className="max-w-2xl space-y-3">
-          <Badge className="bg-[#DBEAFE] text-[#2563EB]">Comment ça marche ?</Badge>
+          <Badge className="bg-[#DBEAFE] text-[#2563EB]">How It Works</Badge>
           <h2 className="font-outfit text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
-            Un espace pensé autour de l'enfant
+            An environment designed around the child
           </h2>
           <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
-            SensAI combine jeu, mouvement et technologie pour créer{" "}
+            SensAI combines play, movement, and technology to create{" "}
             <span className="font-bold text-slate-800">
-              une expérience de rééducation plus interactive
+              a more interactive rehabilitation experience
             </span>.
           </p>
         </div>
@@ -80,9 +80,9 @@ export default function HowItWorks() {
 
         {/* Slogan */}
         <p className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-center font-handwriting text-2xl font-bold tracking-wide sm:text-3xl">
-          <span className="text-pink-500">✨ L'enfant joue.</span>
-          <span className="text-teal-600">Le système observe.</span>
-          <span className="text-purple-600">Le thérapeute suit. ✨</span>
+          <span className="text-pink-500">✨ The child plays.</span>
+          <span className="text-teal-600">The system observes.</span>
+          <span className="text-purple-600">The therapist guides. ✨</span>
         </p>
       </div>
     </section>

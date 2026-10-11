@@ -27,36 +27,36 @@ const GESTURE_OPTIONS: GestureDef[] = [
   {
     kind: 'fairy_r',
     emoji: '🔵🧚',
-    name: 'Fée bleue',
-    action: 'Bras droit',
-    desc: 'Lève vite ton BRAS DROIT !\n\nComme dans un miroir : ton bras droit est à droite sur l’écran.',
+    name: 'Blue Fairy',
+    action: 'Right arm',
+    desc: 'Quickly raise your RIGHT ARM!\n\nLike in a mirror: your right arm is on the right of the screen.',
     kid: 'right',
     imageKey: 'sel_fairy_r',
   },
   {
     kind: 'fairy_l',
     emoji: '💗🧚',
-    name: 'Fée rose',
-    action: 'Bras gauche',
-    desc: 'Lève vite ton BRAS GAUCHE !\n\nTon bras gauche est à gauche sur l’écran.',
+    name: 'Pink Fairy',
+    action: 'Left arm',
+    desc: 'Quickly raise your LEFT ARM!\n\nYour left arm is on the left of the screen.',
     kid: 'left',
     imageKey: 'sel_fairy_l',
   },
   {
     kind: 'star',
     emoji: '⭐',
-    name: 'Étoile filante',
-    action: 'Les deux bras',
-    desc: 'Lève les DEUX bras bien haut, comme une grande étoile !',
+    name: 'Shooting Star',
+    action: 'Both arms',
+    desc: 'Raise BOTH arms high, like a big star!',
     kid: 'both',
     imageKey: 'sel_star',
   },
   {
     kind: 'crown',
     emoji: '👑',
-    name: 'Couronne',
-    action: 'Main sur la tête',
-    desc: 'Mets vite une main sur ta tête pour porter la couronne !',
+    name: 'Crown',
+    action: 'Hand on head',
+    desc: 'Quickly put a hand on your head to wear the crown!',
     kid: 'head',
     imageKey: 'sel_crown',
   },
@@ -64,8 +64,8 @@ const GESTURE_OPTIONS: GestureDef[] = [
     kind: 'dragon',
     emoji: '🐉',
     name: 'Dragon',
-    action: 'Baisse-toi !',
-    desc: 'Baisse-toi vite (accroupi) pour te cacher du dragon, puis relève-toi !',
+    action: 'Duck!',
+    desc: 'Duck down quickly (crouch) to hide from the dragon, then stand back up!',
     kid: 'duck',
     imageKey: 'sel_dragon',
   },
@@ -242,7 +242,7 @@ export class IntroScene extends Phaser.Scene {
     this.drawSparkle(1130, 275, 13, 0xfbb03b);
     this.drawSparkle(1080, 460, 12, 0xfbb03b);
 
-    this.text(80, 82, 'Bienvenue, gardien\ndu château !', {
+    this.text(80, 82, 'Welcome, guardian\nof the castle!', {
       fontSize: '40px',
       fontStyle: 'bold',
       lineSpacing: -2,
@@ -250,7 +250,7 @@ export class IntroScene extends Phaser.Scene {
       wordWrap: { width: 480 },
     });
 
-    this.text(80, 196, 'Le château a besoin de toi !', {
+    this.text(80, 196, 'The castle needs you!', {
       fontSize: '24px',
       fontStyle: 'bold',
       color: '#7253d3',
@@ -260,8 +260,8 @@ export class IntroScene extends Phaser.Scene {
       80,
       242,
       this.prescribed
-        ? 'Ton thérapeute a choisi pour toi 3 défis magiques.\nL’ogre viendra aussi tester tes réflexes de statue !'
-        : 'Choisis 3 défis magiques pour ta partie !\nL’ogre viendra aussi tester tes réflexes de statue !',
+        ? 'Your therapist has chosen 3 magical challenges for you.\nThe ogre will also come to test your statue reflexes!'
+        : 'Choose 3 magical challenges for your game!\nThe ogre will also come to test your statue reflexes!',
       {
         fontSize: '17px',
         color: '#26335a',
@@ -272,9 +272,9 @@ export class IntroScene extends Phaser.Scene {
 
     // 3 Cards: Défi mouvement, Défi précision, Défi statue
     const welcomeCards = [
-      { key: 'card_mouvement', name: 'Défi mouvement', fill: 0xedf5ff, border: 0xd6e8fa },
-      { key: 'card_precision', name: 'Défi précision', fill: 0xfff0f6, border: 0xfadbe9 },
-      { key: 'card_statue', name: 'Défi statue', fill: 0xecfdf3, border: 0xd2f5e0 },
+      { key: 'card_mouvement', name: 'Movement challenge', fill: 0xedf5ff, border: 0xd6e8fa },
+      { key: 'card_precision', name: 'Precision challenge', fill: 0xfff0f6, border: 0xfadbe9 },
+      { key: 'card_statue', name: 'Statue challenge', fill: 0xecfdf3, border: 0xd2f5e0 },
     ];
 
     const centers = [150, 305, 460];
@@ -329,7 +329,7 @@ export class IntroScene extends Phaser.Scene {
       btnX,
       btnY,
       btnW,
-      'Découvrir mes 3 défis  ▶',
+      'Discover my 3 challenges  ▶',
       () => {
         this.step = 1;
         this.render();
@@ -338,8 +338,8 @@ export class IntroScene extends Phaser.Scene {
     this.drawButtonAccents(btnX, btnY, btnW);
 
     speak(this.prescribed
-      ? 'Bienvenue, gardien du château ! Le château a besoin de toi. Ton thérapeute a choisi pour toi 3 défis magiques. L’ogre viendra aussi tester tes réflexes de statue !'
-      : 'Bienvenue, gardien du château ! Le château a besoin de toi. Choisis 3 défis magiques pour ta partie ! L’ogre viendra aussi tester tes réflexes de statue !');
+      ? 'Welcome, guardian of the castle! The castle needs you. Your therapist has chosen 3 magical challenges for you. The ogre will also come to test your statue reflexes!'
+      : 'Welcome, guardian of the castle! The castle needs you. Choose 3 magical challenges for your game! The ogre will also come to test your statue reflexes!');
   }
 
   private toggleChoice(kind: GoKind) {
@@ -361,13 +361,13 @@ export class IntroScene extends Phaser.Scene {
     // Sparkle near title
     this.drawSparkle(85, 58, 16, 0xfbb03b);
 
-    this.text(118, 40, 'Choisis tes 3 défis magiques !', {
+    this.text(118, 40, 'Choose your 3 magical challenges!', {
       fontSize: '32px',
       fontStyle: 'bold',
       color: '#16234f',
     });
 
-    this.text(118, 80, 'Sélectionne les gestes que tu vas accomplir', {
+    this.text(118, 80, 'Select the gestures you will perform', {
       fontSize: '17px',
       fontStyle: 'bold',
       color: '#7253d3',
@@ -384,7 +384,7 @@ export class IntroScene extends Phaser.Scene {
       .strokeRoundedRect(118, 112, isFull ? 210 : 250, 30, 15);
     this.ui.push(statusBg);
 
-    this.text(118 + (isFull ? 105 : 125), 127, isFull ? '✓ 3 gestes sélectionnés' : `Encore ${3 - count} geste(s) à choisir`, {
+    this.text(118 + (isFull ? 105 : 125), 127, isFull ? '✓ 3 gestures selected' : `${3 - count} more gesture(s) to choose`, {
       fontSize: '13px',
       fontStyle: 'bold',
       color: isFull ? '#16803c' : '#b45309',
@@ -458,7 +458,7 @@ export class IntroScene extends Phaser.Scene {
         .fillStyle(selected ? 0xe8f8ee : 0xf1f0f7, 1)
         .fillRoundedRect(x - pillW / 2, y + 57, pillW, 22, 11);
       this.ui.push(pillBg);
-      this.text(x, y + 68, selected ? '✓ CHOISI' : '+ Ajouter', {
+      this.text(x, y + 68, selected ? '✓ CHOSEN' : '+ Add', {
         fontSize: '11px',
         fontStyle: 'bold',
         color: selected ? '#16803c' : '#64748b',
@@ -490,7 +490,7 @@ export class IntroScene extends Phaser.Scene {
       .fillStyle(0xe11d48, 1)
       .fillRoundedRect(ox + 40, oy - 68, 92, 22, 11);
     this.ui.push(reqBg);
-    this.text(ox + 86, oy - 57, '🔒 OBLIGATOIRE', {
+    this.text(ox + 86, oy - 57, '🔒 MANDATORY', {
       fontSize: '10px',
       fontStyle: 'bold',
       color: '#fff',
@@ -505,17 +505,17 @@ export class IntroScene extends Phaser.Scene {
       this.text(ox, oy - 24, '🐻', { fontSize: '38px' }).setOrigin(0.5);
     }
 
-    this.text(ox, oy + 26, 'L’ogre statue', { fontSize: '17px', fontStyle: 'bold', color: '#9f1239' }).setOrigin(0.5);
-    this.text(ox, oy + 46, 'Ne bouge plus !', { fontSize: '13px', color: '#64748b' }).setOrigin(0.5);
+    this.text(ox, oy + 26, 'The statue ogre', { fontSize: '17px', fontStyle: 'bold', color: '#9f1239' }).setOrigin(0.5);
+    this.text(ox, oy + 46, 'Don\'t move!', { fontSize: '13px', color: '#64748b' }).setOrigin(0.5);
 
     // Bottom buttons
-    this.button(210, 615, 190, '◀  Accueil', () => {
+    this.button(210, 615, 190, '◀  Home', () => {
       this.step = 0;
       this.render();
     }, 0x8c83b5);
     this.drawButtonAccents(210, 615, 190);
 
-    this.button(690, 615, 360, 'Valider mes 3 gestes  ▶', () => {
+    this.button(690, 615, 360, 'Confirm my 3 gestures  ▶', () => {
       if (this.selected.length === 3) {
         this.step = 2;
         this.render();
@@ -551,21 +551,21 @@ export class IntroScene extends Phaser.Scene {
 
     // Ogre slide – keep red girl as "freeze" indicator
     slides.push({
-      title: 'L’ogre 👹',
-      text: 'Quand l’ogre apparaît, ne bouge plus du tout !\n\nReste comme une statue 🗿 jusqu’à ce qu’il disparaisse.',
+      title: 'The ogre 👹',
+      text: 'When the ogre appears, don\'t move at all!\n\nStay like a statue 🗿 until it disappears.',
       imageKey: 'tut_girl_red',
     });
 
     // "Avant de jouer" – no character, centered text only
     slides.push({
-      title: 'Avant de jouer 📋',
-      text: 'Reste bien DEBOUT dans le cadre guide.\n\nPlace-toi à deux pas de l’écran, bien visible en entier, avec une bonne lumière.',
+      title: 'Before playing 📋',
+      text: 'Stand UP straight in the guide frame.\n\nStand two steps away from the screen, fully visible, with good lighting.',
     });
 
     // "On s’entraîne" – no character, centered text only
     slides.push({
-      title: 'On s’entraîne d’abord ! 🎮',
-      text: '4 essais pour de faux (tes 3 gestes + l’ogre), puis la vraie partie pour défendre le château.\n\nPrêt, gardien ?',
+      title: 'Let\'s practice first! 🎮',
+      text: '4 practice rounds (your 3 gestures + the ogre), then the real game to defend the castle.\n\nReady, guardian?',
     });
 
     return slides;
@@ -620,7 +620,7 @@ export class IntroScene extends Phaser.Scene {
         });
 
         // Small label under the badge
-        this.text(1070, 490, 'Quand tu vois ça →', {
+        this.text(1070, 490, 'When you see this →', {
           fontSize: '15px',
           color: '#7654d8',
           fontStyle: 'italic',
@@ -645,19 +645,19 @@ export class IntroScene extends Phaser.Scene {
     ).setOrigin(0.5);
 
     // Navigation buttons
-    this.button(210, 620, 200, '◀  Précédent', () => {
+    this.button(210, 620, 200, '◀  Previous', () => {
       this.step = this.step === 2 ? 1 : this.step - 1;
       this.render();
     }, 0x8c83b5);
     this.drawButtonAccents(210, 620, 200);
 
     if (last) {
-      this.button(1010, 620, 380, 'Commencer l’entraînement  ▶', () => {
+      this.button(1010, 620, 380, 'Start practice  ▶', () => {
         this.scene.start('main', { kinds: this.selected });
       });
       this.drawButtonAccents(1010, 620, 380);
     } else {
-      this.button(1030, 620, 220, 'Suivant  ▶', () => {
+      this.button(1030, 620, 220, 'Next  ▶', () => {
         this.step++;
         this.render();
       });

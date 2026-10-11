@@ -25,26 +25,26 @@ export default function Navbar() {
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
           <Link href="#accueil" className="text-slate-900 border-b-2 border-slate-900 pb-0.5 font-bold">
-            Accueil
+            Home
           </Link>
           <Link href="#enfants" className="hover:text-purple-600 transition-colors">
-            Pour les enfants
+            For Kids
           </Link>
           <Link href="#therapeutes" className="hover:text-purple-600 transition-colors">
-            Pour les thérapeutes
+            For Therapists
           </Link>
           <Link href="#comment-ca-marche" className="hover:text-purple-600 transition-colors">
-            Comment ça marche ?
+            How It Works
           </Link>
           <Link href="#a-propos" className="hover:text-purple-600 transition-colors">
-            À propos
+            About
           </Link>
         </nav>
 
         {/* Sign In Button */}
         <div className="flex items-center">
           <Link href="/login" className="bg-[#18212F] hover:bg-slate-900 text-white px-5 py-2.5 rounded-full text-xs font-bold tracking-wide transition-all shadow-xs hover:shadow-md">
-            Se connecter
+            Sign In
           </Link>
         </div>
       </div>

@@ -32,18 +32,18 @@ export default function LoginPage() {
         {/* Right Nav Items matching inspo */}
         <div className="flex items-center gap-6">
           <div className="hidden sm:flex items-center gap-3 text-[13px] font-semibold text-[#7C3AED]">
-            <span>Apprendre</span>
+            <span>Learn</span>
             <span className="w-1 h-1 rounded-full bg-[#3B82F6]/40" />
-            <span>Explorer</span>
+            <span>Explore</span>
             <span className="w-1 h-1 rounded-full bg-[#EC4899]/40" />
-            <span>Grandir</span>
+            <span>Grow</span>
           </div>
 
           {/* Theme mode button */}
           <button
             type="button"
             className="w-8 h-8 rounded-full bg-white/90 border border-slate-200/60 shadow-xs flex items-center justify-center text-slate-600 hover:text-[#7C3AED] hover:scale-105 transition-all"
-            aria-label="Mode thématique"
+            aria-label="Theme mode"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="5" />
@@ -66,7 +66,7 @@ export default function LoginPage() {
           <div className="hidden lg:flex lg:col-span-7 justify-center items-center">
             <Image
               src="/Assets/connexion/image.png"
-              alt="Enfant utilisant SensAI"
+              alt="Child using SensAI"
               width={600}
               height={480}
               className="w-full max-w-[500px] xl:max-w-[540px] h-auto object-contain hover:scale-[1.01] transition-transform duration-300"
@@ -90,9 +90,9 @@ export default function LoginPage() {
           <div className="mx-auto flex items-center gap-3">
             <span>© 2026 SensAI</span>
             <span>·</span>
-            <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
+            <Link href="/confidentialite" className="hover:text-white transition-colors">Privacy</Link>
             <span>·</span>
-            <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>
+            <Link href="/mentions-legales" className="hover:text-white transition-colors">Legal Notices</Link>
             <span>·</span>
             <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>

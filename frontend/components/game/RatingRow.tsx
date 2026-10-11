@@ -15,7 +15,7 @@ export default function RatingRow({
             onClick={() => onChange(i)}
             data-testid={`${testId}-${i}`}
             className={`w-11 h-11 rounded-2xl text-2xl border-2 transition-all ${value === i ? "border-[#7C3AED] bg-purple-50 scale-110" : "border-slate-100 bg-white"}`}
-            aria-label={`${label} ${i} sur 5`}
+            aria-label={`${label} ${i} out of 5`}
           >
             {face}
           </button>

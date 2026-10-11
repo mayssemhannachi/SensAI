@@ -30,19 +30,19 @@ export default function Vision() {
           {/* Left Content */}
           <div className="lg:col-span-5 space-y-4">
             <Badge className="bg-[#FEF3C7] text-[#B45309]">
-              Notre vision
+              Our Vision
             </Badge>
 
             <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-              Et si chaque mouvement pouvait raconter une histoire ?
+              What if every movement could tell a story?
             </h2>
 
             <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
               <p>
-                SensAI est un prototype qui explore une nouvelle manière d'associer rééducation pédiatrique, interaction et intelligence artificielle.
+                SensAI explores a new way to connect pediatric rehabilitation, interactive play, and artificial intelligence.
               </p>
               <p>
-                Notre vision est de continuer à développer une expérience capable de s'adapter davantage aux besoins de chaque enfant et de fournir aux professionnels des informations toujours plus utiles.
+                Our vision is to build an experience that continuously adapts to each child&apos;s needs while providing clinicians with increasingly actionable clinical insights.
               </p>
             </div>
           </div>
@@ -51,10 +51,10 @@ export default function Vision() {
           <div className="lg:col-span-3 flex justify-center">
             <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl p-6 shadow-md rotate-[-2deg] hover:rotate-0 transition-transform max-w-[240px]">
               <p className="font-handwriting text-lg text-slate-700 leading-snug">
-                "Nous ne remplaçons pas la rééducation."
+                &ldquo;We don&apos;t replace rehabilitation.&rdquo;
               </p>
               <p className="font-handwriting text-xl text-purple-700 font-bold mt-2 leading-snug">
-                "Nous repensons l'expérience autour d'elle."
+                &ldquo;We redesign the experience around it.&rdquo;
               </p>
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function Vision() {
             <div className="relative w-full max-w-[340px] hover:scale-[1.01] transition-transform">
               <Image 
                 src="/Assets/Landing Page/enjoysection.png" 
-                alt="Enfant célébrant ses progrès avec les bras levés" 
+                alt="Child celebrating progress with raised arms" 
                 width={380} 
                 height={380} 
                 className="w-full h-auto object-contain drop-shadow-2xl"

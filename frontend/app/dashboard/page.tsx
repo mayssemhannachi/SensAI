@@ -46,7 +46,7 @@ export default function DashboardPage() {
         setGames(g);
         setSessions(sortByDateDesc(s));
       })
-      .catch((err) => setLoadError(err instanceof Error ? err.message : "Erreur de chargement"));
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Loading error"));
   }, [me]);
 
   const patientCode = profile?.patient_code?.toUpperCase() ?? "";
@@ -69,7 +69,7 @@ export default function DashboardPage() {
         const config = withDefaults(g.configuration);
         return {
           key: String(g.id),
-          title: g.game_name || "Jeu",
+          title: g.game_name || "Game",
           image: meta.image,
           category: meta.category,
           limb: meta.limb,
@@ -94,9 +94,9 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-[#EEF2FA] font-outfit flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 text-center max-w-md">
           <div className="text-4xl mb-3">😕</div>
-          <h2 className="text-lg font-black text-slate-800">Impossible de charger ton espace</h2>
+          <h2 className="text-lg font-black text-slate-800">Unable to load your dashboard</h2>
           <p className="text-sm text-slate-500 mt-1">{authError || loadError}</p>
-          <button onClick={() => window.location.reload()} className="mt-4 px-5 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-bold">Réessayer</button>
+          <button onClick={() => window.location.reload()} className="mt-4 px-5 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-bold">Try again</button>
         </div>
       </div>
     );
@@ -105,7 +105,7 @@ export default function DashboardPage() {
   if (!me || !profile) {
     return (
       <div className="min-h-screen bg-[#EEF2FA] font-outfit flex items-center justify-center">
-        <div className="text-center"><div className="text-5xl animate-bounce">🦉</div><p className="mt-3 font-black text-[#312E81]">Chargement de ton espace…</p></div>
+        <div className="text-center"><div className="text-5xl animate-bounce">🦉</div><p className="mt-3 font-black text-[#312E81]">Loading your dashboard…</p></div>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function DashboardPage() {
         <Image src="/Assets/dashboard/Playful Pink Lightning Bolt.png" width={48} height={48} alt="Lightning" />
       </div>
       <div className="absolute bottom-[3%] left-[1.5%] pointer-events-none z-10 -rotate-3" style={{ mixBlendMode: 'multiply', filter: 'contrast(1.2) brightness(1.1)' }}>
-        <Image src="/Assets/dashboard/Tu fais des progrès, adorable sticker.png" width={160} height={160} alt="Tu fais des progrès" />
+        <Image src="/Assets/dashboard/Tu fais des progrès, adorable sticker.png" width={160} height={160} alt="You're making progress" />
       </div>
       <div className="absolute top-[5%] right-[1%] pointer-events-none -rotate-12 z-10 opacity-70" style={{ mixBlendMode: 'multiply' }}>
         <Image src="/Assets/dashboard/Pastel Blue Looping Brushstroke.png" width={130} height={130} alt="Brushstroke" />
@@ -141,7 +141,7 @@ export default function DashboardPage() {
               </div>
               <div className="leading-none">
                 <p className="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
-                  Mon code patient
+                  My patient code
                 </p>
                 <p className="text-[12px] font-extrabold text-slate-800 tracking-widest">
                   {showCode ? patientCode : `•••• ${patientCode.slice(-4)}`}
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                     onClick={() => setShowCode(!showCode)}
                     className="flex items-center gap-1 text-[11px] text-[#7C3AED] font-bold hover:bg-purple-50 px-2 py-0.5 rounded-full transition-colors"
                   >
-                    <Eye size={11} /> {showCode ? "Masquer" : "Afficher"}
+                    <Eye size={11} /> {showCode ? "Hide" : "Show"}
                   </button>
                   
                   {/* Speech-bubble tooltip on hover */}
@@ -163,7 +163,7 @@ export default function DashboardPage() {
                       i
                     </div>
                     <span className="text-[10px] text-slate-600 font-medium">
-                      À donner à votre nouveau thérapeute en cas de changement
+                      Give this to your new therapist if you change providers
                     </span>
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export default function DashboardPage() {
                   ) : (
                     <Copy size={11} />
                   )}{" "}
-                  {copied ? "Copié !" : "Copier"}
+                  {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
             >
               <Image
                 src={avatarSrc}
-                alt={`Avatar de ${firstName}`}
+                alt={`Avatar of ${firstName}`}
                 fill
                 className="object-cover"
               />
@@ -199,9 +199,9 @@ export default function DashboardPage() {
             {menuOpen && (
               <div className="absolute right-0 top-[calc(100%+6px)] bg-white rounded-2xl shadow-lg border border-slate-100 p-2 w-48 z-50">
                 <p className="px-3 py-1 text-[11px] text-slate-400 font-bold truncate">{me.sub}</p>
-                {profile.therapist_name && <p className="px-3 pb-1 text-[11px] text-slate-500 font-bold">Thérapeute : {profile.therapist_name}</p>}
+                {profile.therapist_name && <p className="px-3 pb-1 text-[11px] text-slate-500 font-bold">Therapist: {profile.therapist_name}</p>}
                 <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold text-rose-600 hover:bg-rose-50">
-                  <LogOut size={13} /> Se déconnecter
+                  <LogOut size={13} /> Sign Out
                 </button>
               </div>
             )}
@@ -229,15 +229,15 @@ export default function DashboardPage() {
             {/* Text */}
             <div className="flex flex-col gap-2 z-10 flex-1 min-w-0">
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fce7f3] text-[#ec4899] text-[10px] font-extrabold border border-pink-100 w-fit">
-                ★ Niveau actuel
+                ★ Current Level
               </span>
               <div>
-                <h2 className="text-[26px] font-black text-slate-900 leading-tight">Niveau {level}</h2>
-                <p className="text-[13px] font-bold text-slate-700">Les super-héros du mouvement</p>
+                <h2 className="text-[26px] font-black text-slate-900 leading-tight">Level {level}</h2>
+                <p className="text-[13px] font-bold text-slate-700">Movement Superheroes</p>
               </div>
               <div>
                 <div className="flex justify-between text-[10.5px] font-bold text-slate-600 mb-1">
-                  <span>⭐ Progression vers le niveau suivant</span>
+                  <span>⭐ Progress to next level</span>
                   <span className="text-slate-900 font-black">{progress} / {step}</span>
                 </div>
                 <div className="h-3 bg-white/80 rounded-full shadow-inner border border-white overflow-hidden">
@@ -253,10 +253,10 @@ export default function DashboardPage() {
               {firstPlayable?.href ? (
                 <Link href={firstPlayable.href} className="mt-1 flex items-center gap-2 text-white text-[12px] font-bold px-5 py-2.5 rounded-full shadow hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all w-fit" style={{ background: "linear-gradient(to right, #7c3aed, #6366f1, #38bdf8)" }}>
                   <Gamepad2 size={14} />
-                  Commencer un exercice →
+                  Start an exercise →
                 </Link>
               ) : (
-                <span className="mt-1 text-[11.5px] font-bold text-slate-500">Ton thérapeute n’a pas encore activé de jeu jouable.</span>
+                <span className="mt-1 text-[11.5px] font-bold text-slate-500">Your therapist hasn’t activated a playable game yet.</span>
               )}
             </div>
           </div>
@@ -272,15 +272,15 @@ export default function DashboardPage() {
                 <div className="w-7 h-7 rounded-xl bg-[#EDE9FE] flex items-center justify-center flex-shrink-0">
                   <Calendar size={14} className="text-[#6366F1]" />
                 </div>
-                Dernière séance
+                Last Session
               </h3>
               <div className="flex flex-col items-end text-[11px] font-extrabold text-[#6366F1] -rotate-2 leading-tight text-right ml-1 flex-shrink-0">
                 <span className="flex items-center gap-1">
                   <Image src="/Assets/dashboard/Cheerful Sparkle Star Sticker.png" width={14} height={14} alt="Sparkle" />
-                  Super !
+                  Awesome!
                 </span>
                 <span className="flex items-center gap-1">
-                  Tu as bien joué !
+                  Great job playing!
                   <Image src="/Assets/dashboard/Vibrant Hand-Drawn Pink Heart.png" width={12} height={12} alt="Heart" />
                 </span>
               </div>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
             {/* Date */}
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-600 mb-4">
               <Calendar size={12} className="text-slate-400 flex-shrink-0" />
-              {last ? formatDate(sessionDate(last), true) : "Pas encore de séance"}
+              {last ? formatDate(sessionDate(last), true) : "No sessions yet"}
             </div>
 
             {/* Stats */}
@@ -303,7 +303,7 @@ export default function DashboardPage() {
               </div>
               <div className="bg-[#FAF8FE] border border-purple-50 rounded-2xl p-3 flex flex-col gap-1">
                 <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                  <Image src="/Assets/dashboard/Glossy Neon Target Burst Icon.png" width={15} height={15} alt="Target" /> Taux de réussite
+                  <Image src="/Assets/dashboard/Glossy Neon Target Burst Icon.png" width={15} height={15} alt="Target" /> Success Rate
                 </div>
                 <div className="text-[30px] font-black text-slate-900 leading-none">{last?.metrics?.success_rate != null ? `${Math.round(Number(last.metrics.success_rate))}%` : "—"}</div>
               </div>
@@ -330,23 +330,23 @@ export default function DashboardPage() {
                 <div className="w-7 h-7 rounded-lg bg-[#EDE9FE] flex items-center justify-center flex-shrink-0">
                   <Gamepad2 size={15} className="text-[#7C3AED]" />
                 </div>
-                Mes exercices
+                My Exercises
               </h2>
               <p className="text-[11.5px] text-slate-500 font-semibold mt-0.5">
-                Voici les exercices qui t'ont été attribués par ton thérapeute.
+                Here are the exercises assigned to you by your therapist.
               </p>
             </div>
             <Link
               href="#"
               className="text-[12px] font-bold text-[#7C3AED] hover:text-purple-800 flex items-center gap-0.5 group transition-colors"
             >
-              Voir tous <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+              View all <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </Link>
           </div>
 
           {exercises.length === 0 && (
             <div className="text-center py-8 text-[12.5px] font-bold text-slate-500">
-              Aucun exercice pour l’instant : ton thérapeute va bientôt t’en attribuer 🦉
+              No exercises assigned yet: your therapist will assign one soon 🦉
             </div>
           )}
 
@@ -381,11 +381,11 @@ export default function DashboardPage() {
                   />
                   {ex.active ? (
                     <span className={`absolute top-1.5 left-1.5 text-white text-[8.5px] font-black px-2 py-0.5 rounded-full ${ex.soon ? "bg-[#94A3B8]" : "bg-[#10B981]"}`}>
-                      {ex.soon ? "Bientôt" : "Actif"}
+                      {ex.soon ? "Soon" : "Active"}
                     </span>
                   ) : (
                     <span className="absolute top-1.5 left-1.5 bg-[#64748B] text-white text-[8.5px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                      <Image src="/Assets/dashboard/Glossy Lavender Padlock Icon.png" width={10} height={10} alt="Lock" /> Verrouillé
+                      <Image src="/Assets/dashboard/Glossy Lavender Padlock Icon.png" width={10} height={10} alt="Lock" /> Locked
                     </span>
                   )}
                 </div>
@@ -415,7 +415,7 @@ export default function DashboardPage() {
                 {ex.active ? (
                   <div className="flex items-center justify-between border-t border-slate-100 pt-2">
                     <div className="flex items-center gap-1 text-[11px] font-extrabold text-[#7C3AED]">
-                      <BarChart2 size={13} /> Niveau {ex.level}
+                      <BarChart2 size={13} /> Level {ex.level}
                     </div>
                     <button className="w-6 h-6 rounded-full bg-[#EDE9FE] text-[#7C3AED] group-hover:bg-[#7C3AED] group-hover:text-white transition-colors flex items-center justify-center text-[12px] font-bold flex-shrink-0">
                       →
@@ -423,7 +423,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-1 border-t border-slate-100 pt-2 text-[10px] font-bold text-slate-400">
-                    <Image src="/Assets/dashboard/Glossy Lavender Padlock Icon.png" width={12} height={12} alt="Lock" className="opacity-70 grayscale" /> Verrouillé
+                    <Image src="/Assets/dashboard/Glossy Lavender Padlock Icon.png" width={12} height={12} alt="Lock" className="opacity-70 grayscale" /> Locked
                   </div>
                 )}
               </CardWrapper>

@@ -15,12 +15,12 @@ export default function LoginCard() {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Message après une déconnexion (site ou espace thérapeute)
+  // Message after logout (site or therapist space)
   useEffect(() => {
     const reason = new URLSearchParams(window.location.search).get("reason");
     const messages: Record<string, string> = {
-      logout: "Vous êtes déconnecté(e). À bientôt !",
-      expired: "Votre session a expiré. Reconnectez-vous.",
+      logout: "You have been logged out. See you soon!",
+      expired: "Your session has expired. Please sign in again.",
     };
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (reason && messages[reason]) setNotice(messages[reason]);
@@ -30,7 +30,7 @@ export default function LoginCard() {
     e.preventDefault();
     setError(null);
     if (!email.trim() || !password) {
-      setError("Renseignez votre adresse e-mail et votre mot de passe.");
+      setError("Please enter your email address and password.");
       return;
     }
     setLoading(true);
@@ -38,7 +38,7 @@ export default function LoginCard() {
       const role = await login(email.trim(), password);
       goToSpace(role, router.push);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connexion impossible.");
+      setError(err instanceof Error ? err.message : "Unable to sign in.");
       setLoading(false);
     }
   };
@@ -49,7 +49,7 @@ export default function LoginCard() {
       <div className="absolute inset-0 -z-10 filter drop-shadow-[0_12px_40px_rgba(139,92,246,0.16)] pointer-events-none">
         <Image
           src="/Assets/connexion/login-card-bg.png"
-          alt="Fond de la carte de connexion"
+          alt="Login card background"
           fill
           className="object-fill select-none"
           priority
@@ -64,16 +64,16 @@ export default function LoginCard() {
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          Connexion
+          Sign In
         </div>
 
         {/* Heading */}
         <h1 className="text-[24px] sm:text-[26px] leading-[1.15] font-extrabold text-[#1E293B] mb-1 font-outfit">
-          Bienvenue dans<br />
-          l'aventure <span className="text-[#3B82F6]">Sens</span><span className="text-[#8B5CF6]">A</span><span className="text-[#EC4899]">I</span> !
+          Welcome to the<br />
+          <span className="text-[#3B82F6]">Sens</span><span className="text-[#8B5CF6]">A</span><span className="text-[#EC4899]">I</span> adventure!
         </h1>
         <p className="text-[12px] text-slate-500 mb-3 leading-relaxed">
-          Connectez-vous à votre espace SensAI et poursuivez l'aventure.
+          Sign in to your SensAI space and continue your adventure.
         </p>
 
         {/* Form */}
@@ -94,7 +94,7 @@ export default function LoginCard() {
           {/* Email */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-0.5" htmlFor="email">
-              Adresse e-mail
+              Email address
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -108,7 +108,7 @@ export default function LoginCard() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre@email.com"
+                placeholder="your@email.com"
                 className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#E0E7FF] text-[12px] text-slate-700 placeholder-slate-400 bg-[#F0F5FF]/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/30 focus:border-[#8B5CF6] transition-all"
               />
             </div>
@@ -117,7 +117,7 @@ export default function LoginCard() {
           {/* Password */}
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-0.5" htmlFor="password">
-              Mot de passe
+              Password
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -151,7 +151,7 @@ export default function LoginCard() {
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                Mot de passe oublié ?
+                Forgot password?
               </Link>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function LoginCard() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#0EA5E9] hover:opacity-95 disabled:opacity-60 text-white font-bold py-2.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-md text-[12.5px] mt-1.5"
           >
-            {loading ? "Connexion…" : "Se connecter"}
+            {loading ? "Signing in…" : "Sign In"}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -173,11 +173,11 @@ export default function LoginCard() {
         <div className="relative my-3 flex items-center justify-center">
           <div className="w-full border-t border-slate-200/80" />
           <span className="absolute bg-white px-2.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            ou
+            or
           </span>
         </div>
 
-        {/* Première connexion */}
+        {/* First time signing in */}
         <div className="rounded-xl bg-[#F0F7FF]/80 border border-[#E0F2FE] p-2.5 sm:p-3 flex items-center gap-3">
           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#E0F2FE] flex items-center justify-center text-[#0EA5E9]">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -188,19 +188,19 @@ export default function LoginCard() {
             </svg>
           </div>
           <div>
-            <p className="text-[12px] font-bold text-slate-800 leading-tight">Première connexion ?</p>
-            <p className="text-[10px] text-slate-500 mt-0.5 mb-0.5">Activez votre compte avec votre code patient.</p>
+            <p className="text-[12px] font-bold text-slate-800 leading-tight">First time here?</p>
+            <p className="text-[10px] text-slate-500 mt-0.5 mb-0.5">Activate your account with your patient code.</p>
             <Link href="/activate" className="text-[11px] font-bold text-[#2563EB] flex items-center gap-1 hover:underline">
-              Activer mon compte
+              Activate my account
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </Link>
           </div>
         </div>
 
         <div className="mt-2.5 text-center text-[11px] text-slate-500 font-medium">
-          Vous êtes thérapeute ?{" "}
+          Are you a therapist?{" "}
           <Link href="/register" className="text-[#7C3AED] font-bold hover:underline ml-1">
-            Créer un compte
+            Create an account
           </Link>
         </div>
       </div>

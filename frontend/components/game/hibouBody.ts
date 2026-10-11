@@ -75,14 +75,14 @@ export function shoulderDeviation(current: Shoulders, neutral: Shoulders): numbe
   return Math.max(devTilt, devShift, devRot);
 }
 
-/** Consigne de cadrage fondée sur les épaules (seuils de hibou.py), ou null si bien placé. */
+/** Framing hint based on shoulders (hibou.py thresholds), or null if well positioned. */
 export function shoulderFramingHint(s: Shoulders | null): string | null {
-  if (!s) return "Recule un peu pour montrer tes épaules";
-  if (s.width < 0.22) return "Avance un peu vers la caméra";
-  if (s.width > 0.6) return "Recule un peu de l'écran";
-  // Image non inversée : la droite de l'enfant est à gauche de l'image.
-  if (s.cx < 0.38) return "Décale-toi un peu vers la gauche";
-  if (s.cx > 0.62) return "Décale-toi un peu vers la droite";
+  if (!s) return "Step back a bit so we can see your shoulders";
+  if (s.width < 0.22) return "Move a bit closer to the camera";
+  if (s.width > 0.6) return "Step back a bit from the screen";
+  // Non-mirrored image: child's right is on the left of the image.
+  if (s.cx < 0.38) return "Shift slightly to the left";
+  if (s.cx > 0.62) return "Shift slightly to the right";
   return null;
 }
 

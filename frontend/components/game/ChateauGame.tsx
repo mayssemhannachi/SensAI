@@ -10,26 +10,26 @@ import { chateauConfig } from "@/lib/games";
 type Config = ReturnType<typeof chateauConfig>;
 
 export const CHATEAU_GESTURE_LABELS: Record<string, string> = {
-  fairy_r: "🔵 Fée bleue (bras droit)",
-  fairy_l: "💗 Fée rose (bras gauche)",
-  star: "⭐ Étoile (les deux bras)",
-  crown: "👑 Couronne (main sur la tête)",
-  dragon: "🐉 Dragon (se baisser)",
+  fairy_r: "🔵 Blue fairy (right arm)",
+  fairy_l: "💗 Pink fairy (left arm)",
+  star: "⭐ Star (both arms)",
+  crown: "👑 Crown (hand on head)",
+  dragon: "🐉 Dragon (duck down)",
 };
 
 const spec: EmbeddedGameSpec<Config> = {
   slug: "gardien-chateau",
-  title: "Le Gardien du Château",
+  title: "Guardian of the Castle",
   image: "/Assets/gardien chateau/Whimsical Purple Castle Icon.png",
-  unit: "défis",
+  unit: "challenges",
   config: chateauConfig,
   params: (c) => ({ gestes: c.gestures.join(","), essais: String(c.trials), go: String(c.go_percent) }),
   target: (c) => c.trials,
-  subtitle: () => "Attention et contrôle des gestes · debout devant la caméra",
-  badge: () => "🐻 Gare à l’ogre !",
-  doneTitle: "Bravo, le château est protégé ! 🏰",
+  subtitle: () => "Attention and movement control · standing in front of the camera",
+  badge: () => "🐻 Beware of the ogre!",
+  doneTitle: "Well done, the castle is safe! 🏰",
   doneLine: (m, c) =>
-    `${m.repetitions} / ${c.trials} défis · réussite ${m.success_rate ?? 0} % · statues réussies ${String(m.nogo_success_rate ?? 0)} %`,
+    `${m.repetitions} / ${c.trials} challenges · ${m.success_rate ?? 0}% success · statues: ${String(m.nogo_success_rate ?? 0)}%`,
 };
 
 export default function ChateauGame() {

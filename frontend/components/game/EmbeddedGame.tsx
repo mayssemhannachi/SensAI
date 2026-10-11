@@ -61,12 +61,12 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
         const found =
           games.find((g) => g.id === pgParam) ?? games.find((g) => g.game_slug === spec.slug);
         if (!found) {
-          setError(`${spec.title} ne t’a pas encore été attribué par ton thérapeute.`);
+          setError(`${spec.title} hasn't been assigned to you by your therapist yet.`);
           setPhase("error");
           return;
         }
         if (found.configuration?.active === false) {
-          setError("Ce jeu est en pause : ton thérapeute l’a désactivé pour le moment.");
+          setError("This game is paused: your therapist has disabled it for now.");
           setPhase("error");
           return;
         }
@@ -74,12 +74,12 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
         setPhase("playing");
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Chargement impossible.");
+        setError(err instanceof Error ? err.message : "Loading failed.");
         setPhase("error");
       });
   }, [me, spec.slug, spec.title]);
 
-  // ── Messages du jeu ─────────────────────────────────────────────────────────
+  // ── Game messages ─────────────────────────────────────────────────────────
   useEffect(() => {
     const onMessage = (event: MessageEvent<GameMessage>) => {
       if (event.origin !== window.location.origin || event.data?.source !== spec.slug) return;
@@ -114,7 +114,7 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
       });
       setPhase("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Enregistrement impossible.");
+      setError(err instanceof Error ? err.message : "Saving failed.");
       setPhase("rating");
     }
   };
@@ -138,7 +138,7 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
 
   return (
     <div className={`min-h-screen font-outfit flex flex-col h-screen ${isCastle ? "bg-[#EEF2FA] p-4 gap-3" : isLucioles ? "bg-[#e9e9ff] p-4 gap-3" : "bg-[#F3F5FA] p-4 gap-4"}`}>
-      {/* ── EN-TÊTE ── */}
+      {/* ── HEADER ── */}
       <header className={`flex items-center justify-between bg-white/90 backdrop-blur-md px-6 py-2.5 rounded-full shadow-sm border border-white/80 gap-4 ${isLucioles ? "mx-[5vw] gap-2 px-5 py-2 max-md:flex-wrap" : isCastle ? "mx-[4vw]" : ""}`}>
         <div className={`flex items-center min-w-0 ${isLucioles ? "gap-4" : isCastle ? "gap-3" : "gap-6"}`}>
           <Link href="/dashboard" className="flex items-center shrink-0 gap-2">
@@ -176,12 +176,12 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
             onClick={stop}
             className="px-4 py-1.5 text-xs bg-[#FDF2F8] hover:bg-pink-100 rounded-full border border-pink-100 text-[#DB2777] font-black whitespace-nowrap flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            💖 J&apos;ai mal / Stop
+            💖 Hurts / Stop
           </button>
         </div>
       </header>
 
-      {/* ── JEU ── */}
+      {/* ── GAME ── */}
       <main className={`flex-1 min-h-0 rounded-[2.5rem] overflow-hidden relative shadow-sm border border-white/80 ${isLucioles ? "mx-[5vw] bg-[#e9e9ff]" : isCastle ? "mx-[4vw] bg-[#EEF2FA]" : "bg-[#8fd8ff]"}`}>
         {assignment && (
           <iframe
@@ -194,13 +194,13 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
           />
         )}
 
-        {phase === "loading" && <Overlay><p className="text-white font-black text-xl animate-pulse">Chargement du jeu…</p></Overlay>}
+        {phase === "loading" && <Overlay><p className="text-white font-black text-xl animate-pulse">Loading game…</p></Overlay>}
         {phase === "error" && (
           <Overlay>
             <div className="bg-white rounded-3xl p-6 max-w-md text-center">
               <div className="text-4xl">✨</div>
               <p className="font-black text-slate-800 mt-2">{error}</p>
-              <Link href="/dashboard" className="inline-block mt-4 px-5 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-black">Retour à mon espace</Link>
+              <Link href="/dashboard" className="inline-block mt-4 px-5 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-black">Back to dashboard</Link>
             </div>
           </Overlay>
         )}
@@ -208,34 +208,34 @@ export default function EmbeddedGame<C>({ spec }: { spec: EmbeddedGameSpec<C> })
           <Overlay>
             <div className="bg-white rounded-3xl p-6 max-w-lg w-full text-center shadow-xl">
               <h3 className="text-xl font-black text-indigo-900">
-                {result.metrics.completed ? spec.doneTitle : "Séance arrêtée"}
+                {result.metrics.completed ? spec.doneTitle : "Session Stopped"}
               </h3>
               <p className="text-sm font-bold text-slate-500 mt-1">
                 {spec.doneLine(result.metrics, config)}
               </p>
-              <RatingRow label="As-tu eu mal ?" value={pain} onChange={setPain} faces={["😀", "🙂", "😐", "😕", "😣", "😭"]} testId="pain" />
-              <RatingRow label="C’était difficile ?" value={effort} onChange={setEffort} faces={["😴", "🙂", "😊", "😤", "🥵", "🤯"]} testId="effort" />
+              <RatingRow label="Did it hurt?" value={pain} onChange={setPain} faces={["😀", "🙂", "😐", "😕", "😣", "😭"]} testId="pain" />
+              <RatingRow label="Was it hard?" value={effort} onChange={setEffort} faces={["😴", "🙂", "😊", "😤", "🥵", "🤯"]} testId="effort" />
               {error && <p className="text-xs font-bold text-rose-600 mt-2">{error}</p>}
               <button
                 onClick={submit}
                 disabled={pain === null || effort === null}
                 className="mt-5 px-6 py-2.5 rounded-full bg-[#7C3AED] disabled:opacity-40 text-white text-sm font-black"
               >
-                Envoyer à mon thérapeute
+                Send to my therapist
               </button>
             </div>
           </Overlay>
         )}
-        {phase === "saving" && <Overlay><p className="text-white font-black text-xl animate-pulse">Enregistrement…</p></Overlay>}
+        {phase === "saving" && <Overlay><p className="text-white font-black text-xl animate-pulse">Saving…</p></Overlay>}
         {phase === "done" && (
           <Overlay>
             <div className="bg-white rounded-3xl p-6 max-w-md text-center shadow-xl">
               <div className="text-5xl">🏆</div>
-              <h3 className="text-xl font-black text-indigo-900 mt-2">Séance enregistrée !</h3>
-              <p className="text-sm font-bold text-slate-500 mt-1">Ton thérapeute pourra voir tes progrès.</p>
+              <h3 className="text-xl font-black text-indigo-900 mt-2">Session saved!</h3>
+              <p className="text-sm font-bold text-slate-500 mt-1">Your therapist can now see your progress.</p>
               <div className="flex gap-3 justify-center mt-5">
-                <button onClick={restart} className="px-5 py-2.5 rounded-full bg-slate-100 text-slate-700 text-sm font-black">Rejouer</button>
-                <Link href="/dashboard" className="px-5 py-2.5 rounded-full bg-[#7C3AED] text-white text-sm font-black">Retour à mon espace</Link>
+                <button onClick={restart} className="px-5 py-2.5 rounded-full bg-slate-100 text-slate-700 text-sm font-black">Play Again</button>
+                <Link href="/dashboard" className="px-5 py-2.5 rounded-full bg-[#7C3AED] text-white text-sm font-black">Back to dashboard</Link>
               </div>
             </div>
           </Overlay>

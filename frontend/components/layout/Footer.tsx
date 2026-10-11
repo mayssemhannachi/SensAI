@@ -20,39 +20,39 @@ export default function Footer() {
             />
           </div>
           <p className="text-slate-400 text-xs max-w-xs leading-relaxed">
-            La rééducation devient une aventure.
+            Rehabilitation becomes an adventure.
           </p>
         </div>
 
-        {/* Col 1: Produit */}
+        {/* Col 1: Product */}
         <div className="space-y-3">
-          <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Produit</h5>
+          <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Product</h5>
           <ul className="space-y-2">
-            <li><Link href="#accueil" className="hover:text-white transition-colors">Accueil</Link></li>
-            <li><Link href="#enfants" className="hover:text-white transition-colors">Pour les enfants</Link></li>
-            <li><Link href="#therapeutes" className="hover:text-white transition-colors">Pour les thérapeutes</Link></li>
-            <li><Link href="#comment-ca-marche" className="hover:text-white transition-colors">Comment ça marche ?</Link></li>
+            <li><Link href="#accueil" className="hover:text-white transition-colors">Home</Link></li>
+            <li><Link href="#enfants" className="hover:text-white transition-colors">For Kids</Link></li>
+            <li><Link href="#therapeutes" className="hover:text-white transition-colors">For Therapists</Link></li>
+            <li><Link href="#comment-ca-marche" className="hover:text-white transition-colors">How It Works</Link></li>
           </ul>
         </div>
 
-        {/* Col 2: Projet */}
+        {/* Col 2: Project */}
         <div className="space-y-3">
-          <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Projet</h5>
+          <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Project</h5>
           <ul className="space-y-2">
-            <li><Link href="#" className="hover:text-white transition-colors">Notre vision</Link></li>
-            <li><Link href="#" className="hover:text-white transition-colors">Technologie</Link></li>
-            <li><Link href="#" className="hover:text-white transition-colors">Équipe</Link></li>
+            <li><Link href="#" className="hover:text-white transition-colors">Our Vision</Link></li>
+            <li><Link href="#" className="hover:text-white transition-colors">Technology</Link></li>
+            <li><Link href="#" className="hover:text-white transition-colors">Team</Link></li>
             <li><Link href="#" className="hover:text-white transition-colors">Contact</Link></li>
           </ul>
         </div>
 
-        {/* Col 3: Nous suivre */}
+        {/* Col 3: Follow us */}
         <div className="space-y-3">
-          <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Nous suivre</h5>
+          <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Follow Us</h5>
           <div className="pt-1">
             <Image 
               src="/Assets/Landing Page/footer-socials.png" 
-              alt="Réseaux sociaux" 
+              alt="Social Media" 
               width={100} 
               height={30} 
               className="w-auto h-6 object-contain cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
@@ -63,9 +63,9 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="relative z-10 max-w-6xl mx-auto pt-4 border-t border-slate-700/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-        <p>© 2026 SensAI. Tous droits réservés.</p>
+        <p>© 2026 SensAI. All rights reserved.</p>
         <p className="flex items-center gap-1">
-          Fait avec <Heart size={12} className="text-[#FF5A78] fill-[#FF5A78]" /> pour un futur plus inclusif
+          Made with <Heart size={12} className="text-[#FF5A78] fill-[#FF5A78]" /> for a more inclusive future
         </p>
       </div>
     </footer>

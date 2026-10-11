@@ -34,7 +34,7 @@ export function useRequireAuth(role: Role) {
           logout();
           router.replace("/login");
         } else {
-          setError(err instanceof Error ? err.message : "Erreur inconnue");
+          setError(err instanceof Error ? err.message : "Unknown error");
         }
       });
     return () => {

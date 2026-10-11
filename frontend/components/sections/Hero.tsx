@@ -36,18 +36,19 @@ export default function Hero() {
         {/* Left Text Column */}
         <div className="lg:col-span-6 space-y-6 relative z-10">
           <h1 className="font-outfit text-4xl sm:text-5xl lg:text-[54px] font-extrabold text-slate-900 leading-[1.12] tracking-tight">
-            La rééducation devient <br />
+            Rehabilitation becomes <br />
             <span className="relative inline-block mt-1">
-              une{" "}
+              an{" "}
               <span className="inline-flex font-black">
                 <span className="text-[#EC4899]">a</span>
-                <span className="text-[#8B5CF6]">v</span>
-                <span className="text-[#3B82F6]">e</span>
-                <span className="text-[#06B6D4]">n</span>
-                <span className="text-[#10B981]">t</span>
-                <span className="text-[#F59E0B]">u</span>
-                <span className="text-[#F97316]">r</span>
-                <span className="text-[#8B5CF6]">e</span>
+                <span className="text-[#8B5CF6]">d</span>
+                <span className="text-[#3B82F6]">v</span>
+                <span className="text-[#06B6D4]">e</span>
+                <span className="text-[#10B981]">n</span>
+                <span className="text-[#F59E0B]">t</span>
+                <span className="text-[#F97316]">u</span>
+                <span className="text-[#8B5CF6]">r</span>
+                <span className="text-[#EC4899]">e</span>
                 <span className="text-[#EC4899]">.</span>
               </span>
             </span>
@@ -55,10 +56,10 @@ export default function Hero() {
 
           <div className="space-y-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
             <p>
-              SensAI explore comment enrichir la rééducation motrice par la stimulation cognitive et le jeu partagé, pour les enfants présentant des troubles neuromoteurs.
+              SensAI explores how to enrich motor rehabilitation through cognitive stimulation and shared play for children with neuromotor challenges.
             </p>
             <p className="text-sm sm:text-base text-slate-500">
-              L&apos;enfant interagit naturellement avec les activités grâce à sa caméra, tandis que SensAI transforme ses mouvements en interactions et données de session.
+              Children interact naturally with activities using their camera, while SensAI transforms their movements into playful interactions and actionable session data.
             </p>
           </div>
 
@@ -67,13 +68,13 @@ export default function Hero() {
               href="#enfants" 
               className="bg-[#18212F] hover:bg-black text-white px-7 py-3.5 rounded-full text-sm font-bold flex items-center gap-2.5 transition-all shadow-md hover:translate-y-[-1px]"
             >
-              Commencer l&apos;aventure <ArrowRight size={16} />
+              Start the adventure <ArrowRight size={16} />
             </Link>
             <Link 
               href="#comment-ca-marche" 
               className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-6 py-3.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all shadow-xs"
             >
-              Découvrir SensAI <ArrowDown size={15} className="text-slate-400" />
+              Discover SensAI <ArrowDown size={15} className="text-slate-400" />
             </Link>
           </div>
         </div>
@@ -83,7 +84,7 @@ export default function Hero() {
           <div className="relative w-full max-w-xl hover:scale-[1.01] transition-transform duration-300">
             <Image 
               src="/Assets/Landing Page/hero-composite.png" 
-              alt="Enfant effectuant des exercices de rééducation avec SensAI" 
+              alt="Child performing rehabilitation exercises with SensAI" 
               width={700} 
               height={550} 
               className="w-full h-auto object-contain drop-shadow-xl"

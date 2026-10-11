@@ -32,20 +32,20 @@ export default function ForTherapists() {
           {/* Left Info */}
           <div className="lg:col-span-5 space-y-5">
             <Badge className="bg-[#F3E8FF] text-[#7E22CE]">
-              Pour les thérapeutes
+              For Therapists
             </Badge>
 
             <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-              Une autre façon de suivre les séances
+              A new way to track and guide sessions
             </h2>
 
             <p className="text-slate-600 text-sm leading-relaxed">
-              SensAI propose également un espace destiné aux professionnels. Le thérapeute peut retrouver les informations issues des sessions et observer l'évolution des performances de l'enfant.
+              SensAI also provides a dedicated space for clinicians. Therapists can review detailed session metrics and observe each child&apos;s performance trajectory over time.
             </p>
 
             <div>
               <button className="bg-[#18212F] hover:bg-black text-white px-6 py-3 rounded-full text-xs font-bold flex items-center gap-2 transition-all shadow-sm">
-                Découvrir l'espace thérapeute <ArrowRight size={14} />
+                Explore the therapist space <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -55,7 +55,7 @@ export default function ForTherapists() {
             <div className="relative w-full hover:scale-[1.01] transition-transform">
               <Image 
                 src="/Assets/Landing Page/Therapy-Dashboard.png" 
-                alt="Tableau de bord thérapeute SensAI" 
+                alt="SensAI Therapist Dashboard" 
                 width={750} 
                 height={500} 
                 className="w-full h-auto object-contain drop-shadow-2xl"
@@ -71,44 +71,44 @@ export default function ForTherapists() {
             {/* Feature 1 */}
             <div className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
               <div className="w-10 h-10 shrink-0">
-                <Image src="/Assets/Landing Page/therapist/performance.png" alt="Suivi des performances" width={40} height={40} className="w-full h-full object-contain" />
+                <Image src="/Assets/Landing Page/therapist/performance.png" alt="Performance Tracking" width={40} height={40} className="w-full h-full object-contain" />
               </div>
               <div>
-                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Suivi des performances</h4>
-                <p className="text-[11px] text-slate-500 leading-snug">Visualiser les résultats des activités</p>
+                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Performance Tracking</h4>
+                <p className="text-[11px] text-slate-500 leading-snug">Visualize activity outcomes</p>
               </div>
             </div>
             
             {/* Feature 2 */}
             <div className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
               <div className="w-10 h-10 shrink-0">
-                <Image src="/Assets/Landing Page/therapist/Historique.png" alt="Historique des sessions" width={40} height={40} className="w-full h-full object-contain" />
+                <Image src="/Assets/Landing Page/therapist/Historique.png" alt="Session History" width={40} height={40} className="w-full h-full object-contain" />
               </div>
               <div>
-                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Historique des sessions</h4>
-                <p className="text-[11px] text-slate-500 leading-snug">Consulter les sessions précédentes</p>
+                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Session History</h4>
+                <p className="text-[11px] text-slate-500 leading-snug">Review past sessions and trends</p>
               </div>
             </div>
 
             {/* Feature 3 */}
             <div className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
               <div className="w-10 h-10 shrink-0">
-                <Image src="/Assets/Landing Page/therapist/suivi.png" alt="Données d'interaction" width={40} height={40} className="w-full h-full object-contain" />
+                <Image src="/Assets/Landing Page/therapist/suivi.png" alt="Interaction Metrics" width={40} height={40} className="w-full h-full object-contain" />
               </div>
               <div>
-                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Données d'interaction</h4>
-                <p className="text-[11px] text-slate-500 leading-snug">Créer vos différents indicateurs globaux</p>
+                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Interaction Metrics</h4>
+                <p className="text-[11px] text-slate-500 leading-snug">Monitor customized clinical indicators</p>
               </div>
             </div>
 
             {/* Feature 4 */}
             <div className="flex items-center gap-3 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
               <div className="w-10 h-10 shrink-0">
-                <Image src="/Assets/Landing Page/therapist/profil.png" alt="Vue individuelle" width={40} height={40} className="w-full h-full object-contain" />
+                <Image src="/Assets/Landing Page/therapist/profil.png" alt="Individual Profiles" width={40} height={40} className="w-full h-full object-contain" />
               </div>
               <div>
-                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Vue individuelle</h4>
-                <p className="text-[11px] text-slate-500 leading-snug">Retrouver les informations associées à chaque enfant</p>
+                <h4 className="font-outfit font-extrabold text-sm text-slate-900">Individual Profiles</h4>
+                <p className="text-[11px] text-slate-500 leading-snug">Access personalized data for each child</p>
               </div>
             </div>
           </div>

@@ -9,7 +9,7 @@ import { ApiError, getMe, getToken, logout, therapistSpaceUrl } from "@/lib/api"
 
 export default function TherapistRedirect() {
   const router = useRouter();
-  const [message, setMessage] = useState("Ouverture de votre espace thérapeute…");
+  const [message, setMessage] = useState("Opening therapist space…");
 
   useEffect(() => {
     if (!getToken()) {
@@ -29,7 +29,7 @@ export default function TherapistRedirect() {
           logout();
           router.replace("/login");
         } else {
-          setMessage(err instanceof Error ? err.message : "Erreur de connexion.");
+          setMessage(err instanceof Error ? err.message : "Connection error.");
         }
       });
   }, [router]);

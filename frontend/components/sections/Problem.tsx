@@ -13,79 +13,79 @@ export default function Problem() {
           {/* Left: title + description */}
           <div className="lg:col-span-5 space-y-5">
             <Badge className="bg-[#DBEAFE] text-[#1D4ED8]">
-              Le problème
+              The Challenge
             </Badge>
             <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-              Et si la rééducation ressemblait moins à un exercice ?
+              What if rehabilitation felt less like a chore?
             </h2>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-              Les séances de rééducation peuvent parfois devenir répétitives pour les enfants.
+              Rehabilitation sessions can sometimes feel repetitive for children.
             </p>
             <p className="text-slate-700 text-sm sm:text-base leading-relaxed">
-              SensAI cherche à créer une expérience{" "}
+              SensAI seeks to create a{" "}
               <span className="font-bold text-slate-900 underline decoration-purple-400 decoration-2 underline-offset-4">
-                différente
+                different
               </span>{" "}
-              — plus engageante, plus naturelle, et plus observable.
+              experience — more engaging, more natural, and more trackable.
             </p>
           </div>
 
           {/* Right: 3 cards with large floating illustrations */}
           <div className="lg:col-span-7 grid sm:grid-cols-3 gap-5">
 
-            {/* Card 1: Plus engageante */}
+            {/* Card 1: More Engaging */}
             <div className="relative flex flex-col items-center group">
               <div className="relative z-10 w-24 h-24 mb-[-24px]">
                 <Image
                   src="/Assets/Landing Page/icon-child bg.png"
-                  alt="Plus engageante"
+                  alt="More engaging"
                   width={96}
                   height={96}
                   className="w-full h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
                 />
               </div>
               <div className="w-full bg-[#FFF4EE] border border-[#FFE2D2] rounded-[24px] pt-10 pb-6 px-5 text-center shadow-sm group-hover:shadow-md transition-shadow duration-300">
-                <h3 className="font-outfit font-extrabold text-base text-slate-900 mb-2">Plus engageante</h3>
+                <h3 className="font-outfit font-extrabold text-base text-slate-900 mb-2">More Engaging</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Transformer les exercices en interactions ludiques.
+                  Transforming exercises into playful interactions.
                 </p>
               </div>
             </div>
 
-            {/* Card 2: Plus naturelle */}
+            {/* Card 2: More Natural */}
             <div className="relative flex flex-col items-center group sm:mt-8">
               <div className="relative z-10 w-24 h-24 mb-[-24px]">
                 <Image
                   src="/Assets/Landing Page/icon-hand bg.png"
-                  alt="Plus naturelle"
+                  alt="More natural"
                   width={96}
                   height={96}
                   className="w-full h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
                 />
               </div>
               <div className="w-full bg-[#E9FAF8] border border-[#CEF5F0] rounded-[24px] pt-10 pb-6 px-5 text-center shadow-sm group-hover:shadow-md transition-shadow duration-300">
-                <h3 className="font-outfit font-extrabold text-base text-slate-900 mb-2">Plus naturelle</h3>
+                <h3 className="font-outfit font-extrabold text-base text-slate-900 mb-2">More Natural</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Utiliser les mouvements comme moyen d'interaction.
+                  Using movement as the primary way to interact.
                 </p>
               </div>
             </div>
 
-            {/* Card 3: Plus observable */}
+            {/* Card 3: More Observable */}
             <div className="relative flex flex-col items-center group">
               <div className="relative z-10 w-24 h-24 mb-[-24px]">
                 <Image
                   src="/Assets/Landing Page/icon-trend bg.png"
-                  alt="Plus observable"
+                  alt="More observable"
                   width={96}
                   height={96}
                   className="w-full h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
                 />
               </div>
               <div className="w-full bg-[#F4F1FD] border border-[#E7E0FB] rounded-[24px] pt-10 pb-6 px-5 text-center shadow-sm group-hover:shadow-md transition-shadow duration-300">
-                <h3 className="font-outfit font-extrabold text-base text-slate-900 mb-2">Plus observable</h3>
+                <h3 className="font-outfit font-extrabold text-base text-slate-900 mb-2">More Observable</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Données de session pour suivre les performances.
+                  Session data to track progress accurately.
                 </p>
               </div>
             </div>

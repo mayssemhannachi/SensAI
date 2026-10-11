@@ -14,44 +14,44 @@ export type GameMeta = {
 export const GAME_META: Record<string, GameMeta> = {
   "le-hibou": {
     image: "/Assets/dashboard/Magical Owl Valley Adventure.png",
-    category: "Rotation cervicale",
-    limb: "Tête / Cou",
+    category: "Cervical Rotation",
+    limb: "Head / Neck",
     playable: true,
     path: "/dashboard/game/le-hibou",
   },
   "gardien-lucioles": {
     image: "/Assets/dashboard/Chibi Sky Quest to the Star.png",
-    category: "Abduction de l'épaule",
-    limb: "Épaule / Bras",
+    category: "Shoulder Abduction",
+    limb: "Shoulder / Arm",
     playable: true,
     path: "/dashboard/game/gardien-lucioles",
   },
   "danse-lucioles": {
     image: "/Assets/dashboard/Magical Shape Quest with Friends.png",
-    category: "Mémoire et coordination",
-    limb: "Mains / Bras",
+    category: "Memory & Coordination",
+    limb: "Hands / Arms",
     playable: true,
     path: "/dashboard/game/danse-lucioles",
   },
   "gardien-chateau": {
     image: "/Assets/gardien chateau/Whimsical Purple Castle Icon.png",
-    category: "Attention et contrôle des gestes",
-    limb: "Corps entier",
+    category: "Attention & Gesture Control",
+    limb: "Whole Body",
     playable: true,
     path: "/dashboard/game/gardien-chateau",
   },
-  "color-touch": { image: "/Assets/dashboard/Girl Activates a Magical Portal.png", category: "Jeu de couleur", limb: "Main droite" },
-  "reaction-speed": { image: "/Assets/dashboard/Kawaii Cosmic Ring Adventure.png", category: "Jeu de rapidité", limb: "Main gauche" },
-  "sequence-memory": { image: "/Assets/dashboard/Magical Shape Quest with Friends.png", category: "Jeu de mémoire", limb: "Œil / Vision" },
-  "tremor-trace": { image: "/Assets/dashboard/Chibi Sky Quest to the Star.png", category: "Jeu de précision", limb: "Main gauche" },
-  "target-tracking": { image: "/Assets/dashboard/Whimsical Starry Meadow Archery.png", category: "Jeu de suivi", limb: "Tête / Cou" },
-  "balance-builder": { image: "/Assets/dashboard/Balancing Star in a Whimsical Meadow.png", category: "Jeu d'équilibre", limb: "Jambe" },
-  "puzzle-motion": { image: "/Assets/dashboard/Kawaii Puzzle Play in Dreamy Park.png", category: "Jeu de coordination", limb: "Corps entier" },
+  "color-touch": { image: "/Assets/dashboard/Girl Activates a Magical Portal.png", category: "Color Game", limb: "Right Hand" },
+  "reaction-speed": { image: "/Assets/dashboard/Kawaii Cosmic Ring Adventure.png", category: "Speed Game", limb: "Left Hand" },
+  "sequence-memory": { image: "/Assets/dashboard/Magical Shape Quest with Friends.png", category: "Memory Game", limb: "Eye / Vision" },
+  "tremor-trace": { image: "/Assets/dashboard/Chibi Sky Quest to the Star.png", category: "Precision Game", limb: "Left Hand" },
+  "target-tracking": { image: "/Assets/dashboard/Whimsical Starry Meadow Archery.png", category: "Tracking Game", limb: "Head / Neck" },
+  "balance-builder": { image: "/Assets/dashboard/Balancing Star in a Whimsical Meadow.png", category: "Balance Game", limb: "Leg" },
+  "puzzle-motion": { image: "/Assets/dashboard/Kawaii Puzzle Play in Dreamy Park.png", category: "Coordination Game", limb: "Whole Body" },
 };
 
 const FALLBACK_META: GameMeta = {
   image: "/Assets/dashboard/Magical Shape Quest with Friends.png",
-  category: "Jeu de rééducation",
+  category: "Rehabilitation Game",
   limb: "—",
 };
 
@@ -98,12 +98,12 @@ export function danseConfig(config?: GameConfig) {
   return { ...DANSE_DEFAULTS, ...(config || {}) } as typeof DANSE_DEFAULTS;
 }
 
-// Le Gardien du Château (attention et contrôle des gestes, ergothérapie, jeu de Chahed)
+// Castle Guardian game
 export const CHATEAU_GESTURES = ["fairy_r", "fairy_l", "star", "crown", "dragon"] as const;
 export const CHATEAU_DEFAULTS = {
-  gestures: ["fairy_r", "fairy_l", "star"] as string[], // les 3 défis prescrits
-  trials: 40, // essais de la vraie partie
-  go_percent: 80, // % d'essais « défi » (le reste : l'ogre statue)
+  gestures: ["fairy_r", "fairy_l", "star"] as string[],
+  trials: 40,
+  go_percent: 80,
   active: true,
 };
 
@@ -119,14 +119,13 @@ export function withDefaults(config?: GameConfig) {
   return { ...DEFAULT_CONFIG, ...(config || {}) };
 }
 
-export const SPEED_LABELS: Record<string, string> = { lente: "Lente", moderee: "Modérée", rapide: "Rapide" };
-export const DIFFICULTY_LABELS: Record<string, string> = { faible: "Faible", moyenne: "Moyenne", elevee: "Élevée" };
+export const SPEED_LABELS: Record<string, string> = { lente: "Slow", moderee: "Moderate", rapide: "Fast" };
+export const DIFFICULTY_LABELS: Record<string, string> = { faible: "Low", moyenne: "Medium", elevee: "High" };
 export const DIFFICULTY_LEVEL: Record<string, number> = { faible: 1, moyenne: 2, elevee: 3 };
 
-// ─── Aides de calcul sur les séances ─────────────────────────────────────────
+// ─── Session calculation helpers ─────────────────────────────────────────
 export function sessionDate(session: GameSession): Date {
   const raw = (session.metrics?.played_at as string) || session.created_at;
-  // created_at du backend est en UTC sans fuseau
   return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(raw) ? raw : `${raw}Z`);
 }
 
@@ -135,7 +134,7 @@ export function sortByDateDesc(sessions: GameSession[]): GameSession[] {
 }
 
 export function formatDate(date: Date, withTime = false): string {
-  return date.toLocaleDateString("fr-FR", {
+  return date.toLocaleDateString("en-US", {
     day: "numeric",
     month: withTime ? "long" : "short",
     year: "numeric",

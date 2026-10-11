@@ -18,7 +18,7 @@ export default function LogoutPage() {
 
   return (
     <div className="min-h-screen bg-[#EEF2FA] flex items-center justify-center font-outfit">
-      <p className="text-slate-500 font-bold">Déconnexion…</p>
+      <p className="text-slate-500 font-bold">Signing out…</p>
     </div>
   );
 }

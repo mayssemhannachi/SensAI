@@ -8,7 +8,7 @@ export type Session = {
   duration: string;
   gamesCompleted: string;
   score: number;
-  status: "Complet" | "Partiel";
+  status: "Complete" | "Partial";
   painLevel: number;
   effort: number;
   rotationLeft: number;
@@ -31,11 +31,11 @@ export type Patient = {
   // Le Hibou game stats
   targetAngle: number;
   targetHold: number;
-  speedLimit: "Lente" | "Modérée" | "Rapide";
-  difficulty: "Faible" | "Moyenne" | "Élevée";
+  speedLimit: "Slow" | "Moderate" | "Fast";
+  difficulty: "Low" | "Medium" | "High";
   safetyLimit: number;
   sessions: Session[];
-  activeGames: { title: string; category: string; image: string; status: "Actif" | "Inactif" }[];
+  activeGames: { title: string; category: string; image: string; status: "Active" | "Inactive" }[];
 };
 
 // ─── PATIENT DATA (Salma / code 7F3A) ─────────────────────────────────────────
@@ -48,56 +48,56 @@ export const PATIENTS: Record<string, Patient> = {
     avatar: "/Assets/dashboard/Playful Character Face Sticker Sheet.png",
     diagnosis: "Post-traumatic Neck Stiffness / Torticollis",
     adherence: 85,
-    lastSession: "6 oct. 2026",
+    lastSession: "Oct 6, 2026",
     lastSessionDuration: "15 min",
     lastScore: 420,
     lastSuccessRate: 92,
     painLevel: 4,
     targetAngle: 30,
     targetHold: 3,
-    speedLimit: "Lente",
-    difficulty: "Moyenne",
+    speedLimit: "Slow",
+    difficulty: "Medium",
     safetyLimit: 35,
     sessions: [
       {
-        date: "6 oct. 2026",
+        date: "Oct 6, 2026",
         duration: "15 min",
         gamesCompleted: "3 / 3",
         score: 420,
-        status: "Complet",
+        status: "Complete",
         painLevel: 4,
         effort: 4,
         rotationLeft: 36,
         rotationRight: 46,
       },
       {
-        date: "3 oct. 2026",
+        date: "Oct 3, 2026",
         duration: "14 min",
         gamesCompleted: "3 / 3",
         score: 398,
-        status: "Complet",
+        status: "Complete",
         painLevel: 2,
         effort: 3,
         rotationLeft: 34,
         rotationRight: 42,
       },
       {
-        date: "1 oct. 2026",
+        date: "Oct 1, 2026",
         duration: "12 min",
         gamesCompleted: "2 / 3",
         score: 310,
-        status: "Partiel",
+        status: "Partial",
         painLevel: 3,
         effort: 3,
         rotationLeft: 30,
         rotationRight: 38,
       },
       {
-        date: "29 sept. 2026",
+        date: "Sept 29, 2026",
         duration: "10 min",
         gamesCompleted: "3 / 3",
         score: 365,
-        status: "Complet",
+        status: "Complete",
         painLevel: 1,
         effort: 2,
         rotationLeft: 28,
@@ -106,22 +106,22 @@ export const PATIENTS: Record<string, Patient> = {
     ],
     activeGames: [
       {
-        title: "Le Hibou",
-        category: "Rotation cervicale",
+        title: "The Owl",
+        category: "Cervical Rotation",
         image: "/Assets/dashboard/Magical Owl Valley Adventure.png",
-        status: "Actif",
+        status: "Active",
       },
       {
         title: "Color Touch",
-        category: "Précision",
+        category: "Precision",
         image: "/Assets/dashboard/Girl Activates a Magical Portal.png",
-        status: "Actif",
+        status: "Active",
       },
       {
         title: "Tremor Trace",
-        category: "Contrôle du mouvement",
+        category: "Movement Control",
         image: "/Assets/dashboard/Chibi Sky Quest to the Star.png",
-        status: "Actif",
+        status: "Active",
       },
     ],
   },

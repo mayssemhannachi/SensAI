@@ -5,33 +5,33 @@ import Sticker from "@/components/ui/Sticker";
 const reasons = [
   {
     icon: "/Assets/Landing Page/pourquoi/Ludique.png",
-    title: "Ludique",
-    desc: "Faire de l'interaction un élément central de l'expérience.",
+    title: "Playful",
+    desc: "Making joyful interaction the heart of the experience.",
   },
   {
     icon: "/Assets/Landing Page/pourquoi/Adapte.png",
-    title: "Adapté",
-    desc: "Concevoir l'expérience autour des besoins spécifiques de l'enfant.",
+    title: "Tailored",
+    desc: "Designing the experience around each child's individual needs.",
   },
   {
     icon: "/Assets/Landing Page/pourquoi/accessible.png",
     title: "Accessible",
-    desc: "Utiliser une caméra plutôt qu'un matériel spécialisé supplémentaire.",
+    desc: "Using a standard camera instead of costly specialized hardware.",
   },
   {
     icon: "/Assets/Landing Page/pourquoi/intelligent.png",
     title: "Intelligent",
-    desc: "Exploiter la vision par ordinateur pour rendre l'interaction plus naturelle.",
+    desc: "Harnessing computer vision to make interactions feel effortless.",
   },
   {
     icon: "/Assets/Landing Page/pourquoi/cognitive.png",
-    title: "Stimulation cognitive",
-    desc: "Associer le mouvement à l'attention, la mémoire, la prise de décision et le repérage spatial.",
+    title: "Cognitive Stimulation",
+    desc: "Linking movement with attention, working memory, decision-making, and spatial awareness.",
   },
   {
     icon: "/Assets/Landing Page/pourquoi/social.png",
-    title: "Jeu partagé",
-    desc: "Placer le lien social au cœur du jeu, avec des expériences à partager en duo, en famille ou entre pairs.",
+    title: "Shared Play",
+    desc: "Centering social connection with cooperative duo play, family bonding, and peer interaction.",
   },
 ];
 
@@ -61,7 +61,7 @@ export default function WhySensAI() {
         {/* Tag */}
         <div className="text-center">
           <Badge className="bg-[#FEF3C7] text-[#B45309]">
-            Pourquoi SensAI ?
+            Why SensAI?
           </Badge>
         </div>
 

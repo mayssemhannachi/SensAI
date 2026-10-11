@@ -29,19 +29,19 @@ export default function HomeOrClinic() {
           {/* Left */}
           <div className="lg:col-span-6 space-y-4">
             <Badge className="bg-[#E0F2FE] text-[#0369A1]">
-              À la maison / En cabinet
+              At Home or in the Clinic
             </Badge>
 
             <h2 className="font-outfit text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-              Une technologie qui s'intègre dans le quotidien
+              Technology that seamlessly fits everyday life
             </h2>
 
             <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
               <p>
-                SensAI est pensé pour fonctionner avec un équipement courant : un écran et une caméra.
+                SensAI is engineered to work with standard, everyday equipment: a screen and a camera.
               </p>
               <p>
-                L'objectif est de rendre l'expérience simple à utiliser, aussi bien dans un environnement professionnel que dans un contexte à domicile, selon les besoins et l'encadrement approprié.
+                The goal is to make the experience effortless to use, whether in a clinical setting or at home under appropriate professional guidance.
               </p>
             </div>
           </div>
@@ -51,7 +51,7 @@ export default function HomeOrClinic() {
             <div className="w-full max-w-lg hover:scale-[1.01] transition-transform">
               <Image 
                 src="/Assets/Landing Page/hardware.png" 
-                alt="Installation matériel : Caméra + Écran = SensAI" 
+                alt="Hardware setup: Camera + Screen = SensAI" 
                 width={600} 
                 height={350} 
                 className="w-full h-auto object-contain mx-auto"

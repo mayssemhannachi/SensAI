@@ -6,11 +6,11 @@
   la page /dashboard/game/gardien-lucioles) et la séance est renvoyée à cette page par
   postMessage, qui l'enregistre dans le backend. Le reste du jeu est celui de Maram.
 -->
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Le Gardien des Lucioles</title>
+<title>Guardian of the Fireflies</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--texte:#3b2a7a}
@@ -56,17 +56,17 @@ input,select,button{font:inherit}
 
   <div id="intro"><div class="card">
     <div class="owl">🦉</div>
-    <h1>Le Gardien<br>des Lucioles</h1>
-    <p>Lève ton bras pour attirer les lucioles dans la lanterne de Léo !</p>
+    <h1>Guardian<br>of the Fireflies</h1>
+    <p>Raise your arm to draw the fireflies into Leo's lantern!</p>
     <p id="goal" style="font-weight:700;color:#7c3aed"></p>
-    <button id="start" class="btn">📷 Jouer avec la caméra</button>
-    <button id="demo" class="btn alt">⌨️ Essayer au clavier</button>
+    <button id="start" class="btn">📷 Play with camera</button>
+    <button id="demo" class="btn alt">⌨️ Try with keyboard</button>
   </div></div>
 
   <div id="msg"></div>
 
   <div id="end"><div class="card">
-    <div class="owl">🏆</div><h1>Bravo !</h1><p id="endTxt"></p>
+    <div class="owl">🏆</div><h1>Well done!</h1><p id="endTxt"></p>
   </div></div>
 </div>
 
@@ -138,7 +138,7 @@ let landmarker, lastT = -1;
 async function startCamera(){
   if(landmarker){ S.demo = false; $('intro').style.display = 'none'; return; }
   $('intro').style.display = 'none';
-  $('msg').textContent = 'Léo prépare la magie…';
+  $('msg').textContent = 'Leo is preparing the magic…';
   try{
     const stream = await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720,facingMode:'user'}});
     const cam = $('cam'); cam.srcObject = stream; await cam.play();
@@ -150,7 +150,7 @@ async function startCamera(){
     S.demo = false; S.dbg.model = true; $('msg').textContent = ''; loop();
   }catch(err){
     stopCamera();
-    $('msg').textContent = 'Caméra ou modèle indisponible (' + err.message + ') : essaie le mode clavier.';
+    $('msg').textContent = 'Camera or model unavailable (' + err.message + '): try keyboard mode.';
     $('intro').style.display = 'flex';
   }
 }
@@ -194,8 +194,8 @@ const C = {                                                             // même
 };
 S.target = C.reps; S.thr = C.thr; S.dir = C.dir;
 S.elbMin = num('elb', 140, 90, 180); S.restMax = num('rest', 35, 10, 60); S.holdMs = num('hold', 0.4, 0.2, 10) * 1000;
-const DIR_TXT = {any:'', side:' sur le côté', front:' devant toi', mid:' devant toi, vers le milieu'};
-$('goal').textContent = `Objectif : ${C.reps} lucioles, ${C.arm==='BI' ? 'les deux bras' : 'bras ' + (C.arm==='R' ? 'droit' : 'gauche')}${DIR_TXT[C.dir]}, jusqu'à ${C.thr}°`;
+const DIR_TXT = {any:'', side:' to the side', front:' in front of you', mid:' in front of you, towards the center'};
+$('goal').textContent = `Target: ${C.reps} fireflies, ${C.arm==='BI' ? 'both arms' : (C.arm==='R' ? 'right' : 'left') + ' arm'}${DIR_TXT[C.dir]}, up to ${C.thr}°`;
 
 // ---------- Dialogue avec la page SensAI (parent) ----------
 const toParent = msg => { if (parent !== window) parent.postMessage({source:'gardien-lucioles', ...msg}, location.origin); };
@@ -211,7 +211,7 @@ function beginSession(){
   S.t0 = Date.now(); S.log = []; S.started = false; S.readyHold = 0;
   toParent({type:'started', input: S.demo ? 'keyboard' : 'camera'});
 }
-const EXERCISE = {side:"Abduction de l'épaule", front:"Flexion de l'épaule", mid:"Flexion-adduction de l'épaule", any:"Élévation du bras"};
+const EXERCISE = {side:"Shoulder abduction", front:"Shoulder flexion", mid:"Shoulder flexion-adduction", any:"Arm elevation"};
 function buildSummary(stoppedEarly){
   const reps = S.log.filter(l => l.ev === 'repetition');
   const peaks = reps.map(r => r.a);
@@ -254,7 +254,7 @@ $('demo').onclick = () => { S.demo = true; S.ok = true; S.arms = []; beginSessio
 
 // ---------- Phaser ----------
 const W=960, H=540, FONT='Fredoka, "Trebuchet MS", sans-serif';
-const BRAVO = ['Bravo !','Super !','Génial !','Magique !','Bien joué !'];
+const BRAVO = ['Well done!','Great!','Awesome!','Magical!','Good job!'];
 const BANDS = [0xff6b6b,0xffa94d,0xffe066,0x8ce99a,0x74c0fc,0xb197fc];
 const fmt = v => (v>=0?'+':'−')+Math.abs(v).toFixed(2);
 const bar = v => { const n = Math.round(Math.min(1,Math.abs(v))*10); return '■'.repeat(n)+'·'.repeat(10-n); };
@@ -317,12 +317,12 @@ class Jeu extends Phaser.Scene{
     this.info = this.add.text(W/2,H-30,'',{fontFamily:FONT,fontSize:'26px',color:'#3b2a7a',fontStyle:'bold',backgroundColor:'rgba(255,255,255,.88)',padding:{x:22,y:8}}).setOrigin(.5).setDepth(9);
     this.pop = tx(W/2,230,'',70,'#ff6b3d').setOrigin(.5).setAlpha(0).setDepth(13);
     this.veil = this.add.rectangle(W/2,H/2,W,H,0x6b6f75,.85).setVisible(false).setDepth(10);
-    this.veilT = this.add.text(W/2,H/2-10,"Léo a besoin de TON bras magique,\npas de l'autre !",
+    this.veilT = this.add.text(W/2,H/2-10,"Leo needs YOUR magic arm,\nnot the other one!",
       {fontFamily:FONT,fontSize:'44px',align:'center',color:'#fff',fontStyle:'bold',stroke:'#333',strokeThickness:6}).setOrigin(.5).setVisible(false).setDepth(11);
 
     // Écran d'attente : position de départ (caméra nette, sans voile de couleur)
     this.wait = this.add.container(0,0).setDepth(15);
-    const wt = this.add.text(W/2,H/2-70,"Mets-toi en position !\nBras le long du corps, face à la caméra",
+    const wt = this.add.text(W/2,H/2-70,"Get into position!\nArms by your side, facing the camera",
       {fontFamily:FONT,fontSize:'38px',align:'center',color:'#fff',fontStyle:'bold',stroke:'#1b1464',strokeThickness:6}).setOrigin(.5);
     this.waitSub = this.add.text(W/2,H/2+10,'',{fontFamily:FONT,fontSize:'26px',align:'center',color:'#ffe066',fontStyle:'bold',stroke:'#1b1464',strokeThickness:5}).setOrigin(.5);
     this.waitBar = this.add.graphics();
@@ -344,7 +344,7 @@ class Jeu extends Phaser.Scene{
   finish(){
     S.done = true; S.tEnd = Date.now();
     this.time.delayedCall(1300, () => {
-      $('endTxt').textContent = 'Tu as attrapé ' + S.reps + ' lucioles ! Meilleur angle : ' + Math.round(S.peak) + '°';
+      $('endTxt').textContent = 'You caught ' + S.reps + ' fireflies! Best angle: ' + Math.round(S.peak) + '°';
       finishSession(false);                       // SensAI affiche l'auto-évaluation puis enregistre
     });
   }
@@ -375,17 +375,17 @@ class Jeu extends Phaser.Scene{
     if(Phaser.Input.Keyboard.JustDown(this.keys.D)) this.showDbg = !this.showDbg;
     // Diagnostic détaillé des 3 axes (projection épaule→poignet sur X côté / Y haut / Z devant)
     const hor = Math.hypot(S.ax,S.az), domZ = Math.abs(S.az) > Math.abs(S.ax);
-    const mesure = hor < 0.35 ? 'bras vertical (direction ignorée)' : (domZ ? 'Z : DEVANT' : 'X : CÔTÉ');
-    const cible = {any:'peu importe', side:'X (côté)', front:'Z (devant)', mid:'Z+X (milieu)'}[S.dir];
-    const ok = S.dev <= AZ_TOL ? '✓ direction OK' : '✗ mauvaise direction';
+    const mesure = hor < 0.35 ? 'vertical arm (direction ignored)' : (domZ ? 'Z: FRONT' : 'X: SIDE');
+    const cible = {any:'any', side:'X (side)', front:'Z (front)', mid:'Z+X (middle)'}[S.dir];
+    const ok = S.dev <= AZ_TOL ? '✓ direction OK' : '✗ wrong direction';
     this.dbgTxt.setVisible(this.showDbg).setText(
-      'X côté   '+fmt(S.ax)+'  '+bar(S.ax)+'\n'+
-      'Y haut   '+fmt(S.ay)+'  '+bar(S.ay)+'\n'+
-      'Z devant '+fmt(S.az)+'  '+bar(S.az)+'\n'+
-      'Direction (X-Z) : '+Math.round(S.psi)+'°   [0=côté 90=devant 135=milieu]\n'+
-      'Mesuré : '+mesure+'\n'+
-      'Cible : '+cible+'   écart '+Math.round(S.dev)+'°   '+ok+'\n'+
-      'Élévation : '+Math.round(S.abd)+'°   [D = masquer]');
+      'X side    '+fmt(S.ax)+'  '+bar(S.ax)+'\n'+
+      'Y up      '+fmt(S.ay)+'  '+bar(S.ay)+'\n'+
+      'Z front   '+fmt(S.az)+'  '+bar(S.az)+'\n'+
+      'Direction (X-Z) : '+Math.round(S.psi)+'°   [0=side 90=front 135=middle]\n'+
+      'Measured : '+mesure+'\n'+
+      'Target : '+cible+'   offset '+Math.round(S.dev)+'°   '+ok+'\n'+
+      'Elevation : '+Math.round(S.abd)+'°   [D = hide]');
     if(S.demo){
       if(this.keys.UP.isDown) S.abd = Math.min(175,S.abd+70*k);
       if(this.keys.DOWN.isDown) S.abd = Math.max(0,S.abd-70*k);
@@ -401,23 +401,23 @@ class Jeu extends Phaser.Scene{
       S.readyHold = inPos ? S.readyHold + dt : 0;
       const need = 1500, pr = Math.min(1,S.readyHold/need);
       this.wait.setVisible(true);
-      this.waitSub.setText(!S.ok ? 'Je ne te vois pas… place-toi devant la caméra'
-        : S.abdMax >= 30 ? (S.mode==='bi' ? 'Baisse tes deux bras le long du corps' : 'Baisse ton bras le long du corps')
-        : S.elb < S.elbMin ? 'Tends bien ton coude'
-        : !inPos ? "Baisse aussi l'autre bras"
-        : 'Super ! Ne bouge plus…');
+      this.waitSub.setText(!S.ok ? 'I cannot see you… step in front of the camera'
+        : S.abdMax >= 30 ? (S.mode==='bi' ? 'Lower both arms along your body' : 'Lower your arm along your body')
+        : S.elb < S.elbMin ? 'Keep your elbow straight'
+        : !inPos ? 'Lower your other arm too'
+        : 'Great! Hold still…');
       this.waitBar.clear().fillStyle(0xffffff,.9).fillRoundedRect(W/2-200,H/2+60,400,26,13)
         .fillStyle(0x2fbf71,1).fillRoundedRect(W/2-200,H/2+60,Math.max(0,400*pr),26,13);
       const d = S.dbg;
-      this.waitDbg.setText(S.demo ? 'Mode clavier : ↑ ↓ pour lever le bras  •  C = lever l\'autre bras  •  Espace = commencer'
-        : 'Modèle : '+(d.model?'✓ chargé':'… chargement')+'   Personne : '+(d.det?'✓':'✗')+'   Visibilité bras : '+d.vis.toFixed(2)+
-          '   Angle : '+Math.round(S.abd)+'°\nEspace = commencer sans attendre');
+      this.waitDbg.setText(S.demo ? 'Keyboard mode: ↑ ↓ to raise arm  •  C = raise other arm  •  Space = start'
+        : 'Model: '+(d.model?'✓ loaded':'… loading')+'   Person: '+(d.det?'✓':'✗')+'   Arm visibility: '+d.vis.toFixed(2)+
+          '   Angle: '+Math.round(S.abd)+'°\nSpace = start immediately');
       this.waitDbg.setVisible(this.showDbg || S.demo);   // infos techniques cachées à l'enfant
       const skip = Phaser.Input.Keyboard.JustDown(this.keys.SPACE);
       if(S.readyHold >= need || skip){
         S.started = true; S.t0 = Date.now(); S.log = []; S.reps = 0; S.peak = 0; S.compCount = 0;
         this.wait.setVisible(false); this.armed = true; this.hold = 0;
-        this.pop.setText("C'est parti !").setAlpha(1).setScale(.4);
+        this.pop.setText("Let's go!").setAlpha(1).setScale(.4);
         this.tweens.add({targets:this.pop,scale:1,duration:300,ease:'Back.out'});
         this.tweens.add({targets:this.pop,alpha:0,delay:700,duration:400});
       }
@@ -478,13 +478,13 @@ class Jeu extends Phaser.Scene{
     this.drawOwl(comp,t);
 
     this.score.setText('⭐ '+S.reps+' / '+S.target);
-    const DL = {any:'comme tu veux', side:'sur le côté', front:'devant toi', mid:'devant toi, vers le milieu'}[S.dir];
-    const who = S.mode==='bi' ? 'tes deux bras' : 'ton bras';
-    this.info.setText(!S.ok ? 'Place-toi devant la caméra, bras visibles'
-      : S.elb<S.elbMin && S.abd>30 ? 'Tends bien ton coude !'
-      : S.dev>AZ_TOL && S.abd>30 ? 'Lève '+who+' '+DL+' !'
-      : S.abd>=S.thr ? 'Super ! Tiens un instant…'
-      : 'Lève '+who+' '+DL+' : '+Math.round(S.abd)+'° / '+S.thr+'°');
+    const DL = {any:'as you wish', side:'to the side', front:'in front of you', mid:'in front of you, towards the center'}[S.dir];
+    const who = S.mode==='bi' ? 'both arms' : 'your arm';
+    this.info.setText(!S.ok ? 'Stand in front of the camera, arms visible'
+      : S.elb<S.elbMin && S.abd>30 ? 'Keep your elbow straight!'
+      : S.dev>AZ_TOL && S.abd>30 ? 'Raise '+who+' '+DL+'!'
+      : S.abd>=S.thr ? 'Great! Hold for a moment…'
+      : 'Raise '+who+' '+DL+' : '+Math.round(S.abd)+'° / '+S.thr+'°');
   }
 }
 const start = () => new Phaser.Game({type:Phaser.AUTO,parent:'game',width:W,height:H,transparent:true,

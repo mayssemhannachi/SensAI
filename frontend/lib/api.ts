@@ -173,13 +173,13 @@ export class ApiError extends Error {
 }
 
 const MESSAGES: Record<number, string> = {
-  400: "La requête est invalide.",
-  401: "Session expirée ou identifiants invalides.",
-  403: "Accès refusé.",
-  404: "Élément introuvable.",
-  409: "Conflit : cet élément existe déjà ou a déjà été utilisé.",
-  410: "Ce code a expiré.",
-  422: "Certaines informations sont manquantes ou invalides.",
+  400: "The request is invalid.",
+  401: "Session expired or invalid credentials.",
+  403: "Access denied.",
+  404: "Item not found.",
+  409: "Conflict: this item already exists or has already been used.",
+  410: "This code has expired.",
+  422: "Some information is missing or invalid.",
 };
 
 async function request<T>(method: string, path: string, body?: unknown, auth = true): Promise<T> {
@@ -197,7 +197,7 @@ async function request<T>(method: string, path: string, body?: unknown, auth = t
     });
   } catch {
     throw new ApiError(
-      `Impossible de joindre le serveur (${API_URL}). Vérifiez que le backend est démarré.`,
+      `Unable to reach the server (${API_URL}). Please verify that the backend is running.`,
       0,
     );
   }
@@ -208,10 +208,10 @@ async function request<T>(method: string, path: string, body?: unknown, auth = t
       const data = await response.json();
       detail = typeof data?.detail === "string" ? data.detail : "";
     } catch {
-      /* pas de JSON */
+      /* no JSON */
     }
     if (response.status === 401 && auth && token) logout();
-    throw new ApiError(MESSAGES[response.status] || `Erreur serveur (${response.status}).`, response.status, detail);
+    throw new ApiError(MESSAGES[response.status] || `Server error (${response.status}).`, response.status, detail);
   }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
@@ -227,7 +227,7 @@ export async function login(email: string, password: string): Promise<Role> {
     return result.role || "therapist";
   } catch (error) {
     if (error instanceof ApiError && [401, 422].includes(error.status)) {
-      throw new ApiError("Adresse e-mail ou mot de passe incorrect.", error.status);
+      throw new ApiError("Incorrect email address or password.", error.status);
     }
     throw error;
   }
@@ -243,10 +243,10 @@ export async function registerTherapist(
     await request("POST", "/auth/register", { full_name: fullName, email, password, specialty }, false);
   } catch (error) {
     if (error instanceof ApiError && error.status === 400) {
-      throw new ApiError("Cette adresse e-mail est déjà utilisée.", 400);
+      throw new ApiError("This email address is already in use.", 400);
     }
     if (error instanceof ApiError && error.status === 422) {
-      throw new ApiError("Vérifiez l’adresse e-mail saisie.", 422);
+      throw new ApiError("Please check the entered email address.", 422);
     }
     throw error;
   }

@@ -24,19 +24,19 @@ export default function ActivationCard() {
     setFormError(null);
     const fullCode = code.join("").trim();
     if (fullCode.length !== 6) {
-      setFormError("Saisissez les 6 caractères du code d'activation.");
+      setFormError("Please enter all 6 characters of your activation code.");
       return;
     }
     if (!email.trim() || !password) {
-      setFormError("Renseignez une adresse e-mail et un mot de passe.");
+      setFormError("Please enter an email address and password.");
       return;
     }
     if (password.length < 6) {
-      setFormError("Le mot de passe doit contenir au moins 6 caractères.");
+      setFormError("Password must contain at least 6 characters.");
       return;
     }
     if (password !== confirmPassword) {
-      setFormError("Les mots de passe ne correspondent pas.");
+      setFormError("Passwords do not match.");
       return;
     }
     setLoading(true);
@@ -49,12 +49,12 @@ export default function ActivationCard() {
         if (err.status === 404) return setActiveAlert("error");
         if (err.status === 410) return setActiveAlert("expired");
         if (err.status === 409 && err.detail.toLowerCase().includes("email")) {
-          return setFormError("Cette adresse e-mail est déjà utilisée.");
+          return setFormError("This email address is already in use.");
         }
         if (err.status === 409) return setActiveAlert("used");
-        if (err.status === 422) return setFormError("Vérifiez l’adresse e-mail saisie.");
+        if (err.status === 422) return setFormError("Please verify the email address entered.");
       }
-      setFormError(err instanceof Error ? err.message : "Activation impossible.");
+      setFormError(err instanceof Error ? err.message : "Activation failed.");
     }
   };
 
@@ -62,10 +62,8 @@ export default function ActivationCard() {
 
   const handleCodeChange = (index: number, raw: string) => {
     let value = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    // Saisie d'un caractère dans une case déjà remplie : on garde le dernier.
     if (value.length === 2 && code[index]) value = value.slice(-1);
     if (value.length > 1) {
-      // Collage du code complet
       const pasted = value.slice(0, 6 - index).split("");
       const newCode = [...code];
       pasted.forEach((char, i) => {
@@ -99,7 +97,7 @@ export default function ActivationCard() {
       <div className="absolute inset-0 -z-10 filter drop-shadow-[0_12px_40px_rgba(139,92,246,0.16)] pointer-events-none">
         <Image
           src="/Assets/connexion/login-card-bg.png"
-          alt="Fond de la carte d'activation"
+          alt="Activation card background"
           fill
           className="object-fill select-none"
           priority
@@ -119,11 +117,11 @@ export default function ActivationCard() {
 
         {/* Heading */}
         <h1 className="text-[23px] sm:text-[26px] leading-[1.15] font-extrabold text-[#1E293B] mb-1 font-outfit">
-          Activez votre espace<br />
-          <span className="text-[#3B82F6]">Sens</span><span className="text-[#8B5CF6]">A</span><span className="text-[#EC4899]">I</span> !
+          Activate your<br />
+          <span className="text-[#3B82F6]">Sens</span><span className="text-[#8B5CF6]">A</span><span className="text-[#EC4899]">I</span> space!
         </h1>
         <p className="text-[12px] text-slate-500 mb-3 leading-relaxed">
-          Entrez le code fourni par votre thérapeute pour créer vos identifiants.
+          Enter the code provided by your therapist to set up your credentials.
         </p>
 
         {/* Optional Alert Banners */}
@@ -131,7 +129,7 @@ export default function ActivationCard() {
           <div className="mb-2.5 p-2.5 rounded-xl bg-[#FFE4E6] border border-[#FECDD3] text-[#E11D48] text-[11px] font-medium flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-[#E11D48] text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">!</span>
-              <span>Code non reconnu. Vérifiez le code saisi.</span>
+              <span>Code not recognized. Please check your code.</span>
             </div>
             <button onClick={() => setActiveAlert(null)} className="text-[#E11D48] hover:opacity-75">✕</button>
           </div>
@@ -141,7 +139,7 @@ export default function ActivationCard() {
           <div className="mb-2.5 p-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#D97706] text-[11px] font-medium flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-[#D97706] text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">!</span>
-              <span>Ce code a expiré. Contactez votre thérapeute.</span>
+              <span>This code has expired. Please contact your therapist.</span>
             </div>
             <button onClick={() => setActiveAlert(null)} className="text-[#D97706] hover:opacity-75">✕</button>
           </div>
@@ -151,7 +149,7 @@ export default function ActivationCard() {
           <div className="mb-2.5 p-2.5 rounded-xl bg-[#EEF2FF] border border-[#C7D2FE] text-[#4F46E5] text-[11px] font-medium flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-[#4F46E5] text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">i</span>
-              <span>Ce code a déjà été utilisé. <Link href="/login" className="font-bold underline">Se connecter</Link></span>
+              <span>This code has already been used. <Link href="/login" className="font-bold underline">Sign In</Link></span>
             </div>
             <button onClick={() => setActiveAlert(null)} className="text-[#4F46E5] hover:opacity-75">✕</button>
           </div>
@@ -167,7 +165,7 @@ export default function ActivationCard() {
         {/* Activation Code Section */}
         <div className="mb-3">
           <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
-            Code d'activation
+            Activation Code
           </label>
           <div className="grid grid-cols-6 gap-1.5">
             {code.map((digit, idx) => (
@@ -176,7 +174,7 @@ export default function ActivationCard() {
                 ref={(el) => { inputRefs.current[idx] = el; }}
                 type="text"
                 maxLength={6}
-                aria-label={`Caractère ${idx + 1} du code`}
+                aria-label={`Character ${idx + 1} of code`}
                 value={digit}
                 onChange={(e) => handleCodeChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
@@ -191,14 +189,14 @@ export default function ActivationCard() {
               <line x1="12" y1="16" x2="12" y2="12" />
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
-            Code à 6 caractères remis par votre thérapeute.
+            6-character code given by your therapist.
           </p>
         </div>
 
         {/* Credentials Form */}
         <form onSubmit={handleSubmit} className="space-y-2">
           <label className="block text-[11px] font-bold text-slate-700 -mb-0.5">
-            Créer vos identifiants
+            Create your credentials
           </label>
 
           {/* Email */}
@@ -214,7 +212,7 @@ export default function ActivationCard() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Adresse e-mail"
+                placeholder="Email address"
                 className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#E0E7FF] text-[12px] text-slate-700 placeholder-slate-400 bg-[#F0F5FF]/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/30 focus:border-[#8B5CF6] transition-all"
               />
             </div>
@@ -233,7 +231,7 @@ export default function ActivationCard() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mot de passe"
+                placeholder="Password"
                 className="w-full pl-8 pr-9 py-2 rounded-xl border border-[#E0E7FF] text-[12px] text-slate-700 placeholder-slate-400 bg-[#F0F5FF]/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/30 focus:border-[#8B5CF6] transition-all"
               />
               <button
@@ -262,7 +260,7 @@ export default function ActivationCard() {
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirmez votre mot de passe"
+                placeholder="Confirm your password"
                 className="w-full pl-8 pr-9 py-2 rounded-xl border border-[#E0E7FF] text-[12px] text-slate-700 placeholder-slate-400 bg-[#F0F5FF]/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/30 focus:border-[#8B5CF6] transition-all"
               />
               <button
@@ -281,7 +279,7 @@ export default function ActivationCard() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
-                Les mots de passe correspondent
+                Passwords match
               </p>
             )}
           </div>
@@ -292,7 +290,7 @@ export default function ActivationCard() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#0EA5E9] hover:opacity-95 disabled:opacity-60 text-white font-bold py-2.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-md text-[12.5px] mt-2"
           >
-            {loading ? "Activation…" : "Activer mon compte"}
+            {loading ? "Activating…" : "Activate my account"}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -301,9 +299,9 @@ export default function ActivationCard() {
 
         {/* Back to Login Link */}
         <div className="mt-2.5 text-center text-[11px] text-slate-500 font-medium">
-          Déjà un compte ?{" "}
+          Already have an account?{" "}
           <Link href="/login" className="text-[#2563EB] font-bold hover:underline ml-1">
-            Se connecter
+            Sign In
           </Link>
         </div>
       </div>

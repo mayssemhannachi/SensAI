@@ -19,27 +19,27 @@ const CARD_SIZE = 140;             // display size in game units
 const INFO: Record<Go, { e: string; voice: string; g: Gesture }> = {
   fairy_r: {
     e: '🔵🧚',
-    voice: 'Fée bleue ! Bras droit !',
+    voice: 'Blue Fairy! Right arm!',
     g: 'right',
   },
   fairy_l: {
     e: '💗🧚',
-    voice: 'Fée rose ! Bras gauche !',
+    voice: 'Pink Fairy! Left arm!',
     g: 'left',
   },
   star: {
     e: '⭐',
-    voice: "Étoile ! Les deux bras !",
+    voice: "Star! Both arms!",
     g: 'both',
   },
   crown: {
     e: '👑',
-    voice: 'Couronne ! Main sur la tête !',
+    voice: 'Crown! Hand on head!',
     g: 'head',
   },
   dragon: {
     e: '🐉',
-    voice: 'Dragon ! Baisse-toi !',
+    voice: 'Dragon! Duck!',
     g: 'duck',
   },
 };
@@ -232,7 +232,7 @@ export class MainScene extends Phaser.Scene {
 
   private async startCamera() {
     this.show('🏰');
-    this.say('Chargement du jeu…');
+    this.say('Loading game...');
     try {
       await this.tracker.init();
       this.video = document.getElementById('cam') as HTMLVideoElement;
@@ -240,7 +240,7 @@ export class MainScene extends Phaser.Scene {
       await this.video.play();
       document.body.classList.add('camera-active');
     } catch (e) {
-      this.say('Caméra ou modèle indisponible :\n' + (e as Error).message);
+      this.say('Camera or model unavailable:\n' + (e as Error).message);
       return;
     }
     this.show('');
@@ -253,7 +253,7 @@ export class MainScene extends Phaser.Scene {
     this.noise = [];
     this.noseS = [];
     drawInitialZone(this.zoneG, this.scale.width / 2, 380, 'standing', false);
-    this.say('Place-toi debout dans le cadre guide…');
+    this.say('Stand up in the guide frame...');
   }
 
   update() {
@@ -285,7 +285,7 @@ export class MainScene extends Phaser.Scene {
         } else {
           if (!this.inZoneSince) {
             this.inZoneSince = now;
-            this.say('Parfait ! Reste immobile comme une statue…');
+            this.say('Perfect! Stay still like a statue...');
           }
           this.noise.push(this.speed);
           if (this.pose) this.noseS.push(this.pose[0].y);
@@ -316,16 +316,16 @@ export class MainScene extends Phaser.Scene {
     this.practice = true;
     this.trials = [...this.cfg.kinds, 'enemy'];
     this.idx = 0;
-    this.setTag('ENTRAÎNEMENT');
+    this.setTag('PRACTICE');
     this.show('🏰');
-    this.say('Prêt ?\n4 essais pour tester tes gestes !');
+    this.say('Ready?\n4 rounds to test your gestures!');
     this.phase = 'gap';
     this.until = performance.now() + 3500;
   }
 
   private endPractice(now: number) {
     this.show('🎉');
-    this.say('Bravo ! L’entraînement est fini.\nMaintenant, la vraie partie !');
+    this.say('Well done! Practice is over.\nNow, the real game!');
     this.phase = 'pause';
     this.until = now + 3500;
   }
@@ -340,7 +340,7 @@ export class MainScene extends Phaser.Scene {
     this.bar.width = 0;
     this.starTxt.setText('⭐ 0');
     this.show('🏰');
-    this.say('Protège le château !');
+    this.say('Protect the castle!');
     this.phase = 'gap';
     this.until = now + 2000;
   }
@@ -363,7 +363,7 @@ export class MainScene extends Phaser.Scene {
     const trialDuration = this.kind === 'enemy' ? this.enemy.value : this.fairy.value;
     this.until = now + trialDuration + 6000;
 
-    const voice = this.kind === 'enemy' ? 'Ogre ! Ne bouge plus !' : INFO[this.kind as Go].voice;
+    const voice = this.kind === 'enemy' ? 'Ogre! Freeze!' : INFO[this.kind as Go].voice;
     const textureKey = this.kind === 'enemy' ? 'sel_ogre' : `sel_${this.kind}`;
     this.show(textureKey);
 
@@ -470,14 +470,14 @@ export class MainScene extends Phaser.Scene {
     // Retours oraux courts
     const isEnemy = this.kind === 'enemy';
     if (ok) {
-      const praise = ['Bravo !', 'Super !', 'Génial !', 'Bien joué !'];
-      speak(isEnemy ? 'Bien joué, statue !' : praise[Math.floor(Math.random() * praise.length)]);
+      const praise = ['Well done!', 'Super!', 'Awesome!', 'Good job!'];
+      speak(isEnemy ? 'Well played, statue!' : praise[Math.floor(Math.random() * praise.length)]);
     } else if (wrongArm) {
-      speak('Pas le bon bras !');
+      speak('Wrong arm!');
     } else if (isEnemy) {
-      speak('L’ogre t’a vu !');
+      speak('The ogre saw you!');
     } else {
-      speak('Trop lent ! Plus vite !');
+      speak('Too slow! Faster!');
     }
 
     this.phase = 'fb';
@@ -504,13 +504,13 @@ export class MainScene extends Phaser.Scene {
     };
     this.show('🏆');
     this.say([
-      `Défis : ${s.fairies - s.omissions - s.wrongArms}/${s.fairies} · mauvais gestes : ${s.wrongArms}`,
-      `Statues : ${s.enemies - s.falseAlarms}/${s.enemies}`,
-      `Réaction : ${s.rtMeanMs} ms (±${s.rtSdMs})`,
-      `Début / milieu / fin : ${s.thirds.join(' / ')} %`,
-      `Arrêt : ${s.stopMeanMs ?? '–'} ms · agitation : ${s.agitation}`,
+      `Challenges: ${s.fairies - s.omissions - s.wrongArms}/${s.fairies} · wrong gestures: ${s.wrongArms}`,
+      `Statues: ${s.enemies - s.falseAlarms}/${s.enemies}`,
+      `Reaction: ${s.rtMeanMs} ms (±${s.rtSdMs})`,
+      `Start / middle / end: ${s.thirds.join(' / ')} %`,
+      `Stop: ${s.stopMeanMs ?? '–'} ms · agitation: ${s.agitation}`,
       '',
-      '[ Copier le résultat ]',
+      '[ Copy result ]',
     ].join('\n'));
     this.msg.setFontSize('30px').setY(420).setInteractive()
       .on('pointerdown', () => { void navigator.clipboard.writeText(JSON.stringify(session, null, 2)); });
@@ -523,7 +523,7 @@ export class MainScene extends Phaser.Scene {
     this.phase = 'result';
     stopSpeech();
     this.show('🛑');
-    this.say('Séance arrêtée. Repose-toi bien !');
+    this.say('Session stopped. Rest well!');
     this.sendSummary(true);
   }
 
@@ -554,7 +554,7 @@ export class MainScene extends Phaser.Scene {
         repetitions_target: target,
         // niveau : plus l'ogre est fréquent, plus il faut se retenir (même règle que le dashboard)
         level_number: this.cfg.goRatio >= 0.85 ? 1 : this.cfg.goRatio >= 0.7 ? 2 : 3,
-        exercise_name: 'Attention et contrôle des gestes (le château)',
+        exercise_name: 'Attention and gesture control (the castle)',
         played_at: new Date().toISOString(),
         go_success_rate: rate(goOk, s.fairies),
         nogo_success_rate: rate(nogoOk, s.enemies),
